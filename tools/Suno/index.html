@@ -1,260 +1,5 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Suno Prompt Converter — Optional Ganesh</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Syne:wght@400;600;700&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg: #0a0a0a;
-    --surface: #111111;
-    --surface2: #181818;
-    --border: rgba(255,255,255,0.08);
-    --border2: rgba(255,255,255,0.14);
-    --text: #f0ede8;
-    --muted: #888580;
-    --hint: #4a4845;
-    --accent: #c8b89a;
-    --accent2: #7a6e5f;
-    --green: #4caf7d;
-    --warn: #d4853a;
-    --red: #c0504a;
-    --mono: 'DM Mono', monospace;
-    --sans: 'Syne', sans-serif;
-  }
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 16px; }
-  body { min-height: 100vh; padding: 0; }
-
-  /* grain overlay */
-  body::before {
-    content: '';
-    position: fixed; inset: 0; z-index: 0; pointer-events: none;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-    opacity: 0.4;
-  }
-
-  .page { position: relative; z-index: 1; max-width: 740px; margin: 0 auto; padding: 3rem 2rem 5rem; }
-
-  header { margin-bottom: 3rem; }
-  .logo { font-size: 11px; font-family: var(--mono); letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase; margin-bottom: 1.2rem; }
-  h1 { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 700; letter-spacing: -0.03em; line-height: 1.05; color: var(--text); }
-  h1 span { color: var(--accent); }
-  .subtitle { margin-top: 0.75rem; font-family: var(--mono); font-size: 13px; color: var(--muted); }
-
-  .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 2rem; }
-  .tab {
-    padding: 0.6rem 1.4rem; font-size: 13px; font-family: var(--mono); letter-spacing: 0.05em;
-    color: var(--muted); cursor: pointer; background: none; border: none; border-bottom: 2px solid transparent;
-    margin-bottom: -1px; transition: color 0.2s, border-color 0.2s;
-  }
-  .tab:hover { color: var(--text); }
-  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-
-  .panel { display: none; }
-  .panel.active { display: block; }
-
-  .field { margin-bottom: 1.5rem; }
-  .field label {
-    display: block; font-family: var(--mono); font-size: 11px; letter-spacing: 0.15em;
-    text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem;
-  }
-  textarea, input[type="text"] {
-    width: 100%; background: var(--surface); border: 1px solid var(--border);
-    color: var(--text); font-family: var(--mono); font-size: 13px; line-height: 1.6;
-    padding: 0.75rem 1rem; border-radius: 4px; outline: none; resize: vertical;
-    transition: border-color 0.2s;
-  }
-  textarea:focus, input[type="text"]:focus { border-color: var(--border2); }
-  textarea { min-height: 110px; }
-  input[type="text"] { height: 38px; }
-
-  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-
-  .tags-cloud { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 0.5rem; }
-  .tag {
-    font-family: var(--mono); font-size: 11px; padding: 3px 10px;
-    border: 1px solid var(--border); border-radius: 2px; color: var(--muted);
-    cursor: pointer; background: none; transition: all 0.15s;
-  }
-  .tag:hover { border-color: var(--accent2); color: var(--accent); }
-
-  .api-section { margin-bottom: 2rem; }
-  .api-row { display: flex; gap: 8px; align-items: center; }
-  .api-row input { flex: 1; font-size: 12px; }
-  .api-toggle { font-family: var(--mono); font-size: 11px; color: var(--muted); cursor: pointer; white-space: nowrap; background: none; border: none; padding: 0; }
-  .api-toggle:hover { color: var(--accent); }
-  .api-hint { font-family: var(--mono); font-size: 11px; color: var(--hint); margin-top: 6px; }
-  .api-hint a { color: var(--accent2); text-decoration: none; }
-  .api-hint a:hover { color: var(--accent); }
-
-  .run-btn {
-    width: 100%; padding: 0.85rem; font-family: var(--sans); font-size: 15px; font-weight: 600;
-    letter-spacing: 0.05em; background: var(--accent); color: #0a0a0a; border: none;
-    border-radius: 4px; cursor: pointer; transition: opacity 0.2s, transform 0.1s;
-    margin-bottom: 2rem;
-  }
-  .run-btn:hover { opacity: 0.88; }
-  .run-btn:active { transform: scale(0.99); }
-  .run-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
-
-  .output { animation: fadeIn 0.3s ease; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-
-  .out-block { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; margin-bottom: 1rem; overflow: hidden; }
-  .out-header {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 0.5rem 0.9rem; border-bottom: 1px solid var(--border);
-    background: var(--surface2);
-  }
-  .out-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
-  .out-actions { display: flex; gap: 8px; align-items: center; }
-  .char-pill {
-    font-family: var(--mono); font-size: 11px; padding: 2px 8px;
-    border-radius: 2px; background: rgba(76,175,125,0.15); color: var(--green);
-  }
-  .char-pill.over { background: rgba(192,80,74,0.15); color: var(--red); }
-  .char-pill.close { background: rgba(212,133,58,0.15); color: var(--warn); }
-  .copy-btn {
-    font-family: var(--mono); font-size: 11px; color: var(--muted); background: none;
-    border: 1px solid var(--border); border-radius: 2px; padding: 2px 8px; cursor: pointer;
-    transition: all 0.15s;
-  }
-  .copy-btn:hover { color: var(--accent); border-color: var(--accent2); }
-  .out-body { padding: 0.9rem 1rem; font-family: var(--mono); font-size: 13px; line-height: 1.65; color: var(--text); word-break: break-word; }
-
-  .regen-row { display: flex; gap: 10px; }
-  .regen-btn {
-    flex: 1; padding: 0.6rem; font-family: var(--mono); font-size: 12px;
-    color: var(--muted); background: none; border: 1px solid var(--border);
-    border-radius: 4px; cursor: pointer; transition: all 0.2s;
-  }
-  .regen-btn:hover { color: var(--accent); border-color: var(--accent2); }
-
-  .status-bar {
-    display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem;
-    font-family: var(--mono); font-size: 12px; color: var(--muted);
-    min-height: 24px;
-  }
-  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
-  .dot.loading { background: var(--warn); animation: pulse 1s infinite; }
-  .dot.ok { background: var(--green); }
-  .dot.err { background: var(--red); }
-  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
-
-  footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-family: var(--mono); font-size: 11px; color: var(--hint); letter-spacing: 0.05em; }
-
-  @media (max-width: 520px) {
-    .page { padding: 2rem 1.2rem 4rem; }
-    .row2 { grid-template-columns: 1fr; }
-    h1 { font-size: 2rem; }
-  }
-</style>
-</head>
-<body>
-<div class="page">
-  <header>
-    <div class="logo">Optional Ganesh / Tools</div>
-    <h1>Suno <span>Prompt</span><br>Converter</h1>
-    <p class="subtitle">// Comprime cualquier idea a &lt;200 chars para Suno AI</p>
-  </header>
-
-  <!-- API Key -->
-  <div class="api-section">
-    <div class="field">
-      <label>Anthropic API Key</label>
-      <div class="api-row">
-        <input type="password" id="api-key" placeholder="sk-ant-api03-..." autocomplete="off" />
-        <button class="api-toggle" onclick="toggleApiVis()">mostrar</button>
-      </div>
-      <div class="api-hint">
-        Obtenla en <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> — se guarda solo en tu navegador (localStorage).
-      </div>
-    </div>
-  </div>
-
-  <!-- Tabs -->
-  <div class="tabs">
-    <button class="tab active" onclick="switchTab('compress')">Comprimir prompt</button>
-    <button class="tab" onclick="switchTab('generate')">Generar desde cero</button>
-  </div>
-
-  <!-- Panel: Comprimir -->
-  <div class="panel active" id="panel-compress">
-    <div class="field">
-      <label>Texto de entrada</label>
-      <textarea id="input-compress" placeholder="Pega el prompt largo del bot de Telegram, o cualquier descripción libre del sonido que quieres..."></textarea>
-    </div>
-    <div class="row2">
-      <div class="field">
-        <label>Estilo extra (opcional)</label>
-        <input type="text" id="style-extra" placeholder="lo-fi, dark ambient, flamenco fusion…" />
-      </div>
-      <div class="field">
-        <label>Mood (opcional)</label>
-        <input type="text" id="mood-extra" placeholder="melancholic, hypnotic, raw…" />
-      </div>
-    </div>
-  </div>
-
-  <!-- Panel: Generar -->
-  <div class="panel" id="panel-generate">
-    <div class="field">
-      <label>Concepto sonoro</label>
-      <textarea id="input-generate" placeholder="ej. Burial meets Floating Points, percusión industrial oxidada, voz fantasma con reverb de catedral, medianoche en el metro de Tokyo…"></textarea>
-    </div>
-    <div class="field">
-      <label>Tags rápidos</label>
-      <div class="tags-cloud">
-        <button class="tag" onclick="appendTag('dark ambient')">dark ambient</button>
-        <button class="tag" onclick="appendTag('lo-fi hip hop')">lo-fi hip hop</button>
-        <button class="tag" onclick="appendTag('cinematic')">cinematic</button>
-        <button class="tag" onclick="appendTag('experimental')">experimental</button>
-        <button class="tag" onclick="appendTag('trip-hop')">trip-hop</button>
-        <button class="tag" onclick="appendTag('jazz fusion')">jazz fusion</button>
-        <button class="tag" onclick="appendTag('post-rock')">post-rock</button>
-        <button class="tag" onclick="appendTag('glitch')">glitch</button>
-        <button class="tag" onclick="appendTag('neo-soul')">neo-soul</button>
-        <button class="tag" onclick="appendTag('drone')">drone</button>
-        <button class="tag" onclick="appendTag('flamenco fusion')">flamenco fusion</button>
-        <button class="tag" onclick="appendTag('balearic')">balearic</button>
-        <button class="tag" onclick="appendTag('afrobeat')">afrobeat</button>
-        <button class="tag" onclick="appendTag('dub techno')">dub techno</button>
-      </div>
-    </div>
-  </div>
-
-  <button class="run-btn" id="run-btn" onclick="runGeneration()">Generar →</button>
-
-  <!-- Status -->
-  <div class="status-bar" id="status-bar" style="display:none">
-    <div class="dot loading" id="status-dot"></div>
-    <span id="status-text">Procesando...</span>
-  </div>
-
-  <!-- Output -->
-  <div id="output-area"></div>
-
-  <footer>optionalganesh.com / herramientas internas — no compartir API key</footer>
-</div>
-
 <script>
-const STORAGE_KEY = 'og_anthropic_key';
 let currentMode = 'compress';
-let lastPayload = null;
-
-// Restore key
-const savedKey = localStorage.getItem(STORAGE_KEY);
-if (savedKey) document.getElementById('api-key').value = savedKey;
-document.getElementById('api-key').addEventListener('change', () => {
-  localStorage.setItem(STORAGE_KEY, document.getElementById('api-key').value.trim());
-});
-
-function toggleApiVis() {
-  const el = document.getElementById('api-key');
-  el.type = el.type === 'password' ? 'text' : 'password';
-}
 
 function switchTab(mode) {
   currentMode = mode;
@@ -295,7 +40,7 @@ function renderOutput(data) {
           <span class="out-label">Prompt Suno</span>
           <div class="out-actions">
             <span class="${charPillClass(len)}">${len}/200</span>
-            <button class="copy-btn" onclick="copyText('out-prompt')">copiar</button>
+            <button class="copy-btn" onclick="copyText('out-prompt', this)">copiar</button>
           </div>
         </div>
         <div class="out-body" id="out-prompt">${esc(prompt)}</div>
@@ -304,7 +49,7 @@ function renderOutput(data) {
       <div class="out-block">
         <div class="out-header">
           <span class="out-label">Título sugerido</span>
-          <button class="copy-btn" onclick="copyText('out-title')">copiar</button>
+          <button class="copy-btn" onclick="copyText('out-title', this)">copiar</button>
         </div>
         <div class="out-body" id="out-title">${esc(title)}</div>
       </div>` : ''}
@@ -312,7 +57,7 @@ function renderOutput(data) {
       <div class="out-block">
         <div class="out-header">
           <span class="out-label">Style tags (campo Style en Suno)</span>
-          <button class="copy-btn" onclick="copyText('out-tags')">copiar</button>
+          <button class="copy-btn" onclick="copyText('out-tags', this)">copiar</button>
         </div>
         <div class="out-body" id="out-tags">${esc(style_tags)}</div>
       </div>` : ''}
@@ -323,23 +68,325 @@ function renderOutput(data) {
     </div>`;
 }
 
-function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
 
-async function copyText(id) {
+async function copyText(id, btnEl) {
   const el = document.getElementById(id);
   if (!el) return;
   await navigator.clipboard.writeText(el.textContent);
-  const btn = el.closest('.out-block').querySelector('.copy-btn');
-  const orig = btn.textContent;
-  btn.textContent = '✓';
-  setTimeout(() => btn.textContent = orig, 1500);
+  if (!btnEl) return;
+  const orig = btnEl.textContent;
+  btnEl.textContent = '✓';
+  setTimeout(() => btnEl.textContent = orig, 1500);
+}
+
+function pick(arr, fallback='') {
+  if (!arr || !arr.length) return fallback;
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function unique(arr) {
+  return [...new Set(arr.filter(Boolean).map(x => x.trim()).filter(Boolean))];
+}
+
+function normalizeSpaces(s) {
+  return s.replace(/\s+/g, ' ').replace(/\s+,/g, ',').trim();
+}
+
+function extractLine(label, text) {
+  const re = new RegExp(label + '\\s*:\\s*(.+)', 'i');
+  const m = text.match(re);
+  return m ? m[1].trim() : '';
+}
+
+function parseBullets(block) {
+  return block
+    .split('\n')
+    .map(l => l.replace(/^\s*[-•]\s*/, '').trim())
+    .filter(Boolean);
+}
+
+function parseStructuredInput(raw) {
+  const text = raw.replace(/\r/g, '');
+  const lower = text.toLowerCase();
+
+  const title = extractLine('Title', text);
+  const seed = extractLine('Seed', text);
+  const concept = extractLine('Concept', text);
+  const style = extractLine('Style', text);
+  const mood = extractLine('Mood', text);
+  const bpm = extractLine('BPM', text);
+  const key = extractLine('Key', text);
+  const groove = extractLine('Groove', text);
+  const focus = extractLine('Focus', text);
+  const voiceDirection = extractLine('Voice Direction', text);
+  const sunoPrompt = extractLine('Suno Prompt', text);
+  const directive = extractLine('Directive', text);
+
+  const coreTexture = extractLine('Core texture', text);
+  const secondaryTexture = extractLine('Secondary texture', text);
+  const tracesOf = extractLine('Traces of', text);
+
+  const tags = [];
+
+  if (style) tags.push(style);
+  if (mood) tags.push(mood);
+  if (bpm) tags.push(`${bpm} bpm`);
+  if (key) tags.push(key);
+  if (groove) tags.push(groove);
+  if (focus) tags.push(focus);
+  if (coreTexture) tags.push(coreTexture);
+  if (secondaryTexture) tags.push(secondaryTexture);
+  if (tracesOf) tags.push(tracesOf);
+
+  if (voiceDirection) {
+    if (/instrument/i.test(voiceDirection)) tags.push('voice as texture');
+    if (/barely audible|barely/i.test(voiceDirection)) tags.push('buried vocals');
+    if (/longing/i.test(voiceDirection)) tags.push('yearning vocal tone');
+  }
+
+  if (directive) {
+    if (/glitch|imperfection/i.test(directive)) tags.push('subtle glitch details');
+    if (/human/i.test(directive)) tags.push('human imperfection');
+  }
+
+  if (!style && lower.includes('trip-hop')) tags.push('trip-hop');
+  if (!mood && lower.includes('melancholic')) tags.push('melancholic');
+  if (lower.includes('lo-fi')) tags.push('lo-fi textures');
+  if (lower.includes('haunting piano') || lower.includes('piano')) tags.push('haunting piano');
+  if (lower.includes('broken beat') || lower.includes('stuttering beat') || lower.includes('disjointed rhythm')) tags.push('broken beats');
+  if (lower.includes('ethereal vocal') || lower.includes('whispery') || lower.includes('whisper')) tags.push('ethereal vocals');
+  if (lower.includes('vinyl') || lower.includes('hiss')) tags.push('vinyl crackle');
+  if (lower.includes('grainy')) tags.push('grainy samples');
+  if (lower.includes('distorted synth')) tags.push('distorted synths');
+  if (lower.includes('ambient')) tags.push('ominous ambience');
+  if (lower.includes('mournful')) tags.push('mournful tone');
+
+  return {
+    title,
+    seed,
+    concept,
+    style,
+    mood,
+    bpm,
+    key,
+    groove,
+    focus,
+    coreTexture,
+    secondaryTexture,
+    tracesOf,
+    voiceDirection,
+    sunoPrompt,
+    directive,
+    tags: unique(tags)
+  };
+}
+
+function compressPrompt(data, styleExtra, moodExtra, moreExp=false) {
+  const tags = [...data.tags];
+
+  if (styleExtra) tags.push(styleExtra);
+  if (moodExtra) tags.push(moodExtra);
+
+  const replacements = [
+    ['b harmonic minor', 'B harmonic minor'],
+    ['a harmonic minor', 'A harmonic minor'],
+    ['c harmonic minor', 'C harmonic minor'],
+    ['d harmonic minor', 'D harmonic minor'],
+    ['e harmonic minor', 'E harmonic minor'],
+    ['f harmonic minor', 'F harmonic minor'],
+    ['g harmonic minor', 'G harmonic minor'],
+    ['voice as texture', pick(['voice as texture', 'vocal texture'])],
+    ['subtle glitch details', pick(['glitch details', 'subtle glitch'])],
+    ['human imperfection', pick(['human imperfection', 'raw imperfections'])],
+    ['ethereal vocals', pick(['ethereal vocals', 'ghostly vocals', 'whispered vocals'])],
+    ['vinyl crackle', pick(['vinyl crackle', 'vinyl hiss'])],
+    ['grainy samples', pick(['grainy samples', 'grainy lo-fi samples'])],
+    ['ominous ambience', pick(['ominous ambience', 'dark ambience'])],
+    ['mournful tone', pick(['mournful tone', 'yearning tone'])],
+    ['broken beats', pick(['broken beats', 'stuttering beats'])],
+    ['haunting piano', pick(['haunting piano', 'distorted piano', 'dusty piano'])],
+  ];
+
+  let finalTags = tags.map(t => {
+    let out = t;
+    replacements.forEach(([from, to]) => {
+      if (String(out).toLowerCase() === from) out = to;
+    });
+    return out;
+  });
+
+  if (data.sunoPrompt) {
+    finalTags.unshift(...data.sunoPrompt.split(',').map(s => s.trim()));
+  }
+
+  finalTags = unique(finalTags);
+
+  const priority = [
+    data.style,
+    data.mood,
+    data.bpm ? `${data.bpm} bpm` : '',
+    data.key,
+    'broken beats',
+    'stuttering beats',
+    'haunting piano',
+    'distorted piano',
+    'lo-fi textures',
+    'grainy samples',
+    'ethereal vocals',
+    'ghostly vocals',
+    'whispered vocals',
+    'vinyl crackle',
+    'vinyl hiss',
+    'distorted synths',
+    'ominous ambience',
+    'mournful tone',
+    'yearning tone',
+    'glitch details',
+    'subtle glitch',
+    'human imperfection'
+  ];
+
+  const ordered = [];
+  priority.forEach(p => {
+    const found = finalTags.find(t => t.toLowerCase() === String(p).toLowerCase());
+    if (found && !ordered.includes(found)) ordered.push(found);
+  });
+  finalTags.forEach(t => {
+    if (!ordered.includes(t)) ordered.push(t);
+  });
+
+  if (moreExp) {
+    const experimental = unique([
+      pick(['degraded tape feel', 'blurred transients', 'unstable ambience']),
+      pick(['fractured rhythm', 'ghost harmonics', 'smoked-out atmosphere']),
+      pick(['off-balance texture', 'dissolving synths', 'imperfect mix residue'])
+    ]);
+    experimental.forEach(t => {
+      if (!ordered.includes(t)) ordered.push(t);
+    });
+  }
+
+  let prompt = '';
+  for (const tag of ordered) {
+    const next = prompt ? `${prompt}, ${tag}` : tag;
+    if (next.length <= 200) prompt = next;
+  }
+
+  if (!prompt && data.concept) {
+    prompt = data.concept.slice(0, 200);
+  }
+
+  prompt = normalizeSpaces(prompt);
+
+  return {
+    prompt,
+    title: makeTitle(data, moreExp),
+    style_tags: makeStyleTags(data, styleExtra, moodExtra, moreExp)
+  };
+}
+
+function makeTitle(data, moreExp=false) {
+  if (data.title) {
+    if (moreExp) {
+      const suffix = pick(['(Alt Cut)', '(Dust Version)', '(Frayed Mix)', '(Night Edit)']);
+      const withSuffix = `${data.title} ${suffix}`;
+      return withSuffix.length <= 40 ? withSuffix : data.title;
+    }
+    return data.title;
+  }
+
+  const seedBase = data.seed || data.style || 'Untitled';
+  const suffixes = moreExp
+    ? ['Dust Cut', 'Frayed Signal', 'Broken Bloom', 'Night Static']
+    : ['Version', 'Sketch', 'Drop', 'State'];
+
+  return `${seedBase} ${pick(suffixes)}`.trim();
+}
+
+function makeStyleTags(data, styleExtra, moodExtra, moreExp=false) {
+  let tags = unique([
+    data.style,
+    moodExtra || data.mood,
+    styleExtra,
+    data.groove && /broken|stuttering/i.test(data.groove) ? 'broken beats' : '',
+    data.coreTexture && /lo-fi|grainy/i.test(data.coreTexture) ? 'lo-fi' : '',
+    data.secondaryTexture && /vocal|whisper/i.test(data.secondaryTexture) ? 'ethereal vocals' : '',
+    data.tracesOf && /vinyl|hiss/i.test(data.tracesOf) ? 'vinyl' : ''
+  ]);
+
+  if (moreExp) tags.push('experimental');
+  tags = unique(tags);
+
+  let out = '';
+  for (const tag of tags) {
+    const next = out ? `${out}, ${tag}` : tag;
+    if (next.length <= 60) out = next;
+  }
+  return out;
+}
+
+function generateFromScratch(raw, moreExp=false) {
+  const source = raw.trim();
+  const bits = source.split(',').map(s => s.trim()).filter(Boolean);
+
+  const detected = unique(bits.map(x => x.toLowerCase()));
+  const tags = [];
+
+  detected.forEach(t => {
+    if (t.includes('trip-hop')) tags.push('trip-hop');
+    else if (t.includes('neo-soul')) tags.push('neo-soul');
+    else if (t.includes('glitch')) tags.push('glitch textures');
+    else if (t.includes('cinematic')) tags.push('cinematic');
+    else if (t.includes('dark ambient')) tags.push('dark ambient');
+    else if (t.includes('post-rock')) tags.push('post-rock');
+    else if (t.includes('drone')) tags.push('drone');
+    else if (t.includes('jazz fusion')) tags.push('jazz fusion');
+    else if (t.includes('dub techno')) tags.push('dub techno');
+    else if (t.includes('balearic')) tags.push('balearic');
+    else if (t.includes('afrobeat')) tags.push('afrobeat');
+    else tags.push(t);
+  });
+
+  const textures = moreExp
+    ? ['fractured textures', 'blurred low end', 'ghost reverb']
+    : ['textured production', 'moody atmosphere', 'detailed space'];
+
+  textures.forEach(t => {
+    if (!tags.includes(t)) tags.push(t);
+  });
+
+  let prompt = '';
+  for (const tag of unique(tags)) {
+    const next = prompt ? `${prompt}, ${tag}` : tag;
+    if (next.length <= 200) prompt = next;
+  }
+
+  const titleBase = bits[0] || 'Untitled';
+  const title = titleBase
+    .split(' ')
+    .slice(0, 3)
+    .join(' ')
+    .replace(/\b\w/g, c => c.toUpperCase());
+
+  let style_tags = '';
+  for (const tag of unique(tags)) {
+    const next = style_tags ? `${style_tags}, ${tag}` : tag;
+    if (next.length <= 60) style_tags = next;
+  }
+
+  return {
+    prompt: normalizeSpaces(prompt),
+    title: moreExp ? `${title} Alt` : title,
+    style_tags
+  };
 }
 
 async function runGeneration(moreExp = false) {
-  const apiKey = document.getElementById('api-key').value.trim();
-  if (!apiKey) { setStatus('err', 'Necesitas pegar tu Anthropic API key arriba.'); return; }
-
   let inputText = '';
+
   if (currentMode === 'compress') {
     inputText = document.getElementById('input-compress').value.trim();
     if (!inputText) { setStatus('err', 'Escribe o pega algo primero.'); return; }
@@ -353,66 +400,23 @@ async function runGeneration(moreExp = false) {
 
   const btn = document.getElementById('run-btn');
   btn.disabled = true;
-  setStatus('loading', 'Generando prompt...');
-
-  const system = `You are an expert Suno AI prompt engineer with deep knowledge of music production aesthetics.
-
-Hard rules:
-- Main prompt MUST be 200 characters or fewer — count every character, stay under the limit
-- Write in English only
-- No artist names — describe sounds/textures instead
-- Format: genre, instruments, textures, mood, production style — comma-separated descriptors, no sentences
-- Prefer specific evocative terms: "dusty Rhodes piano" not just "piano", "cavernous plate reverb" not just "reverb"
-- Avoid Suno-banned terms
-${moreExp ? '- Make it more unusual, unexpected, and genre-bending than a typical prompt' : ''}
-
-Respond ONLY with valid JSON (no markdown, no explanation):
-{"prompt":"...","title":"...","style_tags":"..."}
-- prompt: ≤200 chars Suno prompt
-- title: 2-4 word evocative title, avoid generic words like Journey/Dreams/Soul
-- style_tags: ≤60 chars, comma-separated style descriptors for Suno's style field`;
-
-  let user = '';
-  if (currentMode === 'compress') {
-    user = `Convert to Suno prompt:\n\n${inputText}`;
-    if (styleExtra) user += `\n\nAdditional style: ${styleExtra}`;
-    if (moodExtra) user += `\nMood: ${moodExtra}`;
-  } else {
-    user = `Generate Suno prompt for this concept:\n\n${inputText}`;
-  }
+  setStatus('loading', 'Sintetizando prompt...');
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-client-side-allow-unsafe': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 400,
-        system,
-        messages: [{ role: 'user', content: user }]
-      })
-    });
+    let result;
 
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error?.message || `HTTP ${res.status}`);
+    if (currentMode === 'compress') {
+      const parsed = parseStructuredInput(inputText);
+      result = compressPrompt(parsed, styleExtra, moodExtra, moreExp);
+    } else {
+      result = generateFromScratch(inputText, moreExp);
     }
 
-    const data = await res.json();
-    const raw = data.content?.find(b => b.type === 'text')?.text || '';
-    const clean = raw.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(clean);
-
-    renderOutput(parsed);
-    setStatus('ok', `Listo — ${parsed.prompt.length} chars`);
+    renderOutput(result);
+    setStatus('ok', `Listo — ${result.prompt.length} chars`);
     setTimeout(() => setStatus(null), 3000);
 
-  } catch(e) {
+  } catch (e) {
     setStatus('err', 'Error: ' + e.message);
     console.error(e);
   }
@@ -420,5 +424,3 @@ Respond ONLY with valid JSON (no markdown, no explanation):
   btn.disabled = false;
 }
 </script>
-</body>
-</html>
