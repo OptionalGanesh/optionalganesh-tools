@@ -1,365 +1,579 @@
-<script>
-let currentMode = 'compress';
-
-function switchTab(mode) {
-  currentMode = mode;
-  document.querySelectorAll('.tab').forEach((t, i) => {
-    t.classList.toggle('active', (i === 0 && mode === 'compress') || (i === 1 && mode === 'generate'));
-  });
-  document.getElementById('panel-compress').classList.toggle('active', mode === 'compress');
-  document.getElementById('panel-generate').classList.toggle('active', mode === 'generate');
-}
-
-function appendTag(t) {
-  const el = document.getElementById('input-generate');
-  el.value = el.value.trim() ? el.value.trim() + ', ' + t : t;
-  el.focus();
-}
-
-function setStatus(state, msg) {
-  const bar = document.getElementById('status-bar');
-  const dot = document.getElementById('status-dot');
-  const txt = document.getElementById('status-text');
-
-  if (!state) {
-    bar.style.display = 'none';
-    return;
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suno Prompt Converter — Optional Ganesh</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Syne:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --surface2: #181818;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #f0ede8;
+    --muted: #888580;
+    --hint: #4a4845;
+    --accent: #c8b89a;
+    --accent2: #7a6e5f;
+    --green: #4caf7d;
+    --warn: #d4853a;
+    --red: #c0504a;
+    --mono: 'DM Mono', monospace;
+    --sans: 'Syne', sans-serif;
   }
 
-  bar.style.display = 'flex';
-  dot.className = 'dot ' + state;
-  txt.textContent = msg;
-}
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 16px; }
+  body { min-height: 100vh; padding: 0; }
 
-function charPillClass(n) {
-  if (n > 200) return 'char-pill over';
-  if (n > 180) return 'char-pill close';
-  return 'char-pill';
-}
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    opacity: 0.4;
+  }
 
-function esc(s) {
-  return String(s || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-}
+  .page { position: relative; z-index: 1; max-width: 740px; margin: 0 auto; padding: 3rem 2rem 5rem; }
 
-async function copyText(id) {
-  const el = document.getElementById(id);
-  if (!el) return;
+  header { margin-bottom: 3rem; }
+  .logo { font-size: 11px; font-family: var(--mono); letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase; margin-bottom: 1.2rem; }
+  h1 { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 700; letter-spacing: -0.03em; line-height: 1.05; color: var(--text); }
+  h1 span { color: var(--accent); }
+  .subtitle { margin-top: 0.75rem; font-family: var(--mono); font-size: 13px; color: var(--muted); }
 
-  await navigator.clipboard.writeText(el.textContent);
+  .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 2rem; }
+  .tab {
+    padding: 0.6rem 1.4rem; font-size: 13px; font-family: var(--mono); letter-spacing: 0.05em;
+    color: var(--muted); cursor: pointer; background: none; border: none; border-bottom: 2px solid transparent;
+    margin-bottom: -1px; transition: color 0.2s, border-color 0.2s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 
-  const btn = el.closest('.out-block').querySelector('.copy-btn');
-  if (!btn) return;
+  .panel { display: none; }
+  .panel.active { display: block; }
 
-  const orig = btn.textContent;
-  btn.textContent = '✓';
-  setTimeout(() => {
-    btn.textContent = orig;
-  }, 1500);
-}
+  .field { margin-bottom: 1.5rem; }
+  .field label {
+    display: block; font-family: var(--mono); font-size: 11px; letter-spacing: 0.15em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem;
+  }
 
-function renderOutput(data) {
-  const prompt = data.prompt || '';
-  const title = data.title || '';
-  const style_tags = data.style_tags || '';
-  const len = prompt.length;
+  textarea, input[type="text"] {
+    width: 100%; background: var(--surface); border: 1px solid var(--border);
+    color: var(--text); font-family: var(--mono); font-size: 13px; line-height: 1.6;
+    padding: 0.75rem 1rem; border-radius: 4px; outline: none; resize: vertical;
+    transition: border-color 0.2s;
+  }
 
-  document.getElementById('output-area').innerHTML = `
-    <div class="output">
-      <div class="out-block">
-        <div class="out-header">
-          <span class="out-label">Prompt Suno</span>
-          <div class="out-actions">
-            <span class="${charPillClass(len)}">${len}/200</span>
-            <button class="copy-btn" onclick="copyText('out-prompt')">copiar</button>
-          </div>
-        </div>
-        <div class="out-body" id="out-prompt">${esc(prompt)}</div>
-      </div>
+  textarea:focus, input[type="text"]:focus { border-color: var(--border2); }
+  textarea { min-height: 110px; }
+  input[type="text"] { height: 38px; }
 
-      ${title ? `
-      <div class="out-block">
-        <div class="out-header">
-          <span class="out-label">Título sugerido</span>
-          <button class="copy-btn" onclick="copyText('out-title')">copiar</button>
-        </div>
-        <div class="out-body" id="out-title">${esc(title)}</div>
-      </div>` : ''}
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 
-      ${style_tags ? `
-      <div class="out-block">
-        <div class="out-header">
-          <span class="out-label">Style tags (campo Style en Suno)</span>
-          <button class="copy-btn" onclick="copyText('out-tags')">copiar</button>
-        </div>
-        <div class="out-body" id="out-tags">${esc(style_tags)}</div>
-      </div>` : ''}
+  .tags-cloud { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 0.5rem; }
+  .tag {
+    font-family: var(--mono); font-size: 11px; padding: 3px 10px;
+    border: 1px solid var(--border); border-radius: 2px; color: var(--muted);
+    cursor: pointer; background: none; transition: all 0.15s;
+  }
+  .tag:hover { border-color: var(--accent2); color: var(--accent); }
 
-      <div class="regen-row">
-        <button class="regen-btn" onclick="runGeneration()">↺ Otra versión</button>
-        <button class="regen-btn" onclick="runGeneration(true)">↺ Más experimental</button>
+  .api-section { margin-bottom: 2rem; }
+  .api-hint { font-family: var(--mono); font-size: 11px; color: var(--hint); margin-top: 6px; }
+
+  .run-btn {
+    width: 100%; padding: 0.85rem; font-family: var(--sans); font-size: 15px; font-weight: 600;
+    letter-spacing: 0.05em; background: var(--accent); color: #0a0a0a; border: none;
+    border-radius: 4px; cursor: pointer; transition: opacity 0.2s, transform 0.1s;
+    margin-bottom: 2rem;
+  }
+  .run-btn:hover { opacity: 0.88; }
+  .run-btn:active { transform: scale(0.99); }
+  .run-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+  .output { animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  .out-block { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; margin-bottom: 1rem; overflow: hidden; }
+  .out-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.5rem 0.9rem; border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .out-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
+  .out-actions { display: flex; gap: 8px; align-items: center; }
+  .char-pill {
+    font-family: var(--mono); font-size: 11px; padding: 2px 8px;
+    border-radius: 2px; background: rgba(76,175,125,0.15); color: var(--green);
+  }
+  .char-pill.over { background: rgba(192,80,74,0.15); color: var(--red); }
+  .char-pill.close { background: rgba(212,133,58,0.15); color: var(--warn); }
+  .copy-btn {
+    font-family: var(--mono); font-size: 11px; color: var(--muted); background: none;
+    border: 1px solid var(--border); border-radius: 2px; padding: 2px 8px; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .copy-btn:hover { color: var(--accent); border-color: var(--accent2); }
+  .out-body { padding: 0.9rem 1rem; font-family: var(--mono); font-size: 13px; line-height: 1.65; color: var(--text); word-break: break-word; }
+
+  .regen-row { display: flex; gap: 10px; }
+  .regen-btn {
+    flex: 1; padding: 0.6rem; font-family: var(--mono); font-size: 12px;
+    color: var(--muted); background: none; border: 1px solid var(--border);
+    border-radius: 4px; cursor: pointer; transition: all 0.2s;
+  }
+  .regen-btn:hover { color: var(--accent); border-color: var(--accent2); }
+
+  .status-bar {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem;
+    font-family: var(--mono); font-size: 12px; color: var(--muted);
+    min-height: 24px;
+  }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
+  .dot.loading { background: var(--warn); animation: pulse 1s infinite; }
+  .dot.ok { background: var(--green); }
+  .dot.err { background: var(--red); }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-family: var(--mono); font-size: 11px; color: var(--hint); letter-spacing: 0.05em; }
+
+  @media (max-width: 520px) {
+    .page { padding: 2rem 1.2rem 4rem; }
+    .row2 { grid-template-columns: 1fr; }
+    h1 { font-size: 2rem; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <div class="logo">Optional Ganesh / Tools</div>
+    <h1>Suno <span>Prompt</span><br>Converter</h1>
+    <p class="subtitle">// Comprime cualquier idea a &lt;200 chars para Suno AI</p>
+  </header>
+
+  <div class="api-section">
+    <div class="field">
+      <label>Modo</label>
+      <div class="api-hint">
+        Offline / sin API — sintetiza prompts desde la estructura que pegues, sin salir del navegador.
       </div>
     </div>
-  `;
-}
+  </div>
 
-function unique(arr) {
-  return [...new Set(arr.filter(Boolean).map(x => String(x).trim()).filter(Boolean))];
-}
+  <div class="tabs">
+    <button class="tab active" type="button" onclick="switchTab('compress')">Comprimir prompt</button>
+    <button class="tab" type="button" onclick="switchTab('generate')">Generar desde cero</button>
+  </div>
 
-function pick(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
+  <div class="panel active" id="panel-compress">
+    <div class="field">
+      <label>Texto de entrada</label>
+      <textarea id="input-compress" placeholder="Pega el prompt largo del bot de Telegram, o cualquier descripción libre del sonido que quieres..."></textarea>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Estilo extra (opcional)</label>
+        <input type="text" id="style-extra" placeholder="lo-fi, dark ambient, flamenco fusion…" />
+      </div>
+      <div class="field">
+        <label>Mood (opcional)</label>
+        <input type="text" id="mood-extra" placeholder="melancholic, hypnotic, raw…" />
+      </div>
+    </div>
+  </div>
 
-function normalizeSpaces(s) {
-  return String(s || '')
-    .replace(/\s+/g, ' ')
-    .replace(/\s+,/g, ',')
-    .trim();
-}
+  <div class="panel" id="panel-generate">
+    <div class="field">
+      <label>Concepto sonoro</label>
+      <textarea id="input-generate" placeholder="ej. Burial meets Floating Points, percusión industrial oxidada, voz fantasma con reverb de catedral, medianoche en el metro de Tokyo…"></textarea>
+    </div>
+    <div class="field">
+      <label>Tags rápidos</label>
+      <div class="tags-cloud">
+        <button class="tag" type="button" onclick="appendTag('dark ambient')">dark ambient</button>
+        <button class="tag" type="button" onclick="appendTag('lo-fi hip hop')">lo-fi hip hop</button>
+        <button class="tag" type="button" onclick="appendTag('cinematic')">cinematic</button>
+        <button class="tag" type="button" onclick="appendTag('experimental')">experimental</button>
+        <button class="tag" type="button" onclick="appendTag('trip-hop')">trip-hop</button>
+        <button class="tag" type="button" onclick="appendTag('jazz fusion')">jazz fusion</button>
+        <button class="tag" type="button" onclick="appendTag('post-rock')">post-rock</button>
+        <button class="tag" type="button" onclick="appendTag('glitch')">glitch</button>
+        <button class="tag" type="button" onclick="appendTag('neo-soul')">neo-soul</button>
+        <button class="tag" type="button" onclick="appendTag('drone')">drone</button>
+        <button class="tag" type="button" onclick="appendTag('flamenco fusion')">flamenco fusion</button>
+        <button class="tag" type="button" onclick="appendTag('balearic')">balearic</button>
+        <button class="tag" type="button" onclick="appendTag('afrobeat')">afrobeat</button>
+        <button class="tag" type="button" onclick="appendTag('dub techno')">dub techno</button>
+      </div>
+    </div>
+  </div>
 
-function extractLine(label, text) {
-  const re = new RegExp(label + '\\s*:\\s*(.+)', 'i');
-  const m = text.match(re);
-  return m ? m[1].trim() : '';
-}
+  <button class="run-btn" id="run-btn" type="button" onclick="runGeneration()">Generar →</button>
 
-function parseStructuredInput(raw) {
-  const text = raw.replace(/\r/g, '');
-  const lower = text.toLowerCase();
+  <div class="status-bar" id="status-bar" style="display:none">
+    <div class="dot loading" id="status-dot"></div>
+    <span id="status-text">Procesando...</span>
+  </div>
 
-  const data = {
-    title: extractLine('Title', text),
-    seed: extractLine('Seed', text),
-    concept: extractLine('Concept', text),
-    style: extractLine('Style', text),
-    mood: extractLine('Mood', text),
-    bpm: extractLine('BPM', text),
-    key: extractLine('Key', text),
-    groove: extractLine('Groove', text),
-    focus: extractLine('Focus', text),
-    voiceDirection: extractLine('Voice Direction', text),
-    sunoPrompt: extractLine('Suno Prompt', text),
-    directive: extractLine('Directive', text),
-    coreTexture: extractLine('Core texture', text),
-    secondaryTexture: extractLine('Secondary texture', text),
-    tracesOf: extractLine('Traces of', text),
-    tags: []
-  };
+  <div id="output-area"></div>
 
-  [
-    data.style,
-    data.mood,
-    data.bpm ? data.bpm + ' bpm' : '',
-    data.key
-  ].forEach(v => {
-    if (v) data.tags.push(v);
-  });
+  <footer>optionalganesh.com / herramientas internas — modo local sin API</footer>
+</div>
 
-  if (/broken|stuttering/.test(lower)) data.tags.push('broken beats');
-  if (/piano/.test(lower)) data.tags.push('haunting piano');
-  if (/lo-fi|grainy/.test(lower)) data.tags.push('lo-fi textures');
-  if (/ethereal|whisper/.test(lower)) data.tags.push('ethereal vocals');
-  if (/vinyl|hiss/.test(lower)) data.tags.push('vinyl crackle');
-  if (/glitch|imperfection/.test(lower)) data.tags.push('subtle glitch');
-  if (/distorted synth/.test(lower)) data.tags.push('distorted synths');
-  if (/longing|mournful/.test(lower)) data.tags.push('yearning tone');
+<script>
+(function () {
+  let currentMode = 'compress';
 
-  if (data.focus) data.tags.push(data.focus);
-  if (data.coreTexture) data.tags.push(data.coreTexture);
-  if (data.secondaryTexture) data.tags.push(data.secondaryTexture);
-  if (data.tracesOf) data.tags.push(data.tracesOf);
-
-  if (data.sunoPrompt) {
-    data.tags.unshift(...data.sunoPrompt.split(',').map(s => s.trim()));
+  function unique(arr) {
+    return [...new Set(arr.filter(Boolean).map(x => String(x).trim()).filter(Boolean))];
   }
 
-  data.tags = unique(data.tags);
-  return data;
-}
-
-function mutateTag(tag) {
-  const map = {
-    'broken beats': ['fractured rhythm', 'off-grid percussion', 'staggered beats'],
-    'haunting piano': ['warped piano', 'detuned piano', 'dusty piano'],
-    'lo-fi textures': ['degraded tape', 'burnt texture', 'dust-coated texture'],
-    'ethereal vocals': ['ghost vocals', 'distant whispers', 'blurred vocals'],
-    'vinyl crackle': ['tape hiss', 'surface noise', 'needle dust'],
-    'subtle glitch': ['glitch residue', 'digital scars', 'micro-failures'],
-    'distorted synths': ['melting synths', 'corroded synths', 'unstable synth bloom'],
-    'yearning tone': ['aching undertow', 'distant ache', 'hollow ache'],
-    'trip-hop': ['fractured trip-hop', 'dusty trip-hop', 'smoked-out trip-hop'],
-    'melancholic': ['bleak melancholy', 'faded melancholy', 'suspended melancholy']
-  };
-
-  const key = String(tag).toLowerCase().trim();
-  const found = Object.keys(map).find(k => k.toLowerCase() === key);
-  return found ? pick(map[found]) : tag;
-}
-
-function makeTitle(data, moreExp) {
-  if (data.title) {
-    if (!moreExp) return data.title;
-    const suffix = pick(['(Alt Cut)', '(Dust Version)', '(Night Edit)', '(Frayed Mix)']);
-    const out = data.title + ' ' + suffix;
-    return out.length <= 48 ? out : data.title;
+  function pick(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
   }
 
-  const base = data.seed || data.style || 'Untitled';
-  return moreExp ? base + ' Alt' : base;
-}
-
-function makeStyleTags(data, styleExtra, moodExtra, moreExp) {
-  let tags = unique([
-    data.style,
-    moodExtra || data.mood,
-    styleExtra,
-    /broken|stuttering/i.test(data.groove || '') ? 'broken beats' : '',
-    /lo-fi|grainy/i.test(data.coreTexture || '') ? 'lo-fi' : '',
-    /vocal|whisper/i.test(data.secondaryTexture || '') ? 'ethereal vocals' : '',
-    /vinyl|hiss/i.test(data.tracesOf || '') ? 'vinyl' : ''
-  ]);
-
-  if (moreExp) {
-    tags = unique(tags.map(mutateTag).concat(['experimental']));
+  function normalizeSpaces(s) {
+    return String(s || '').replace(/\s+/g, ' ').replace(/\s+,/g, ',').trim();
   }
 
-  let out = '';
-  for (const tag of tags) {
-    const next = out ? out + ', ' + tag : tag;
-    if (next.length <= 60) out = next;
-  }
-  return out;
-}
-
-function compressPrompt(data, styleExtra, moodExtra, moreExp) {
-  let tags = [...data.tags];
-
-  if (styleExtra) tags.push(styleExtra);
-  if (moodExtra) tags.push(moodExtra);
-
-  tags = unique(tags);
-
-  if (moreExp) {
-    tags = unique(
-      tags.map(mutateTag).concat([
-        pick(['ghost reverb', 'blurred transients', 'unstable low end']),
-        pick(['smoked-out atmosphere', 'frayed edges', 'off-balance texture'])
-      ])
-    );
+  function extractLine(label, text) {
+    const re = new RegExp(label + '\\s*:\\s*(.+)', 'i');
+    const m = text.match(re);
+    return m ? m[1].trim() : '';
   }
 
-  const priority = [
-    data.style,
-    data.mood,
-    data.bpm ? data.bpm + ' bpm' : '',
-    data.key,
-    moreExp ? 'fractured rhythm' : 'broken beats',
-    moreExp ? 'warped piano' : 'haunting piano',
-    moreExp ? 'degraded tape' : 'lo-fi textures',
-    moreExp ? 'ghost vocals' : 'ethereal vocals',
-    moreExp ? 'tape hiss' : 'vinyl crackle',
-    moreExp ? 'glitch residue' : 'subtle glitch'
-  ];
-
-  const ordered = [];
-
-  priority.forEach(p => {
-    const found = tags.find(t => t.toLowerCase() === String(p).toLowerCase());
-    if (found && !ordered.includes(found)) ordered.push(found);
-  });
-
-  tags.forEach(t => {
-    if (!ordered.includes(t)) ordered.push(t);
-  });
-
-  let prompt = '';
-  for (const tag of ordered) {
-    const next = prompt ? prompt + ', ' + tag : tag;
-    if (next.length <= 200) prompt = next;
+  function esc(s) {
+    return String(s || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
   }
 
-  return {
-    prompt: normalizeSpaces(prompt),
-    title: makeTitle(data, moreExp),
-    style_tags: makeStyleTags(data, styleExtra, moodExtra, moreExp)
-  };
-}
-
-function generateFromScratch(raw, moreExp) {
-  let tags = unique(raw.split(',').map(s => s.trim()).filter(Boolean));
-
-  if (moreExp) {
-    tags = unique(
-      tags.map(mutateTag).concat([
-        pick(['ghost reverb', 'fractured textures', 'blurred low end']),
-        pick(['degraded tape', 'smoked-out atmosphere', 'off-grid pulse'])
-      ])
-    );
-  } else {
-    tags = unique(tags.concat(['textured production', 'moody atmosphere']));
+  function charPillClass(n) {
+    if (n > 200) return 'char-pill over';
+    if (n > 180) return 'char-pill close';
+    return 'char-pill';
   }
 
-  let prompt = '';
-  for (const tag of tags) {
-    const next = prompt ? prompt + ', ' + tag : tag;
-    if (next.length <= 200) prompt = next;
-  }
+  function setStatus(state, msg) {
+    const bar = document.getElementById('status-bar');
+    const dot = document.getElementById('status-dot');
+    const txt = document.getElementById('status-text');
 
-  let style_tags = '';
-  for (const tag of tags) {
-    const next = style_tags ? style_tags + ', ' + tag : tag;
-    if (next.length <= 60) style_tags = next;
-  }
-
-  const titleBase = (raw.split(',')[0] || 'Untitled').trim();
-
-  return {
-    prompt: normalizeSpaces(prompt),
-    title: moreExp ? titleBase + ' Alt' : titleBase,
-    style_tags
-  };
-}
-
-function runGeneration(moreExp = false) {
-  const btn = document.getElementById('run-btn');
-  let inputText = '';
-
-  if (currentMode === 'compress') {
-    inputText = document.getElementById('input-compress').value.trim();
-    if (!inputText) {
-      setStatus('err', 'Escribe o pega algo primero.');
+    if (!state) {
+      bar.style.display = 'none';
       return;
     }
-  } else {
-    inputText = document.getElementById('input-generate').value.trim();
-    if (!inputText) {
-      setStatus('err', 'Describe el sonido primero.');
-      return;
+
+    bar.style.display = 'flex';
+    dot.className = 'dot ' + state;
+    txt.textContent = msg;
+  }
+
+  function renderOutput(data) {
+    const prompt = data.prompt || '';
+    const title = data.title || '';
+    const style_tags = data.style_tags || '';
+    const len = prompt.length;
+
+    document.getElementById('output-area').innerHTML =
+      '<div class="output">' +
+        '<div class="out-block">' +
+          '<div class="out-header">' +
+            '<span class="out-label">Prompt Suno</span>' +
+            '<div class="out-actions">' +
+              '<span class="' + charPillClass(len) + '">' + len + '/200</span>' +
+              '<button class="copy-btn" type="button" onclick="copyText(\'out-prompt\')">copiar</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="out-body" id="out-prompt">' + esc(prompt) + '</div>' +
+        '</div>' +
+
+        (title ? (
+          '<div class="out-block">' +
+            '<div class="out-header">' +
+              '<span class="out-label">Título sugerido</span>' +
+              '<button class="copy-btn" type="button" onclick="copyText(\'out-title\')">copiar</button>' +
+            '</div>' +
+            '<div class="out-body" id="out-title">' + esc(title) + '</div>' +
+          '</div>'
+        ) : '') +
+
+        (style_tags ? (
+          '<div class="out-block">' +
+            '<div class="out-header">' +
+              '<span class="out-label">Style tags (campo Style en Suno)</span>' +
+              '<button class="copy-btn" type="button" onclick="copyText(\'out-tags\')">copiar</button>' +
+            '</div>' +
+            '<div class="out-body" id="out-tags">' + esc(style_tags) + '</div>' +
+          '</div>'
+        ) : '') +
+
+        '<div class="regen-row">' +
+          '<button class="regen-btn" type="button" onclick="runGeneration()">↺ Otra versión</button>' +
+          '<button class="regen-btn" type="button" onclick="runGeneration(true)">↺ Más experimental</button>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function parseStructuredInput(raw) {
+    const text = raw.replace(/\r/g, '');
+    const lower = text.toLowerCase();
+
+    const data = {
+      title: extractLine('Title', text),
+      seed: extractLine('Seed', text),
+      concept: extractLine('Concept', text),
+      style: extractLine('Style', text),
+      mood: extractLine('Mood', text),
+      bpm: extractLine('BPM', text),
+      key: extractLine('Key', text),
+      groove: extractLine('Groove', text),
+      focus: extractLine('Focus', text),
+      voiceDirection: extractLine('Voice Direction', text),
+      sunoPrompt: extractLine('Suno Prompt', text),
+      directive: extractLine('Directive', text),
+      coreTexture: extractLine('Core texture', text),
+      secondaryTexture: extractLine('Secondary texture', text),
+      tracesOf: extractLine('Traces of', text),
+      tags: []
+    };
+
+    [data.style, data.mood, data.bpm ? data.bpm + ' bpm' : '', data.key].forEach(v => {
+      if (v) data.tags.push(v);
+    });
+
+    if (/broken|stuttering/.test(lower)) data.tags.push('broken beats');
+    if (/piano/.test(lower)) data.tags.push('haunting piano');
+    if (/lo-fi|grainy/.test(lower)) data.tags.push('lo-fi textures');
+    if (/ethereal|whisper/.test(lower)) data.tags.push('ethereal vocals');
+    if (/vinyl|hiss/.test(lower)) data.tags.push('vinyl crackle');
+    if (/glitch|imperfection/.test(lower)) data.tags.push('subtle glitch');
+    if (/distorted synth/.test(lower)) data.tags.push('distorted synths');
+    if (/longing|mournful/.test(lower)) data.tags.push('yearning tone');
+
+    if (data.focus) data.tags.push(data.focus);
+    if (data.coreTexture) data.tags.push(data.coreTexture);
+    if (data.secondaryTexture) data.tags.push(data.secondaryTexture);
+    if (data.tracesOf) data.tags.push(data.tracesOf);
+
+    if (data.sunoPrompt) {
+      data.tags.unshift.apply(data.tags, data.sunoPrompt.split(',').map(function (s) { return s.trim(); }));
     }
+
+    data.tags = unique(data.tags);
+    return data;
   }
 
-  const styleExtra = document.getElementById('style-extra') ? document.getElementById('style-extra').value.trim() : '';
-  const moodExtra = document.getElementById('mood-extra') ? document.getElementById('mood-extra').value.trim() : '';
+  function mutateTag(tag) {
+    const map = {
+      'broken beats': ['fractured rhythm', 'off-grid percussion', 'staggered beats'],
+      'haunting piano': ['warped piano', 'detuned piano', 'dusty piano'],
+      'lo-fi textures': ['degraded tape', 'burnt texture', 'dust-coated texture'],
+      'ethereal vocals': ['ghost vocals', 'distant whispers', 'blurred vocals'],
+      'vinyl crackle': ['tape hiss', 'surface noise', 'needle dust'],
+      'subtle glitch': ['glitch residue', 'digital scars', 'micro-failures'],
+      'distorted synths': ['melting synths', 'corroded synths', 'unstable synth bloom'],
+      'yearning tone': ['aching undertow', 'distant ache', 'hollow ache'],
+      'trip-hop': ['fractured trip-hop', 'dusty trip-hop', 'smoked-out trip-hop'],
+      'melancholic': ['bleak melancholy', 'faded melancholy', 'suspended melancholy']
+    };
 
-  btn.disabled = true;
-  setStatus('loading', moreExp ? 'Mutando prompt...' : 'Sintetizando prompt...');
-
-  try {
-    const result = currentMode === 'compress'
-      ? compressPrompt(parseStructuredInput(inputText), styleExtra, moodExtra, moreExp)
-      : generateFromScratch(inputText, moreExp);
-
-    renderOutput(result);
-    setStatus('ok', 'Listo — ' + result.prompt.length + ' chars');
-    setTimeout(() => setStatus(null), 3000);
-  } catch (e) {
-    console.error(e);
-    setStatus('err', 'Error: ' + e.message);
+    const key = String(tag).toLowerCase().trim();
+    const found = Object.keys(map).find(function (k) { return k.toLowerCase() === key; });
+    return found ? pick(map[found]) : tag;
   }
 
-  btn.disabled = false;
-}
+  function makeTitle(data, moreExp) {
+    if (data.title) {
+      if (!moreExp) return data.title;
+      const suffix = pick(['(Alt Cut)', '(Dust Version)', '(Night Edit)', '(Frayed Mix)']);
+      const out = data.title + ' ' + suffix;
+      return out.length <= 48 ? out : data.title;
+    }
+
+    const base = data.seed || data.style || 'Untitled';
+    return moreExp ? base + ' Alt' : base;
+  }
+
+  function makeStyleTags(data, styleExtra, moodExtra, moreExp) {
+    let tags = unique([
+      data.style,
+      moodExtra || data.mood,
+      styleExtra,
+      /broken|stuttering/i.test(data.groove || '') ? 'broken beats' : '',
+      /lo-fi|grainy/i.test(data.coreTexture || '') ? 'lo-fi' : '',
+      /vocal|whisper/i.test(data.secondaryTexture || '') ? 'ethereal vocals' : '',
+      /vinyl|hiss/i.test(data.tracesOf || '') ? 'vinyl' : ''
+    ]);
+
+    if (moreExp) {
+      tags = unique(tags.map(mutateTag).concat(['experimental']));
+    }
+
+    let out = '';
+    tags.forEach(function (tag) {
+      const next = out ? out + ', ' + tag : tag;
+      if (next.length <= 60) out = next;
+    });
+    return out;
+  }
+
+  function compressPrompt(data, styleExtra, moodExtra, moreExp) {
+    let tags = data.tags.slice();
+
+    if (styleExtra) tags.push(styleExtra);
+    if (moodExtra) tags.push(moodExtra);
+
+    tags = unique(tags);
+
+    if (moreExp) {
+      tags = unique(
+        tags.map(mutateTag).concat([
+          pick(['ghost reverb', 'blurred transients', 'unstable low end']),
+          pick(['smoked-out atmosphere', 'frayed edges', 'off-balance texture'])
+        ])
+      );
+    }
+
+    const priority = [
+      data.style,
+      data.mood,
+      data.bpm ? data.bpm + ' bpm' : '',
+      data.key,
+      moreExp ? 'fractured rhythm' : 'broken beats',
+      moreExp ? 'warped piano' : 'haunting piano',
+      moreExp ? 'degraded tape' : 'lo-fi textures',
+      moreExp ? 'ghost vocals' : 'ethereal vocals',
+      moreExp ? 'tape hiss' : 'vinyl crackle',
+      moreExp ? 'glitch residue' : 'subtle glitch'
+    ];
+
+    const ordered = [];
+    priority.forEach(function (p) {
+      const found = tags.find(function (t) { return t.toLowerCase() === String(p).toLowerCase(); });
+      if (found && !ordered.includes(found)) ordered.push(found);
+    });
+    tags.forEach(function (t) {
+      if (!ordered.includes(t)) ordered.push(t);
+    });
+
+    let prompt = '';
+    ordered.forEach(function (tag) {
+      const next = prompt ? prompt + ', ' + tag : tag;
+      if (next.length <= 200) prompt = next;
+    });
+
+    return {
+      prompt: normalizeSpaces(prompt),
+      title: makeTitle(data, moreExp),
+      style_tags: makeStyleTags(data, styleExtra, moodExtra, moreExp)
+    };
+  }
+
+  function generateFromScratch(raw, moreExp) {
+    let tags = unique(raw.split(',').map(function (s) { return s.trim(); }).filter(Boolean));
+
+    if (moreExp) {
+      tags = unique(
+        tags.map(mutateTag).concat([
+          pick(['ghost reverb', 'fractured textures', 'blurred low end']),
+          pick(['degraded tape', 'smoked-out atmosphere', 'off-grid pulse'])
+        ])
+      );
+    } else {
+      tags = unique(tags.concat(['textured production', 'moody atmosphere']));
+    }
+
+    let prompt = '';
+    tags.forEach(function (tag) {
+      const next = prompt ? prompt + ', ' + tag : tag;
+      if (next.length <= 200) prompt = next;
+    });
+
+    let style_tags = '';
+    tags.forEach(function (tag) {
+      const next = style_tags ? style_tags + ', ' + tag : tag;
+      if (next.length <= 60) style_tags = next;
+    });
+
+    const titleBase = (raw.split(',')[0] || 'Untitled').trim();
+
+    return {
+      prompt: normalizeSpaces(prompt),
+      title: moreExp ? titleBase + ' Alt' : titleBase,
+      style_tags: style_tags
+    };
+  }
+
+  async function copyText(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    await navigator.clipboard.writeText(el.textContent);
+    const btn = el.closest('.out-block').querySelector('.copy-btn');
+    if (!btn) return;
+    const orig = btn.textContent;
+    btn.textContent = '✓';
+    setTimeout(function () {
+      btn.textContent = orig;
+    }, 1500);
+  }
+
+  function runGeneration(moreExp) {
+    const btn = document.getElementById('run-btn');
+    let inputText = '';
+
+    if (currentMode === 'compress') {
+      inputText = document.getElementById('input-compress').value.trim();
+      if (!inputText) {
+        setStatus('err', 'Escribe o pega algo primero.');
+        return;
+      }
+    } else {
+      inputText = document.getElementById('input-generate').value.trim();
+      if (!inputText) {
+        setStatus('err', 'Describe el sonido primero.');
+        return;
+      }
+    }
+
+    const styleExtra = document.getElementById('style-extra').value.trim();
+    const moodExtra = document.getElementById('mood-extra').value.trim();
+
+    btn.disabled = true;
+    setStatus('loading', moreExp ? 'Mutando prompt...' : 'Sintetizando prompt...');
+
+    try {
+      const result = currentMode === 'compress'
+        ? compressPrompt(parseStructuredInput(inputText), styleExtra, moodExtra, !!moreExp)
+        : generateFromScratch(inputText, !!moreExp);
+
+      renderOutput(result);
+      setStatus('ok', 'Listo — ' + result.prompt.length + ' chars');
+      setTimeout(function () {
+        setStatus(null);
+      }, 3000);
+    } catch (e) {
+      console.error(e);
+      setStatus('err', 'Error: ' + e.message);
+    }
+
+    btn.disabled = false;
+  }
+
+  window.switchTab = switchTab;
+  window.appendTag = appendTag;
+  window.runGeneration = runGeneration;
+  window.copyText = copyText;
+})();
 </script>
+</body>
+</html>
