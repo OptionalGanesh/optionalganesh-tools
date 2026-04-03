@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MG-30 Patch Builder — Optional Ganesh</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Syne:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0d0a;
+    --surface: #131410;
+    --surface2: #1a1c16;
+    --border: rgba(180,200,120,0.08);
+    --border2: rgba(180,200,120,0.18);
+    --text: #e8eddc;
+    --muted: #7a8068;
+    --hint: #3a3e30;
+    --accent: #a8c060;
+    --accent2: #6a8038;
+    --dim: #4a5535;
+    --red: #c05848;
+    --amber: #d49840;
+    --mono: 'DM Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: var(--bg); color: var(--text); font-family: var(--sans); }
+  body { min-height: 100vh; }
+
+  body::before {
+    content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+    background: radial-gradient(ellipse 60% 40% at 20% 80%, rgba(168,192,96,0.04) 0%, transparent 70%);
+  }
+
+  .page { position:relative; z-index:1; max-width:820px; margin:0 auto; padding:2.5rem 2rem 5rem; }
+
+  header { margin-bottom:2.5rem; }
+  .logo { font-size:11px; font-family:var(--mono); letter-spacing:0.2em; color:var(--muted); margin-bottom:1rem; }
+  h1 { font-size:clamp(1.8rem,5vw,2.8rem); font-weight:700; letter-spacing:-0.03em; line-height:1.1; }
+  h1 span { color:var(--accent); }
+  .subtitle { margin-top:0.6rem; font-family:var(--mono); font-size:12px; color:var(--muted); }
+
+  /* ── layout ── */
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+  .grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; }
+  .full { grid-column:1/-1; }
+
+  .card {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:4px; padding:1.2rem 1.1rem;
+  }
+  .card-title {
+    font-family:var(--mono); font-size:10px; letter-spacing:0.18em;
+    text-transform:uppercase; color:var(--muted); margin-bottom:1rem;
+    border-bottom:1px solid var(--border); padding-bottom:0.6rem;
+  }
+
+  label.fl { display:block; font-family:var(--mono); font-size:11px; color:var(--muted); margin-bottom:4px; letter-spacing:0.05em; }
+  input[type=text], input[type=number], select {
+    width:100%; background:var(--surface2); border:1px solid var(--border);
+    color:var(--text); font-family:var(--mono); font-size:13px;
+    padding:6px 10px; border-radius:3px; outline:none; height:34px;
+    transition:border-color 0.15s;
+  }
+  input:focus, select:focus { border-color:var(--border2); }
+  select option { background:var(--surface2); }
+
+  .field { margin-bottom:0.9rem; }
+
+  /* slider */
+  .slider-row { display:flex; align-items:center; gap:8px; }
+  input[type=range] {
+    flex:1; -webkit-appearance:none; height:3px; background:var(--hint);
+    border-radius:2px; outline:none; cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance:none; width:14px; height:14px; border-radius:50%;
+    background:var(--accent); cursor:pointer;
+  }
+  input[type=range]::-moz-range-thumb {
+    width:14px; height:14px; border-radius:50%; background:var(--accent);
+    border:none; cursor:pointer;
+  }
+  .val-badge {
+    font-family:var(--mono); font-size:11px; color:var(--accent);
+    min-width:30px; text-align:right;
+  }
+
+  /* toggle */
+  .toggle-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:0.7rem; }
+  .toggle-label { font-family:var(--mono); font-size:12px; color:var(--text); }
+  .toggle {
+    width:36px; height:20px; background:var(--hint); border:none;
+    border-radius:10px; cursor:pointer; position:relative; transition:background 0.2s;
+    flex-shrink:0;
+  }
+  .toggle.on { background:var(--accent2); }
+  .toggle::after {
+    content:''; position:absolute; top:3px; left:3px; width:14px; height:14px;
+    background:var(--text); border-radius:50%; transition:left 0.2s;
+  }
+  .toggle.on::after { left:19px; }
+
+  /* FX chain */
+  .chain { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:1rem; }
+  .fx-slot {
+    font-family:var(--mono); font-size:11px; padding:4px 10px;
+    border:1px solid var(--border); border-radius:3px; color:var(--muted);
+    cursor:pointer; user-select:none; transition:all 0.15s; background:none;
+    display:flex; align-items:center; gap:4px;
+  }
+  .fx-slot.active { border-color:var(--accent2); color:var(--accent); background:rgba(168,192,96,0.08); }
+  .fx-slot .dot { width:5px; height:5px; border-radius:50%; background:var(--muted); }
+  .fx-slot.active .dot { background:var(--accent); }
+
+  /* scenes */
+  .scene-tabs { display:flex; gap:0; border-bottom:1px solid var(--border); margin-bottom:1.5rem; }
+  .scene-tab {
+    padding:0.5rem 1.2rem; font-family:var(--mono); font-size:12px; color:var(--muted);
+    background:none; border:none; border-bottom:2px solid transparent;
+    margin-bottom:-1px; cursor:pointer; transition:all 0.15s;
+  }
+  .scene-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+
+  /* action buttons */
+  .btn-row { display:flex; gap:10px; margin-top:1.5rem; }
+  .btn {
+    flex:1; padding:0.7rem 1rem; font-family:var(--sans); font-size:14px; font-weight:600;
+    border-radius:3px; cursor:pointer; transition:all 0.15s; border:none;
+  }
+  .btn-primary { background:var(--accent); color:#0c0d0a; }
+  .btn-primary:hover { background:#c0d870; }
+  .btn-secondary {
+    background:none; color:var(--muted); border:1px solid var(--border);
+  }
+  .btn-secondary:hover { color:var(--text); border-color:var(--border2); }
+
+  /* status */
+  .status { font-family:var(--mono); font-size:12px; color:var(--muted); margin-top:1rem; min-height:20px; }
+  .status.ok { color:var(--accent); }
+  .status.err { color:var(--red); }
+
+  /* import */
+  .drop-zone {
+    border:1px dashed var(--border2); border-radius:4px; padding:2rem;
+    text-align:center; cursor:pointer; transition:all 0.2s;
+    font-family:var(--mono); font-size:13px; color:var(--muted);
+  }
+  .drop-zone:hover, .drop-zone.over { border-color:var(--accent2); color:var(--accent); }
+  .drop-zone input { display:none; }
+
+  /* divider */
+  hr { border:none; border-top:1px solid var(--border); margin:1.5rem 0; }
+
+  footer { margin-top:3rem; font-family:var(--mono); font-size:11px; color:var(--hint); }
+
+  @media(max-width:540px) {
+    .grid, .grid3 { grid-template-columns:1fr; }
+    .full { grid-column:1; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="logo">Optional Ganesh / Tools</div>
+    <h1>MG-30 <span>Patch</span> Builder</h1>
+    <p class="subtitle">// Crea y descarga patches .mg30patch para NUX MG-30</p>
+  </header>
+
+  <!-- Import -->
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div class="card-title">Importar patch existente (opcional)</div>
+    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-in').click()" ondragover="ev(event,'over')" ondragleave="ev(event,'out')" ondrop="dropFile(event)">
+      <input type="file" id="file-in" accept=".mg30patch" onchange="loadFile(this)">
+      Arrastra un .mg30patch aquí o haz click para abrir
+    </div>
+    <div class="status" id="import-status"></div>
+  </div>
+
+  <!-- Scene tabs -->
+  <div class="scene-tabs">
+    <button class="scene-tab active" onclick="switchScene(0)">Escena A</button>
+    <button class="scene-tab" onclick="switchScene(1)">Escena B</button>
+    <button class="scene-tab" onclick="switchScene(2)">Escena C</button>
+  </div>
+
+  <!-- Patch name -->
+  <div class="card" style="margin-bottom:1rem;">
+    <div class="card-title">Nombre del patch</div>
+    <input type="text" id="patch-name" maxlength="13" placeholder="mi_patch (máx 13 chars)" oninput="syncName()">
+  </div>
+
+  <!-- AMP -->
+  <div class="card" style="margin-bottom:1rem;">
+    <div class="card-title">Amplificador</div>
+    <div class="grid">
+      <div class="field">
+        <label class="fl">Modelo</label>
+        <select id="amp-model" onchange="buildPreview()">
+          <option value="0">Clean — Fender Twin</option>
+          <option value="1">Crunch — Marshall Plexi</option>
+          <option value="2">Hi-Gain — Mesa Rectifier</option>
+          <option value="3">Brit — JCM800</option>
+          <option value="4">AC — Vox AC30</option>
+          <option value="5">Blues — Bassman</option>
+          <option value="6">Modern — 5150</option>
+          <option value="7">Metal — Dual Rectifier</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="fl">Ganancia</label>
+        <div class="slider-row">
+          <input type="range" id="amp-gain" min="0" max="100" value="50" oninput="sv(this,'gain-val')">
+          <span class="val-badge" id="gain-val">50</span>
+        </div>
+      </div>
+      <div class="field">
+        <label class="fl">Bass</label>
+        <div class="slider-row">
+          <input type="range" id="amp-bass" min="0" max="100" value="50" oninput="sv(this,'bass-val')">
+          <span class="val-badge" id="bass-val">50</span>
+        </div>
+      </div>
+      <div class="field">
+        <label class="fl">Mid</label>
+        <div class="slider-row">
+          <input type="range" id="amp-mid" min="0" max="100" value="50" oninput="sv(this,'mid-val')">
+          <span class="val-badge" id="mid-val">50</span>
+        </div>
+      </div>
+      <div class="field">
+        <label class="fl">Treble</label>
+        <div class="slider-row">
+          <input type="range" id="amp-treble" min="0" max="100" value="50" oninput="sv(this,'treble-val')">
+          <span class="val-badge" id="treble-val">50</span>
+        </div>
+      </div>
+      <div class="field">
+        <label class="fl">Presencia</label>
+        <div class="slider-row">
+          <input type="range" id="amp-presence" min="0" max="100" value="50" oninput="sv(this,'pres-val')">
+          <span class="val-badge" id="pres-val">50</span>
+        </div>
+      </div>
+      <div class="field">
+        <label class="fl">Volumen master</label>
+        <div class="slider-row">
+          <input type="range" id="amp-vol" min="0" max="100" value="100" oninput="sv(this,'vol-val')">
+          <span class="val-badge" id="vol-val">100</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GATE + COMP -->
+  <div class="grid" style="margin-bottom:1rem;">
+    <div class="card">
+      <div class="card-title">Noise Gate</div>
+      <div class="toggle-row">
+        <span class="toggle-label">Activar</span>
+        <button class="toggle" id="gate-on" onclick="tog(this)"></button>
+      </div>
+      <div class="field">
+        <label class="fl">Threshold</label>
+        <div class="slider-row">
+          <input type="range" id="gate-thr" min="0" max="100" value="30" oninput="sv(this,'gthr-v')">
+          <span class="val-badge" id="gthr-v">30</span>
+        </div>
+      </div>
+      <div class="field">
+        <label class="fl">Release</label>
+        <div class="slider-row">
+          <input type="range" id="gate-rel" min="0" max="100" value="50" oninput="sv(this,'grel-v')">
+          <span class="val-badge" id="grel-v">50</span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Compresor</div>
+      <div class="toggle-row">
+        <span class="toggle-label">Activar</span>
+        <button class="toggle" id="comp-on" onclick="tog(this)"></button>
+      </div>
+      <div class="field">
+        <label class="fl">Sustain</label>
+        <div class="slider-row">
+          <input type="range" id="comp-sus" min="0" max="100" value="50" oninput="sv(this,'csus-v')">
+          <span class="val-badge" id="csus-v">50</span>
+        </div>
+      </div>
+      <div class="field">
+        <label class="fl">Attack</label>
+        <div class="slider-row">
+          <input type="range" id="comp-att" min="0" max="100" value="50" oninput="sv(this,'catt-v')">
+          <span class="val-badge" id="catt-v">50</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MOD + DELAY + REVERB -->
+  <div class="grid" style="margin-bottom:1rem;">
+    <div class="card">
+      <div class="card-title">Modulación</div>
+      <div class="toggle-row">
+        <span class="toggle-label">Activar</span>
+        <button class="toggle" id="mod-on" onclick="tog(this)"></button>
+      </div>
+      <div class="field">
+        <label class="fl">Tipo</label>
+        <select id="mod-type">
+          <option value="0">Chorus</option>
+          <option value="1">Flanger</option>
+          <option value="2">Phaser</option>
+          <option value="3">Tremolo</option>
+          <option value="4">Vibrato</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="fl">Rate</label>
+        <div class="slider-row">
+          <input type="range" id="mod-rate" min="0" max="100" value="50" oninput="sv(this,'mrate-v')">
+          <span class="val-badge" id="mrate-v">50</span>
+        </div>
+      </div>
+      <div class="field">
+        <label class="fl">Depth / Mix</label>
+        <div class="slider-row">
+          <input type="range" id="mod-depth" min="0" max="100" value="50" oninput="sv(this,'mdepth-v')">
+          <span class="val-badge" id="mdepth-v">50</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Delay</div>
+      <div class="toggle-row">
+        <span class="toggle-label">Activar</span>
+        <button class="toggle" id="delay-on" onclick="tog(this)"></button>
+      </div>
+      <div class="field">
+        <label class="fl">Tipo</label>
+        <select id="delay-type">
+          <option value="0">Digital</option>
+          <option value="1">Analog</option>
+          <option value="2">Tape</option>
+          <option value="3">Ping Pong</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="fl">Time (ms)</label>
+        <div class="slider-row">
+          <input type="range" id="delay-time" min="10" max="2000" value="500" step="10" oninput="sv(this,'dtime-v')">
+          <span class="val-badge" id="dtime-v">500</span>
+        </div>
+      </div>
+      <div class="field">
+        <label class="fl">Feedback</label>
+        <div class="slider-row">
+          <input type="range" id="delay-fb" min="0" max="100" value="30" oninput="sv(this,'dfb-v')">
+          <span class="val-badge" id="dfb-v">30</span>
+        </div>
+      </div>
+      <div class="field">
+        <label class="fl">Mix</label>
+        <div class="slider-row">
+          <input type="range" id="delay-mix" min="0" max="100" value="30" oninput="sv(this,'dmix-v')">
+          <span class="val-badge" id="dmix-v">30</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:1rem;">
+    <div class="card-title">Reverb</div>
+    <div class="grid">
+      <div class="field">
+        <label class="fl">Tipo</label>
+        <select id="reverb-type">
+          <option value="0">Room</option>
+          <option value="1">Hall</option>
+          <option value="2">Plate</option>
+          <option value="3">Spring</option>
+          <option value="4">Studio</option>
+          <option value="5">Arena</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="fl">Activar</label>
+        <button class="toggle" id="reverb-on" onclick="tog(this)" style="margin-top:4px"></button>
+      </div>
+      <div class="field">
+        <label class="fl">Decay</label>
+        <div class="slider-row">
+          <input type="range" id="reverb-decay" min="0" max="100" value="40" oninput="sv(this,'rdecay-v')">
+          <span class="val-badge" id="rdecay-v">40</span>
+        </div>
+      </div>
+      <div class="field">
+        <label class="fl">Mix</label>
+        <div class="slider-row">
+          <input type="range" id="reverb-mix" min="0" max="100" value="30" oninput="sv(this,'rmix-v')">
+          <span class="val-badge" id="rmix-v">30</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FX Chain order -->
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div class="card-title">Orden de la cadena FX</div>
+    <p style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:0.8rem;">Haz click para activar/desactivar efectos en la cadena</p>
+    <div class="chain" id="fx-chain"></div>
+  </div>
+
+  <!-- Build -->
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="buildAndDownload()">Descargar .mg30patch →</button>
+    <button class="btn btn-secondary" onclick="loadPreset('clean')">Preset: Clean</button>
+    <button class="btn btn-secondary" onclick="loadPreset('crunch')">Preset: Crunch</button>
+  </div>
+  <div class="status" id="build-status"></div>
+
+  <footer style="margin-top:3rem;">optionalganesh.com / NUX MG-30 format v1 — basado en reverse engineering de patches reales</footer>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────
+const NUM_SCENES = 3;
+let currentScene = 0;
+let importedWav = null; // Uint8Array of embedded WAV (9436 bytes)
+
+// FX chain state (12 slots)
+const FX_NAMES = ['WAH','COMP','EFX','AMP','EQ','GATE','MOD','DELAY','REVERB','IR','LOOP','TUNER'];
+let fxActive = [false,true,false,true,false,true,true,true,true,false,false,true];
+
+// Default WAV data (empty placeholder 9436 bytes = RIFF header + silence)
+function makeEmptyWav() {
+  // Minimal WAV: 44-byte header + 9392 bytes silence
+  const size = 9436;
+  const buf = new Uint8Array(size);
+  const dv = new DataView(buf.buffer);
+  // RIFF header
+  buf.set([0x52,0x49,0x46,0x46],0); // "RIFF"
+  dv.setUint32(4, size - 8, true);  // chunk size
+  buf.set([0x57,0x41,0x56,0x45],8); // "WAVE"
+  buf.set([0x66,0x6d,0x74,0x20],12);// "fmt "
+  dv.setUint32(16, 16, true);       // PCM subchunk size
+  dv.setUint16(20, 1, true);        // PCM format
+  dv.setUint16(22, 1, true);        // mono
+  dv.setUint32(24, 48000, true);    // 48kHz
+  dv.setUint32(28, 96000, true);    // byte rate
+  dv.setUint16(32, 2, true);        // block align
+  dv.setUint16(34, 16, true);       // bits per sample
+  buf.set([0x64,0x61,0x74,0x61],36);// "data"
+  dv.setUint32(40, size - 44, true);// data size
+  return buf;
+}
+
+// ── UI helpers ──────────────────────────────────────────
+function sv(el, outId) {
+  document.getElementById(outId).textContent = el.value;
+}
+function tog(btn) {
+  btn.classList.toggle('on');
+}
+function isOn(id) {
+  return document.getElementById(id).classList.contains('on');
+}
+function ev(e, state) {
+  e.preventDefault();
+  document.getElementById('drop-zone').classList.toggle('over', state==='over');
+}
+
+function syncName() {
+  // noop — name read at build time
+}
+
+function switchScene(n) {
+  currentScene = n;
+  document.querySelectorAll('.scene-tab').forEach((t,i) => t.classList.toggle('active', i===n));
+}
+
+// Build FX chain UI
+function buildFxChain() {
+  const ch = document.getElementById('fx-chain');
+  ch.innerHTML = '';
+  FX_NAMES.forEach((name, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'fx-slot' + (fxActive[i] ? ' active' : '');
+    btn.innerHTML = `<span class="dot"></span>${name}`;
+    btn.onclick = () => { fxActive[i] = !fxActive[i]; buildFxChain(); };
+    ch.appendChild(btn);
+  });
+}
+buildFxChain();
+
+// ── File import ─────────────────────────────────────────
+function dropFile(e) {
+  e.preventDefault();
+  document.getElementById('drop-zone').classList.remove('over');
+  const f = e.dataTransfer.files[0];
+  if (f) readPatch(f);
+}
+function loadFile(input) {
+  if (input.files[0]) readPatch(input.files[0]);
+}
+function readPatch(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const buf = new Uint8Array(e.target.result);
+    if (buf.length < 470) {
+      setImportStatus('err', 'Archivo demasiado pequeño — ¿es un .mg30patch válido?');
+      return;
+    }
+    // Extract WAV (starts at 0x1d2)
+    importedWav = buf.slice(0x1d2);
+    // Parse first scene (offset 0)
+    parseScene(buf, 0);
+    setImportStatus('ok', `✓ "${file.name}" importado — ajusta y descarga`);
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseScene(buf, sceneOffset) {
+  // Byte 0: seems to encode amp type loosely — skip complex decode for now
+  // Offsets based on reverse engineering:
+  // 0x00: amp model hint
+  // Params at various offsets (0x14..0x1f area = gain/EQ)
+  // We do a best-effort decode of the readable params
+  const b = (off) => buf[sceneOffset + off] || 0;
+
+  // gain: offset 0x1b (value 0-100, 0x64=100)
+  const gain = Math.min(100, b(0x1b));
+  document.getElementById('amp-gain').value = gain;
+  document.getElementById('gain-val').textContent = gain;
+
+  // EQ: offsets 0x20..0x27 area
+  const bass = Math.min(100, b(0x20));
+  const mid  = Math.min(100, b(0x21));
+  const treb = Math.min(100, b(0x22));
+  document.getElementById('amp-bass').value = bass; document.getElementById('bass-val').textContent = bass;
+  document.getElementById('amp-mid').value = mid;   document.getElementById('mid-val').textContent = mid;
+  document.getElementById('amp-treble').value = treb; document.getElementById('treble-val').textContent = treb;
+
+  // reverb mix: offset 0x8a
+  const rvbMix = Math.min(100, b(0x8a));
+  document.getElementById('reverb-mix').value = rvbMix;
+  document.getElementById('rmix-v').textContent = rvbMix;
+  if (rvbMix > 0) document.getElementById('reverb-on').classList.add('on');
+
+  // patch name at 0x6e (14 bytes null-terminated)
+  let name = '';
+  for (let i = 0; i < 13; i++) {
+    const c = buf[sceneOffset + 0x6e + i];
+    if (c === 0) break;
+    name += String.fromCharCode(c);
+  }
+  document.getElementById('patch-name').value = name;
+
+  // FX chain order at 0x60-0x6d
+  const order = Array.from(buf.slice(sceneOffset + 0x60, sceneOffset + 0x6e));
+  fxActive = FX_NAMES.map((_, i) => order.some(v => v === i));
+  buildFxChain();
+}
+
+function setImportStatus(cls, msg) {
+  const el = document.getElementById('import-status');
+  el.className = 'status ' + cls;
+  el.textContent = msg;
+}
+
+// ── Patch build ─────────────────────────────────────────
+function g(id) { return parseInt(document.getElementById(id).value) || 0; }
+function clamp(v, lo=0, hi=100) { return Math.max(lo, Math.min(hi, v)); }
+
+function buildScene() {
+  const block = new Uint8Array(0x90); // 144 bytes
+
+  // Amp model byte (byte 0 — approximate)
+  const ampModel = g('amp-model');
+  block[0] = [0x48,0x2b,0x43,0x3a,0x55,0x60,0x70,0x7a][ampModel] || 0x48;
+
+  // Amp params block (rough mapping based on analysis)
+  block[0x04] = 0x43; // marker
+  block[0x05] = clamp(g('amp-gain'));
+  block[0x06] = 0x05;
+  block[0x07] = clamp(g('amp-presence'));
+  block[0x08] = 0x04;
+  block[0x09] = 0x01;
+
+  // gain area 0x14..0x1f
+  block[0x14] = clamp(g('amp-gain'));
+  block[0x15] = clamp(g('amp-bass'));
+  block[0x16] = clamp(g('amp-mid'));
+  block[0x1a] = clamp(g('amp-treble'));
+  block[0x1b] = clamp(g('amp-vol'));
+
+  // EQ params 0x20..0x35
+  block[0x20] = clamp(g('amp-bass'));
+  block[0x21] = clamp(g('amp-mid'));
+  block[0x22] = clamp(g('amp-treble'));
+  block[0x23] = clamp(g('amp-presence'));
+  block[0x24] = clamp(g('amp-gain'));
+  block[0x25] = 0x3c;
+  block[0x26] = 0x32; block[0x27] = 0x32;
+  block[0x28] = isOn('comp-on') ? 0x02 : 0x00;
+  block[0x29] = clamp(g('comp-sus'));
+  block[0x2b] = clamp(g('comp-att'));
+  block[0x2c] = 0x32; block[0x2d] = 0x32; block[0x2e] = 0x32;
+  block[0x2f] = 0x32; block[0x30] = 0x32; block[0x31] = 0x00;
+  block[0x32] = 0x32; block[0x33] = 0x32; block[0x34] = 0x32;
+
+  // Gate 0x36..0x3f
+  block[0x36] = isOn('gate-on') ? 0x3b : 0x00;
+  block[0x37] = clamp(g('gate-thr'));
+  block[0x3b] = clamp(g('gate-rel'));
+
+  // More FX params 0x40..0x5f
+  block[0x42] = isOn('mod-on') ? 0x12 : 0x00;
+  block[0x43] = g('mod-type');
+  block[0x44] = clamp(g('mod-rate'));
+  block[0x45] = clamp(g('mod-depth'));
+
+  block[0x4a] = isOn('delay-on') ? 0x04 : 0x00;
+  block[0x4b] = g('delay-type');
+  const dtime = clamp(g('delay-time'), 10, 2000);
+  block[0x4c] = (dtime >> 8) & 0xff;
+  block[0x4d] = dtime & 0xff;
+  block[0x4e] = clamp(g('delay-fb'));
+  block[0x4f] = clamp(g('delay-mix'));
+
+  block[0x50] = isOn('reverb-on') ? 0x04 : 0x00;
+  block[0x51] = g('reverb-type');
+  block[0x52] = clamp(g('reverb-decay'));
+  block[0x53] = clamp(g('reverb-mix'));
+  block[0x54] = 0x57; block[0x55] = 0x00;
+
+  // Volume output 0x58..0x5f
+  block[0x58] = 0x32;
+  block[0x59] = 0x80;
+  block[0x5c] = clamp(g('amp-vol'));
+  block[0x5d] = 0x2d;
+
+  // FX chain order 0x60..0x6d (12 slots)
+  const active = FX_NAMES.map((_, i) => i).filter(i => fxActive[i]);
+  const inactive = FX_NAMES.map((_, i) => i).filter(i => !fxActive[i]);
+  const order = [...active, ...inactive];
+  for (let i = 0; i < 12; i++) block[0x60 + i] = order[i] !== undefined ? order[i] : i;
+
+  // Patch name 0x6e..0x7b (14 bytes, null-terminated, max 13 chars)
+  const rawName = (document.getElementById('patch-name').value || 'my patch').slice(0,13);
+  for (let i = 0; i < 14; i++) block[0x6e + i] = i < rawName.length ? rawName.charCodeAt(i) : 0;
+
+  // I/O block 0x7c..0x8f
+  block[0x7e] = 0x0a; // output mode
+  block[0x7f] = 0x07;
+  block[0x80] = 0x08;
+  block[0x82] = 0x02;
+  block[0x84] = clamp(g('amp-vol')); // output vol
+  block[0x86] = clamp(g('amp-vol'));
+  block[0x8a] = clamp(g('reverb-mix')); // reverb send
+  block[0x8c] = isOn('reverb-on') ? 0x3a : 0x00;
+  block[0x8d] = isOn('reverb-on') ? 0x0b : 0x00;
+  block[0x8e] = isOn('reverb-on') ? 0x3a : 0x00;
+  block[0x8f] = isOn('reverb-on') ? 0x0b : 0x00;
+
+  return block;
+}
+
+function buildAndDownload() {
+  const scene = buildScene();
+  const wav = importedWav || makeEmptyWav();
+
+  // Total file: 3 scenes × 144 + padding to 0x1d2 + WAV
+  const totalHeaderSize = 0x1d2; // 466 bytes
+  const file = new Uint8Array(totalHeaderSize + wav.length);
+
+  // Write 3 scenes
+  file.set(scene, 0);
+  file.set(scene, 0x90);
+  file.set(scene, 0x120);
+  // Padding 0x1b0..0x1d1 = zeros (already zero)
+
+  // WAV
+  file.set(wav, 0x1d2);
+
+  const name = (document.getElementById('patch-name').value || 'patch').replace(/[^a-zA-Z0-9_-]/g,'_');
+  const blob = new Blob([file], { type: 'application/octet-stream' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name + '.mg30patch';
+  a.click();
+
+  const st = document.getElementById('build-status');
+  st.className = 'status ok';
+  st.textContent = `✓ ${name}.mg30patch descargado — ${file.length} bytes`;
+  setTimeout(() => st.textContent = '', 4000);
+}
+
+// ── Presets ─────────────────────────────────────────────
+const PRESETS = {
+  clean: { 'amp-model':0,'amp-gain':25,'amp-bass':55,'amp-mid':50,'amp-treble':60,'amp-presence':45,'amp-vol':100,'gate-thr':20,'comp-sus':60,'reverb-mix':30,'reverb-decay':40, gateOn:false, compOn:true, modOn:false, delayOn:false, reverbOn:true },
+  crunch: { 'amp-model':1,'amp-gain':65,'amp-bass':60,'amp-mid':45,'amp-treble':65,'amp-presence':55,'amp-vol':100,'gate-thr':40,'comp-sus':40,'reverb-mix':20,'reverb-decay':30, gateOn:true, compOn:false, modOn:false, delayOn:true, reverbOn:true },
+};
+
+function loadPreset(name) {
+  const p = PRESETS[name]; if (!p) return;
+  Object.entries(p).forEach(([k,v]) => {
+    if (typeof v === 'number' && document.getElementById(k)) {
+      const el = document.getElementById(k);
+      el.value = v;
+      // update display
+      const valId = k.replace('amp-','').replace('-','') + '-val';
+    }
+  });
+  // re-render vals
+  [['amp-gain','gain-val'],['amp-bass','bass-val'],['amp-mid','mid-val'],['amp-treble','treble-val'],
+   ['amp-presence','pres-val'],['amp-vol','vol-val'],['gate-thr','gthr-v'],
+   ['reverb-mix','rmix-v'],['reverb-decay','rdecay-v']].forEach(([sid,vid]) => {
+    const el = document.getElementById(sid);
+    const vo = document.getElementById(vid);
+    if (el && vo) vo.textContent = el.value;
+  });
+  // toggles
+  const set = (id, on) => { const b=document.getElementById(id); if(on) b.classList.add('on'); else b.classList.remove('on'); };
+  set('gate-on', p.gateOn); set('comp-on', p.compOn);
+  set('mod-on', p.modOn); set('delay-on', p.delayOn); set('reverb-on', p.reverbOn);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Optional Ganesh — Master System</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #ffffff; --bg2: #f5f5f3; --bg3: #eeede9;
+    --text: #1a1a18; --text2: #6b6b66; --text3: #9a9a94;
+    --border: rgba(0,0,0,0.09); --border2: rgba(0,0,0,0.16);
+    --mono: 'SF Mono','Fira Mono','Consolas',monospace;
+    --sans: -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --r: 8px; --rl: 12px;
+    --c1: #1a1a18;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1a; --bg2: #252522; --bg3: #2e2e2b;
+      --text: #e8e7e2; --text2: #8a8a82; --text3: #5a5a54;
+      --border: rgba(255,255,255,0.09); --border2: rgba(255,255,255,0.16);
+    }
+  }
+  body { font-family: var(--sans); background: var(--bg); color: var(--text); padding: 2rem 1.5rem 4rem; max-width: 860px; margin: 0 auto; font-size: 14px; line-height: 1.6; }
+
+  .masthead { margin-bottom: 1.75rem; }
+  .masthead-label { font-size: 10px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text3); margin-bottom: 4px; }
+  .masthead-title { font-size: 18px; font-weight: 500; }
+
+  .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1.75rem; }
+  .tab { font-size: 12px; font-weight: 500; padding: 5px 13px; border-radius: 20px; border: 0.5px solid var(--border2); background: transparent; color: var(--text2); cursor: pointer; transition: all 0.15s; font-family: var(--sans); }
+  .tab:hover { background: var(--bg2); color: var(--text); }
+  .tab.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+  .section { display: none; }
+  .section.on { display: block; }
+
+  .sec-head { font-size: 15px; font-weight: 500; margin-bottom: 2px; }
+  .sec-sub { font-size: 12px; color: var(--text2); margin-bottom: 1.25rem; }
+
+  .divider { height: 0.5px; background: var(--border); margin: 1.5rem 0; }
+  .group-label { font-size: 10px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text3); margin: 1.25rem 0 0.6rem; }
+
+  /* Chain card */
+  .chain-card {
+    border: 0.5px solid var(--border);
+    border-radius: var(--rl);
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+  .chain-hd {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 11px 14px; cursor: pointer; user-select: none; transition: background 0.12s;
+  }
+  .chain-hd:hover { background: var(--bg2); }
+  .chain-hd-left { display: flex; align-items: center; gap: 10px; }
+  .chain-emoji { font-size: 16px; line-height: 1; }
+  .chain-title { font-size: 14px; font-weight: 500; }
+  .chain-genre { font-size: 11px; color: var(--text2); margin-left: 2px; }
+  .chev { font-size: 10px; color: var(--text3); transition: transform 0.18s; }
+  .chain-hd.open .chev { transform: rotate(90deg); }
+  .chain-bd { display: none; border-top: 0.5px solid var(--border); }
+  .chain-bd.open { display: block; }
+
+  /* Chain table */
+  .chain-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .chain-table th {
+    font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text3); padding: 8px 10px; text-align: left;
+    border-bottom: 0.5px solid var(--border); background: var(--bg2);
+  }
+  .chain-table td {
+    padding: 8px 10px; border-bottom: 0.5px solid var(--border);
+    vertical-align: top; color: var(--text);
+  }
+  .chain-table tr:last-child td { border-bottom: none; }
+  .chain-table tr:hover td { background: var(--bg2); }
+
+  .step-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--bg3); color: var(--text2);
+    font-size: 10px; font-weight: 500; flex-shrink: 0;
+  }
+  .plugin-name { font-weight: 500; color: var(--text); display: block; }
+  .plugin-note { font-size: 11px; color: var(--text2); }
+  .target-val { font-family: var(--mono); font-size: 11px; color: var(--text2); white-space: nowrap; }
+
+  /* Result tag */
+  .result-row { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 14px; border-top: 0.5px solid var(--border); background: var(--bg2); }
+  .result-tag { font-size: 11px; padding: 2px 8px; border-radius: 8px; background: var(--bg3); color: var(--text2); border: 0.5px solid var(--border); }
+  .result-label { font-size: 11px; color: var(--text3); align-self: center; margin-right: 4px; }
+
+  /* Targets table */
+  .targets-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; margin-top: 10px; }
+  .target-card { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--r); padding: 10px 12px; }
+  .target-lbl { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); margin-bottom: 4px; }
+  .target-num { font-size: 18px; font-weight: 500; font-family: var(--mono); color: var(--text); }
+
+  /* Atmos map */
+  .atmos-zone { margin-bottom: 8px; border: 0.5px solid var(--border); border-radius: var(--r); overflow: hidden; }
+  .atmos-zone-hd { display: flex; align-items: center; gap: 10px; padding: 8px 12px; cursor: pointer; transition: background 0.12s; }
+  .atmos-zone-hd:hover { background: var(--bg2); }
+  .zone-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .dot-green { background: #3B6D11; }
+  .dot-yellow { background: #854F0B; }
+  .dot-red { background: #993C1D; }
+  .zone-title { font-size: 13px; font-weight: 500; }
+  .zone-sub { font-size: 11px; color: var(--text2); }
+  .atmos-zone-bd { display: none; padding: 0 12px 12px; border-top: 0.5px solid var(--border); }
+  .atmos-zone-bd.open { display: block; }
+  .plugin-pills { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+  .pill { font-size: 11px; padding: 2px 9px; border-radius: 10px; background: var(--bg2); border: 0.5px solid var(--border); color: var(--text2); }
+  .pill-ok { background: #EAF3DE; border-color: #C0DD97; color: #3B6D11; }
+  .pill-ctx { background: #FAEEDA; border-color: #FAC775; color: #854F0B; }
+  .pill-no { background: #FCEBEB; border-color: #F7C1C1; color: #A32D2D; }
+
+  /* Flow */
+  .flow { display: flex; flex-direction: column; gap: 0; margin: 1rem 0; }
+  .flow-step { display: flex; align-items: stretch; }
+  .flow-step-inner { flex: 1; padding: 10px 14px; border: 0.5px solid var(--border); border-radius: var(--r); background: var(--bg); }
+  .flow-step-inner:hover { background: var(--bg2); cursor: pointer; }
+  .flow-step-num { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); margin-bottom: 2px; }
+  .flow-step-name { font-size: 14px; font-weight: 500; }
+  .flow-step-desc { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .flow-arrow { display: flex; align-items: center; justify-content: center; height: 16px; color: var(--text3); font-size: 11px; }
+
+  .detail-block { display: none; padding: 10px 14px; background: var(--bg2); border: 0.5px solid var(--border); border-radius: 0 0 var(--r) var(--r); border-top: none; margin-top: -1px; }
+  .detail-block.open { display: block; }
+
+  .rule-table { width: 100%; font-size: 12px; border-collapse: collapse; margin-top: 8px; }
+  .rule-table td { padding: 5px 8px; border-bottom: 0.5px solid var(--border); vertical-align: top; color: var(--text); }
+  .rule-table td:first-child { color: var(--text2); font-weight: 500; width: 42%; }
+
+  /* Depth layers */
+  .depth-layers { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 1rem 0; }
+  .depth-cell { padding: 10px 8px; border: 0.5px solid var(--border); border-radius: var(--r); text-align: center; }
+  .depth-num { font-size: 10px; color: var(--text3); margin-bottom: 3px; }
+  .depth-name { font-size: 11px; font-weight: 500; color: var(--text); margin-bottom: 3px; }
+  .depth-ex { font-size: 10px; color: var(--text2); }
+  @media (max-width: 600px) {
+    .depth-layers { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  .tip-box { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--r); padding: 10px 12px; font-size: 12px; color: var(--text2); margin: 10px 0; }
+  .tip-box strong { color: var(--text); }
+
+  .three-pillars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 1rem 0; }
+  .pillar { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--r); padding: 12px; text-align: center; }
+  .pillar-name { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+  .pillar-desc { font-size: 11px; color: var(--text2); }
+
+  .pct-row { display: flex; gap: 8px; margin: 1rem 0; flex-wrap: wrap; }
+  .pct-card { flex: 1; min-width: 120px; background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--r); padding: 10px 12px; }
+  .pct-num { font-size: 22px; font-weight: 500; font-family: var(--mono); }
+  .pct-label { font-size: 11px; color: var(--text2); margin-top: 2px; }
+
+  /* badge colors by chain */
+  .badge-analog { background: #FAEEDA; color: #854F0B; font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 500; }
+  .badge-modern { background: #E6F1FB; color: #185FA5; font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 500; }
+  .badge-rough  { background: #FAECE7; color: #993C1D; font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 500; }
+  .badge-wide   { background: #EEEDFE; color: #534AB7; font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 500; }
+  .badge-color  { background: #EAF3DE; color: #3B6D11; font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 500; }
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="masthead-label">Optional Ganesh · Mastering System</div>
+  <div class="masthead-title">Master Chains + Atmos</div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="go('mini',this)">Mac Mini</button>
+  <button class="tab" onclick="go('mbp',this)">MacBook Pro</button>
+  <button class="tab" onclick="go('targets',this)">Targets</button>
+  <button class="tab" onclick="go('atmos',this)">Atmos Map</button>
+  <button class="tab" onclick="go('flow',this)">Atmos Flow</button>
+</div>
+
+<!-- ===== MAC MINI ===== -->
+<div class="section on" id="s-mini">
+  <div class="sec-head">Master Chains — Mac Mini</div>
+  <div class="sec-sub">3 cadenas · UADx full rig</div>
+
+  <!-- Chain 1 -->
+  <div class="chain-card">
+    <div class="chain-hd" onclick="tog(this)">
+      <div class="chain-hd-left">
+        <span class="chain-emoji">🔥</span>
+        <span><span class="badge-analog">Analog Core</span></span>
+        <span class="chain-title">Depth Version</span>
+        <span class="chain-genre">— signature</span>
+      </div>
+      <span class="chev">▶</span>
+    </div>
+    <div class="chain-bd">
+      <table class="chain-table">
+        <thead><tr><th>#</th><th>Plugin</th><th>Target</th><th>Nota</th></tr></thead>
+        <tbody>
+          <tr><td><span class="step-num">1</span></td><td><span class="plugin-name">Pultec EQP-1A</span></td><td class="target-val">–18 RMS</td><td class="plugin-note">60 Hz boost + atten sutil / 10 kHz aire leve</td></tr>
+          <tr><td><span class="step-num">2</span></td><td><span class="plugin-name">Fairchild 670</span></td><td class="target-val">–16 RMS</td><td class="plugin-note">1–2 dB GR · glue musical</td></tr>
+          <tr><td><span class="step-num">3</span></td><td><span class="plugin-name">Studer A800</span></td><td class="target-val">–14 LUFS</td><td class="plugin-note">Cohesión analógica</td></tr>
+          <tr><td><span class="step-num">4</span></td><td><span class="plugin-name">Oxford Inflator</span></td><td class="target-val">–13 LUFS</td><td class="plugin-note">15–25% · densidad controlada</td></tr>
+          <tr><td><span class="step-num">5</span></td><td><span class="plugin-name">God Particle</span></td><td class="target-val">–12 LUFS</td><td class="plugin-note">Balance espectral + micro-dinámica</td></tr>
+          <tr><td><span class="step-num">6</span></td><td><span class="plugin-name">ATR-102</span></td><td class="target-val">–11.5 LUFS</td><td class="plugin-note">Profundidad estéreo natural</td></tr>
+          <tr><td><span class="step-num">7</span></td><td><span class="plugin-name">Oxford Limiter</span></td><td class="target-val">–10 LUFS / –1 dBTP</td><td class="plugin-note">1–2 dB GR máximo</td></tr>
+        </tbody>
+      </table>
+      <div class="result-row">
+        <span class="result-label">resultado →</span>
+        <span class="result-tag">centro sólido</span>
+        <span class="result-tag">profundidad tridimensional</span>
+        <span class="result-tag">Soul / Jazz / Rock</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chain 2 -->
+  <div class="chain-card">
+    <div class="chain-hd" onclick="tog(this)">
+      <div class="chain-hd-left">
+        <span class="chain-emoji">⚡</span>
+        <span><span class="badge-modern">Modern Control</span></span>
+        <span class="chain-title">Open Clean</span>
+        <span class="chain-genre">— limpio y abierto</span>
+      </div>
+      <span class="chev">▶</span>
+    </div>
+    <div class="chain-bd">
+      <table class="chain-table">
+        <thead><tr><th>#</th><th>Plugin</th><th>Target</th><th>Nota</th></tr></thead>
+        <tbody>
+          <tr><td><span class="step-num">1</span></td><td><span class="plugin-name">Lindell 80 Series</span></td><td class="target-val">–18 RMS</td><td class="plugin-note">Tilt tonal sutil</td></tr>
+          <tr><td><span class="step-num">2</span></td><td><span class="plugin-name">Capitol Compressor</span></td><td class="target-val">–16 RMS</td><td class="plugin-note">1 dB GR</td></tr>
+          <tr><td><span class="step-num">3</span></td><td><span class="plugin-name">Studer A800</span></td><td class="target-val">–14 LUFS</td><td class="plugin-note">Punch cohesivo</td></tr>
+          <tr><td><span class="step-num">4</span></td><td><span class="plugin-name">God Particle</span></td><td class="target-val">–12 LUFS</td><td class="plugin-note">Control moderno del espectro</td></tr>
+          <tr><td><span class="step-num">5</span></td><td><span class="plugin-name">ATR-102</span></td><td class="target-val">–11.5 LUFS</td><td class="plugin-note">Apertura y profundidad</td></tr>
+          <tr><td><span class="step-num">6</span></td><td><span class="plugin-name">Oxford Limiter</span></td><td class="target-val">–10 LUFS / –1 dBTP</td><td class="plugin-note">Loudness transparente</td></tr>
+        </tbody>
+      </table>
+      <div class="result-row">
+        <span class="result-label">resultado →</span>
+        <span class="result-tag">más limpio</span>
+        <span class="result-tag">más abierto</span>
+        <span class="result-tag">menos romántico</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chain 3 -->
+  <div class="chain-card">
+    <div class="chain-hd" onclick="tog(this)">
+      <div class="chain-hd-left">
+        <span class="chain-emoji">🧨</span>
+        <span><span class="badge-rough">Rough Statement</span></span>
+        <span class="chain-title">Texture Wide</span>
+        <span class="chain-genre">— grit + espacio lateral</span>
+      </div>
+      <span class="chev">▶</span>
+    </div>
+    <div class="chain-bd">
+      <table class="chain-table">
+        <thead><tr><th>#</th><th>Plugin</th><th>Target</th><th>Nota</th></tr></thead>
+        <tbody>
+          <tr><td><span class="step-num">1</span></td><td><span class="plugin-name">Studer A800</span></td><td class="target-val">–17 RMS</td><td class="plugin-note">Color inicial</td></tr>
+          <tr><td><span class="step-num">2</span></td><td><span class="plugin-name">Drawmer S73</span></td><td class="target-val">–16 RMS</td><td class="plugin-note">Densidad paralela</td></tr>
+          <tr><td><span class="step-num">3</span></td><td><span class="plugin-name">Magma Tube III</span></td><td class="target-val">–14 LUFS</td><td class="plugin-note">Grit armónico</td></tr>
+          <tr><td><span class="step-num">4</span></td><td><span class="plugin-name">Oxford Inflator</span></td><td class="target-val">–13 LUFS</td><td class="plugin-note">Re-densificación</td></tr>
+          <tr><td><span class="step-num">5</span></td><td><span class="plugin-name">God Particle</span></td><td class="target-val">–12 LUFS</td><td class="plugin-note">Rebalance post-color</td></tr>
+          <tr><td><span class="step-num">6</span></td><td><span class="plugin-name">ATR-102</span></td><td class="target-val">–11.5 LUFS</td><td class="plugin-note">Profundidad estéreo</td></tr>
+          <tr><td><span class="step-num">7</span></td><td><span class="plugin-name">Stealth Limiter</span></td><td class="target-val">–10 LUFS / –1 dBTP</td><td class="plugin-note">Control final</td></tr>
+        </tbody>
+      </table>
+      <div class="result-row">
+        <span class="result-label">resultado →</span>
+        <span class="result-tag">textura viva</span>
+        <span class="result-tag">espacio lateral real</span>
+        <span class="result-tag">identidad fuerte</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="tip-box">
+    <strong>Tres plugins absolutamente centrales en el Mac Mini:</strong> Studer A800 (pega la mezcla) · God Particle (equilibrio moderno) · ATR-102 (profundidad final). Juntos son una cadena usada por muchos ingenieros de mastering modernos.
+  </div>
+</div>
+
+<!-- ===== MACBOOK PRO ===== -->
+<div class="section" id="s-mbp">
+  <div class="sec-head">Master Chains — MacBook Pro</div>
+  <div class="sec-sub">4 cadenas · arsenal portátil</div>
+
+  <!-- Chain 1 -->
+  <div class="chain-card">
+    <div class="chain-hd" onclick="tog(this)">
+      <div class="chain-hd-left">
+        <span class="chain-emoji">🔥</span>
+        <span><span class="badge-analog">Analog Depth</span></span>
+        <span class="chain-title">Signature</span>
+        <span class="chain-genre">— Soul / Jazz / Rock / estética orgánica</span>
+      </div>
+      <span class="chev">▶</span>
+    </div>
+    <div class="chain-bd">
+      <table class="chain-table">
+        <thead><tr><th>#</th><th>Plugin</th><th>Target</th><th>Nota</th></tr></thead>
+        <tbody>
+          <tr><td><span class="step-num">1</span></td><td><span class="plugin-name">UADx Pultec EQP-1A</span></td><td class="target-val">–18 RMS</td><td class="plugin-note">+1 dB @ 60 Hz / +1 dB @ 12 kHz</td></tr>
+          <tr><td><span class="step-num">2</span></td><td><span class="plugin-name">UADx Fairchild 670</span></td><td class="target-val">–16 RMS</td><td class="plugin-note">1–2 dB GR · time constant 2</td></tr>
+          <tr><td><span class="step-num">3</span></td><td><span class="plugin-name">UADx Studer A800</span></td><td class="target-val">–15 LUFS</td><td class="plugin-note">IPS 15 / Drive 1–2</td></tr>
+          <tr><td><span class="step-num">4</span></td><td><span class="plugin-name">Cradle God Particle</span></td><td class="target-val">–13 LUFS</td><td class="plugin-note">Drive +1 / Density 20</td></tr>
+          <tr><td><span class="step-num">5</span></td><td><span class="plugin-name">UADx Ampex ATR-102</span></td><td class="target-val">–12 LUFS</td><td class="plugin-note">Bias +2 / HF +1</td></tr>
+          <tr><td><span class="step-num">6</span></td><td><span class="plugin-name">T-RackS Stealth Limiter</span></td><td class="target-val">–10–11 LUFS / –1 dBTP</td><td class="plugin-note">1–2 dB GR</td></tr>
+        </tbody>
+      </table>
+      <div class="result-row">
+        <span class="result-label">resultado →</span>
+        <span class="result-tag">centro fuerte</span>
+        <span class="result-tag">profundidad analógica</span>
+        <span class="result-tag">estéreo natural</span>
+        <span class="result-tag">mezcla "respira"</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chain 2 -->
+  <div class="chain-card">
+    <div class="chain-hd" onclick="tog(this)">
+      <div class="chain-hd-left">
+        <span class="chain-emoji">⚡</span>
+        <span><span class="badge-modern">Modern Open</span></span>
+        <span class="chain-title">Claridad + Aire</span>
+        <span class="chain-genre">— Pop / Electrónica / Indie moderno</span>
+      </div>
+      <span class="chev">▶</span>
+    </div>
+    <div class="chain-bd">
+      <table class="chain-table">
+        <thead><tr><th>#</th><th>Plugin</th><th>Target</th><th>Nota</th></tr></thead>
+        <tbody>
+          <tr><td><span class="step-num">1</span></td><td><span class="plugin-name">T-RackS Linear Phase EQ</span></td><td class="target-val">–18 RMS</td><td class="plugin-note">HPF 30 Hz</td></tr>
+          <tr><td><span class="step-num">2</span></td><td><span class="plugin-name">Oeksound soothe2</span></td><td class="target-val">–17 RMS</td><td class="plugin-note">Depth 35%</td></tr>
+          <tr><td><span class="step-num">3</span></td><td><span class="plugin-name">UADx Capitol Mastering Comp</span></td><td class="target-val">–15 LUFS</td><td class="plugin-note">GR 1 dB</td></tr>
+          <tr><td><span class="step-num">4</span></td><td><span class="plugin-name">MAAG EQ2</span></td><td class="target-val">–14 LUFS</td><td class="plugin-note">+1.5 dB Air Band</td></tr>
+          <tr><td><span class="step-num">5</span></td><td><span class="plugin-name">Cradle God Particle</span></td><td class="target-val">–12.5 LUFS</td><td class="plugin-note">Character Modern</td></tr>
+          <tr><td><span class="step-num">6</span></td><td><span class="plugin-name">UADx Precision Limiter</span></td><td class="target-val">–10–11 LUFS</td><td class="plugin-note">Transparente</td></tr>
+        </tbody>
+      </table>
+      <div class="result-row">
+        <span class="result-label">resultado →</span>
+        <span class="result-tag">claridad moderna</span>
+        <span class="result-tag">hi-fi</span>
+        <span class="result-tag">mucha separación</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chain 3 -->
+  <div class="chain-card">
+    <div class="chain-hd" onclick="tog(this)">
+      <div class="chain-hd-left">
+        <span class="chain-emoji">🧨</span>
+        <span><span class="badge-color">Color &amp; Punch</span></span>
+        <span class="chain-title">Energía + Groove</span>
+        <span class="chain-genre">— Rock / Funk / Alt</span>
+      </div>
+      <span class="chev">▶</span>
+    </div>
+    <div class="chain-bd">
+      <table class="chain-table">
+        <thead><tr><th>#</th><th>Plugin</th><th>Target</th><th>Nota</th></tr></thead>
+        <tbody>
+          <tr><td><span class="step-num">1</span></td><td><span class="plugin-name">UADx 1176 Rev E</span></td><td class="target-val">–18 RMS</td><td class="plugin-note">GR 2 dB</td></tr>
+          <tr><td><span class="step-num">2</span></td><td><span class="plugin-name">Pulsar W495</span></td><td class="target-val">–16 RMS</td><td class="plugin-note">+0.5 dB low / +1 dB air</td></tr>
+          <tr><td><span class="step-num">3</span></td><td><span class="plugin-name">UADx Studer A800</span></td><td class="target-val">–14 LUFS</td><td class="plugin-note">Drive 2</td></tr>
+          <tr><td><span class="step-num">4</span></td><td><span class="plugin-name">T-RackS Classic Clipper</span></td><td class="target-val">–13 LUFS</td><td class="plugin-note">Soft clip 10–15%</td></tr>
+          <tr><td><span class="step-num">5</span></td><td><span class="plugin-name">God Particle</span></td><td class="target-val">–12 LUFS</td><td class="plugin-note">Drive +2</td></tr>
+          <tr><td><span class="step-num">6</span></td><td><span class="plugin-name">Stealth Limiter</span></td><td class="target-val">–10 LUFS</td><td class="plugin-note">Ceiling final</td></tr>
+        </tbody>
+      </table>
+      <div class="result-row">
+        <span class="result-label">resultado →</span>
+        <span class="result-tag">impacto rítmico</span>
+        <span class="result-tag">mezcla hacia delante</span>
+        <span class="result-tag">carácter analógico fuerte</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chain 4 -->
+  <div class="chain-card">
+    <div class="chain-hd" onclick="tog(this)">
+      <div class="chain-hd-left">
+        <span class="chain-emoji">🌌</span>
+        <span><span class="badge-wide">Wide Cinematic</span></span>
+        <span class="chain-title">Profundidad + Estéreo</span>
+        <span class="chain-genre">— Ambient / Cinematic / OG atmospheres</span>
+      </div>
+      <span class="chev">▶</span>
+    </div>
+    <div class="chain-bd">
+      <table class="chain-table">
+        <thead><tr><th>#</th><th>Plugin</th><th>Target</th><th>Nota</th></tr></thead>
+        <tbody>
+          <tr><td><span class="step-num">1</span></td><td><span class="plugin-name">Pulsar W495</span></td><td class="target-val">–18 RMS</td><td class="plugin-note">Sculpt muy suave</td></tr>
+          <tr><td><span class="step-num">2</span></td><td><span class="plugin-name">soothe2</span></td><td class="target-val">–16 RMS</td><td class="plugin-note">Depth 25%</td></tr>
+          <tr><td><span class="step-num">3</span></td><td><span class="plugin-name">UADx Fairchild 670</span></td><td class="target-val">–15 LUFS</td><td class="plugin-note">GR 1 dB</td></tr>
+          <tr><td><span class="step-num">4</span></td><td><span class="plugin-name">UADx ATR-102</span></td><td class="target-val">–13 LUFS</td><td class="plugin-note">Tape width</td></tr>
+          <tr><td><span class="step-num">5</span></td><td><span class="plugin-name">God Particle</span></td><td class="target-val">–12 LUFS</td><td class="plugin-note">Character Wide</td></tr>
+          <tr><td><span class="step-num">6</span></td><td><span class="plugin-name">Precision Limiter</span></td><td class="target-val">–11 LUFS</td><td class="plugin-note">Control final</td></tr>
+        </tbody>
+      </table>
+      <div class="result-row">
+        <span class="result-label">resultado →</span>
+        <span class="result-tag">mezcla muy profunda</span>
+        <span class="result-tag">estéreo natural</span>
+        <span class="result-tag">música atmosférica</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <div class="group-label">Uso recomendado</div>
+  <div class="pct-row">
+    <div class="pct-card"><div class="pct-num">80%</div><div class="pct-label">Analog Depth · tu sonido principal</div></div>
+    <div class="pct-card"><div class="pct-num">15%</div><div class="pct-label">Modern Open · pop / indie</div></div>
+    <div class="pct-card"><div class="pct-num">5%</div><div class="pct-label">Color &amp; Punch · rock / funk</div></div>
+  </div>
+  <div class="tip-box">Eso crea <strong>consistencia estética</strong>. No cambies de cadena cada canción.</div>
+</div>
+
+<!-- ===== TARGETS ===== -->
+<div class="section" id="s-targets">
+  <div class="sec-head">Master Targets</div>
+  <div class="sec-sub">Métricas de referencia · mantener siempre</div>
+
+  <div class="targets-grid">
+    <div class="target-card"><div class="target-lbl">True Peak</div><div class="target-num">–1 dBTP</div></div>
+    <div class="target-card"><div class="target-lbl">LUFS (integrated)</div><div class="target-num">–14 → –11</div></div>
+    <div class="target-card"><div class="target-lbl">RMS</div><div class="target-num">–14 → –12</div></div>
+    <div class="target-card"><div class="target-lbl">Dynamic Range</div><div class="target-num">8 → 10</div></div>
+    <div class="target-card"><div class="target-lbl">Stereo Correlation</div><div class="target-num">0.85 → 0.95</div></div>
+  </div>
+
+  <div class="divider"></div>
+  <div class="group-label">Los tres plugins centrales del sistema</div>
+  <div class="three-pillars">
+    <div class="pillar"><div class="pillar-name">Studer A800</div><div class="pillar-desc">pega la mezcla</div></div>
+    <div class="pillar"><div class="pillar-name">God Particle</div><div class="pillar-desc">equilibrio moderno</div></div>
+    <div class="pillar"><div class="pillar-name">ATR-102</div><div class="pillar-desc">profundidad final</div></div>
+  </div>
+
+  <div class="divider"></div>
+  <div class="group-label">Referencia rápida por género</div>
+  <table class="rule-table">
+    <tr><td>Soul / Jazz / Rock orgánico</td><td>Analog Depth / Analog Core</td></tr>
+    <tr><td>Pop / Indie moderno / Electrónica limpia</td><td>Modern Open</td></tr>
+    <tr><td>Rock / Funk / Alt</td><td>Color &amp; Punch</td></tr>
+    <tr><td>Ambient / Cinematic / Atmósferas</td><td>Wide Cinematic</td></tr>
+    <tr><td>Mezcla con mucho grit / textura</td><td>Rough Statement / Texture Wide</td></tr>
+  </table>
+</div>
+
+<!-- ===== ATMOS MAP ===== -->
+<div class="section" id="s-atmos">
+  <div class="sec-head">Atmos Plugin Map</div>
+  <div class="sec-sub">🟢 Safe · 🟡 Contextual · 🔴 Avoid</div>
+
+  <div class="atmos-zone">
+    <div class="atmos-zone-hd" onclick="togz(this)">
+      <span class="zone-dot dot-green"></span>
+      <div><span class="zone-title">🟢 SAFE — Atmos Workhorses</span><span class="zone-sub"> · trabajan por canal, base de objetos</span></div>
+    </div>
+    <div class="atmos-zone-bd">
+      <div class="group-label" style="margin-top:10px">EQ / Tonal Control</div>
+      <div class="plugin-pills">
+        <span class="pill pill-ok">Logic Channel EQ</span><span class="pill pill-ok">Pultec EQP-1A</span><span class="pill pill-ok">Pultec MEQ-5</span><span class="pill pill-ok">Lindell 80 EQ</span><span class="pill pill-ok">Focusrite Red 2</span><span class="pill pill-ok">Pulsar W495</span><span class="pill pill-ok">MAutoDynamicEQ</span><span class="pill pill-ok">soothe2</span><span class="pill pill-ok">spiff</span>
+      </div>
+      <div class="tip-box" style="margin-top:8px">En Atmos el EQ es <strong>mucho más importante que el compresor</strong>.</div>
+
+      <div class="group-label">Compression</div>
+      <div class="plugin-pills">
+        <span class="pill pill-ok">UADx 1176</span><span class="pill pill-ok">UADx LA-2A</span><span class="pill pill-ok">UADx LA-3A</span><span class="pill pill-ok">Fairchild 660/670</span><span class="pill pill-ok">dbx160</span><span class="pill pill-ok">API 2500 (dual mono)</span><span class="pill pill-ok">Softube VCA</span><span class="pill pill-ok">Drawmer S73 (suave)</span>
+      </div>
+      <div class="tip-box" style="margin-top:8px">Menos compresión que en stereo. El espacio lo necesita.</div>
+
+      <div class="group-label">Utility</div>
+      <div class="plugin-pills">
+        <span class="pill pill-ok">Gain / Trim</span><span class="pill pill-ok">Filters</span><span class="pill pill-ok">MAutoPitch</span><span class="pill pill-ok">Relay</span><span class="pill pill-ok">Mastering the Mix Reso</span><span class="pill pill-ok">Multimeter</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="atmos-zone">
+    <div class="atmos-zone-hd" onclick="togz(this)">
+      <span class="zone-dot dot-yellow"></span>
+      <div><span class="zone-title">🟡 CONTEXTUAL — Usar con intención</span><span class="zone-sub"> · funcionan si se colocan correctamente</span></div>
+    </div>
+    <div class="atmos-zone-bd">
+      <div class="group-label" style="margin-top:10px">Saturation / Analog Color</div>
+      <div class="plugin-pills">
+        <span class="pill pill-ctx">Studer A800</span><span class="pill pill-ctx">ATR-102</span><span class="pill pill-ctx">Oxide Tape</span><span class="pill pill-ctx">Saturation Knob</span><span class="pill pill-ctx">IK T-RackS sat.</span><span class="pill pill-ctx">RC-20</span><span class="pill pill-ctx">Magma Tube III</span>
+      </div>
+      <table class="rule-table" style="margin-top:8px">
+        <tr><td>Objetos individuales</td><td>✔ perfecto</td></tr>
+        <tr><td>Grupos pequeños</td><td>✔ a veces</td></tr>
+        <tr><td>Atmos master</td><td>❌ evitar</td></tr>
+      </table>
+      <div class="tip-box" style="margin-top:8px">El color funciona <strong>antes del espacio</strong>, nunca después.</div>
+
+      <div class="group-label">Reverbs / Delays</div>
+      <div class="plugin-pills">
+        <span class="pill pill-ctx">Lexicon 224</span><span class="pill pill-ctx">EMT 140</span><span class="pill pill-ctx">Pure Plate</span><span class="pill pill-ctx">Capitol Chambers</span><span class="pill pill-ctx">TSAR-1R</span><span class="pill pill-ctx">Exoverb</span><span class="pill pill-ctx">Galaxy Tape Echo</span><span class="pill pill-ctx">EP-34</span><span class="pill pill-ctx">Replika</span><span class="pill pill-ctx">Echorec</span>
+      </div>
+      <table class="rule-table" style="margin-top:8px">
+        <tr><td>Mono reverb objects</td><td>✔ ideal</td></tr>
+        <tr><td>FX buses</td><td>✔ válido</td></tr>
+        <tr><td>Stereo reverb en master</td><td>❌ nunca</td></tr>
+      </table>
+      <div class="tip-box" style="margin-top:8px">La reverb se trata como <strong>objeto espacial</strong>, no como "wash".</div>
+
+      <div class="group-label">Advanced Dynamics / Spectral</div>
+      <div class="plugin-pills">
+        <span class="pill pill-ctx">MAutoDynamicEQ</span><span class="pill pill-ctx">Ozone EQ</span><span class="pill pill-ctx">Ozone Dynamics</span><span class="pill pill-ctx">Neutron modules</span>
+      </div>
+      <div class="tip-box" style="margin-top:8px">Para reparar objetos problemáticos y controlar resonancias. <strong>No usar como carácter del mix.</strong></div>
+    </div>
+  </div>
+
+  <div class="atmos-zone">
+    <div class="atmos-zone-hd" onclick="togz(this)">
+      <span class="zone-dot dot-red"></span>
+      <div><span class="zone-title">🔴 AVOID — rompen la traducción Atmos</span><span class="zone-sub"> · dependen de trucos de imagen estéreo</span></div>
+    </div>
+    <div class="atmos-zone-bd">
+      <div class="group-label" style="margin-top:10px">Stereo Mastering Tools</div>
+      <div class="plugin-pills">
+        <span class="pill pill-no">Lurssen Mastering Console</span><span class="pill pill-no">God Particle (grupos/master)</span><span class="pill pill-no">Ozone Imager</span><span class="pill pill-no">Stereo wideners</span><span class="pill pill-no">M/S processors</span>
+      </div>
+      <div class="tip-box" style="margin-top:8px">Atmos <strong>no necesita wideners</strong>. El espacio ya existe.</div>
+
+      <div class="group-label">Stereo Glue / Chorus Smear</div>
+      <div class="plugin-pills">
+        <span class="pill pill-no">Stereo bus compressors</span><span class="pill pill-no">Stereo tape tricks</span><span class="pill pill-no">Crossfeed processors</span><span class="pill pill-no">Chorus para crear width</span><span class="pill pill-no">Stereo enhancers</span><span class="pill pill-no">Micro-shift tricks</span>
+      </div>
+      <div class="tip-box" style="margin-top:8px">El espacio viene del <strong>panner 3D</strong>, no del plugin.</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <div class="group-label">3 armas secretas en Atmos</div>
+  <div class="three-pillars">
+    <div class="pillar"><div class="pillar-name">soothe2</div><div class="pillar-desc">limpia objetos sin romper espacio</div></div>
+    <div class="pillar"><div class="pillar-name">Pulsar W495</div><div class="pillar-desc">tono natural perfecto para beds</div></div>
+    <div class="pillar"><div class="pillar-name">Capitol Chambers</div><div class="pillar-desc">reverb para crear profundidad real</div></div>
+  </div>
+</div>
+
+<!-- ===== ATMOS FLOW ===== -->
+<div class="section" id="s-flow">
+  <div class="sec-head">Atmos Mixing Flow</div>
+  <div class="sec-sub">Optional Ganesh System · 6 etapas</div>
+
+  <div class="flow">
+
+    <div class="flow-step">
+      <div class="flow-step-inner" onclick="togf(this)">
+        <div class="flow-step-num">1 — Source</div>
+        <div class="flow-step-name">La materia prima</div>
+        <div class="flow-step-desc">¿Objeto o bed? ¿Cerca o lejos? ¿Direccional o difuso?</div>
+      </div>
+    </div>
+    <div class="detail-block" id="f1">
+      <table class="rule-table">
+        <tr><td>Voz, lead, percusión</td><td>Objeto → se mueve</td></tr>
+        <tr><td>Pads, ambientes</td><td>Bed → envuelve</td></tr>
+      </table>
+    </div>
+    <div class="flow-arrow">↓</div>
+
+    <div class="flow-step">
+      <div class="flow-step-inner" onclick="togf(this)">
+        <div class="flow-step-num">2 — Tone</div>
+        <div class="flow-step-name">Definir la identidad del objeto</div>
+        <div class="flow-step-desc">EQ decide qué espacio ocupa el sonido</div>
+      </div>
+    </div>
+    <div class="detail-block" id="f2">
+      <div class="plugin-pills" style="margin-bottom:8px">
+        <span class="pill pill-ok">Logic Channel EQ</span><span class="pill pill-ok">Pultec EQP-1A</span><span class="pill pill-ok">Pulsar W495</span><span class="pill pill-ok">Lindell 80 EQ</span>
+      </div>
+      <table class="rule-table">
+        <tr><td>Objeto borroso</td><td>cortar 200–400 Hz</td></tr>
+        <tr><td>Objeto lejano</td><td>boost 3–5 kHz</td></tr>
+        <tr><td>Objeto demasiado frontal</td><td>reducir 4–6 kHz</td></tr>
+      </table>
+      <div class="tip-box" style="margin-top:8px">En Atmos el EQ define <strong>profundidad</strong>.</div>
+    </div>
+    <div class="flow-arrow">↓</div>
+
+    <div class="flow-step">
+      <div class="flow-step-inner" onclick="togf(this)">
+        <div class="flow-step-num">3 — Dynamics</div>
+        <div class="flow-step-name">Estabilidad en el espacio</div>
+        <div class="flow-step-desc">Un objeto inestable se mueve raro en Atmos</div>
+      </div>
+    </div>
+    <div class="detail-block" id="f3">
+      <div class="plugin-pills" style="margin-bottom:8px">
+        <span class="pill pill-ok">UADx 1176</span><span class="pill pill-ok">LA-2A</span><span class="pill pill-ok">dbx160</span><span class="pill pill-ok">Fairchild</span><span class="pill pill-ok">Softube VCA</span>
+      </div>
+      <table class="rule-table">
+        <tr><td>Percusión</td><td>1176</td></tr>
+        <tr><td>Voces</td><td>LA-2A</td></tr>
+        <tr><td>Buses</td><td>Fairchild</td></tr>
+        <tr><td>Transient control</td><td>spiff</td></tr>
+      </table>
+      <div class="tip-box" style="margin-top:8px">Atmos necesita <strong>menos compresión que stereo</strong>.</div>
+    </div>
+    <div class="flow-arrow">↓</div>
+
+    <div class="flow-step">
+      <div class="flow-step-inner" onclick="togf(this)">
+        <div class="flow-step-num">4 — Color</div>
+        <div class="flow-step-name">Carácter armónico</div>
+        <div class="flow-step-desc">¿Limpio, vintage, roto o texturizado?</div>
+      </div>
+    </div>
+    <div class="detail-block" id="f4">
+      <div class="plugin-pills" style="margin-bottom:8px">
+        <span class="pill pill-ctx">Studer A800</span><span class="pill pill-ctx">ATR-102</span><span class="pill pill-ctx">Oxide</span><span class="pill pill-ctx">Saturation Knob</span><span class="pill pill-ctx">RC-20</span>
+      </div>
+      <table class="rule-table">
+        <tr><td>Saturación antes del espacio</td><td>✔</td></tr>
+        <tr><td>Saturación después del reverb</td><td>❌</td></tr>
+      </table>
+    </div>
+    <div class="flow-arrow">↓</div>
+
+    <div class="flow-step">
+      <div class="flow-step-inner" onclick="togf(this)">
+        <div class="flow-step-num">5 — Space</div>
+        <div class="flow-step-name">Colocar el sonido en el universo</div>
+        <div class="flow-step-desc">Reverbs y delays como objetos espaciales</div>
+      </div>
+    </div>
+    <div class="detail-block" id="f5">
+      <div class="plugin-pills" style="margin-bottom:8px">
+        <span class="pill pill-ctx">Capitol Chambers</span><span class="pill pill-ctx">Lexicon 224</span><span class="pill pill-ctx">EMT 140</span><span class="pill pill-ctx">TSAR-1R</span><span class="pill pill-ctx">Exoverb</span><span class="pill pill-ctx">Galaxy Tape Echo</span><span class="pill pill-ctx">Replika</span><span class="pill pill-ctx">Echorec</span>
+      </div>
+      <table class="rule-table">
+        <tr><td>Lead</td><td>reverb corta</td></tr>
+        <tr><td>Objeto lejano</td><td>reverb larga</td></tr>
+        <tr><td>Ambiente</td><td>muy difusa</td></tr>
+      </table>
+    </div>
+    <div class="flow-arrow">↓</div>
+
+    <div class="flow-step">
+      <div class="flow-step-inner" onclick="togf(this)">
+        <div class="flow-step-num">6 — Atmos Render</div>
+        <div class="flow-step-name">Último control</div>
+        <div class="flow-step-desc">Lo importante es el panner 3D, no el plugin</div>
+      </div>
+    </div>
+    <div class="detail-block" id="f6">
+      <div class="plugin-pills" style="margin-bottom:8px">
+        <span class="pill pill-ok">Multimeter</span><span class="pill pill-ok">Reso</span><span class="pill pill-ok">Relay</span>
+      </div>
+      <div class="tip-box">Chequear: correlación · balance LCR · altura · traducción binaural</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <div class="group-label">Sistema de 5 capas de profundidad</div>
+  <div class="depth-layers">
+    <div class="depth-cell"><div class="depth-num">Layer 1</div><div class="depth-name">Very Close</div><div class="depth-ex">voz, lead</div></div>
+    <div class="depth-cell"><div class="depth-num">Layer 2</div><div class="depth-name">Front</div><div class="depth-ex">guitarra, piano</div></div>
+    <div class="depth-cell"><div class="depth-num">Layer 3</div><div class="depth-name">Mid</div><div class="depth-ex">pads, strings</div></div>
+    <div class="depth-cell"><div class="depth-num">Layer 4</div><div class="depth-name">Far</div><div class="depth-ex">coros, drones</div></div>
+    <div class="depth-cell"><div class="depth-num">Layer 5</div><div class="depth-name">Ambient Field</div><div class="depth-ex">atmósferas</div></div>
+  </div>
+
+  <div class="divider"></div>
+  <div class="group-label">Emoción → posición</div>
+  <table class="rule-table">
+    <tr><td>íntimo</td><td>Layer 1 — sin reverb, presencia absoluta</td></tr>
+    <tr><td>presente</td><td>Layer 2 — reverb &lt;1.5s</td></tr>
+    <tr><td>envolvente</td><td>Layer 3 — saturación ligera + reverb media</td></tr>
+    <tr><td>épico</td><td>Layer 4 — reverb larga, poca compresión</td></tr>
+    <tr><td>inmersivo</td><td>Layer 5 — delay → reverb → automatización</td></tr>
+  </table>
+
+  <div class="tip-box" style="margin-top:1.25rem">
+    <strong>Optional Ganesh Atmos aesthetic:</strong> centro sólido · instrumentos flotando · reverbs profundas · movimiento lento. No necesitas caos. Necesitas profundidad. Tu música pide layers 3–5.
+  </div>
+  <div class="tip-box" style="margin-top:8px">
+    <strong>Truco poderoso:</strong> Studer → Reverb → Delay = máquina de profundidad automática.
+  </div>
+</div>
+
+<script>
+function go(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('s-' + id).classList.add('on');
+  btn.classList.add('active');
+}
+function tog(hd) {
+  hd.classList.toggle('open');
+  hd.nextElementSibling.classList.toggle('open');
+}
+function togz(hd) {
+  const bd = hd.nextElementSibling;
+  bd.classList.toggle('open');
+}
+let openFlow = null;
+function togf(inner) {
+  const stepDiv = inner.parentElement;
+  const detail = stepDiv.nextElementSibling;
+  if (!detail || !detail.classList.contains('detail-block')) return;
+  if (openFlow && openFlow !== detail) openFlow.classList.remove('open');
+  detail.classList.toggle('open');
+  openFlow = detail.classList.contains('open') ? detail : null;
+}
+</script>
+</body>
+</html>

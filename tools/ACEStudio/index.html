@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ACE Studio — Prompt Cheat Sheet</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #ffffff;
+    --bg-secondary: #f5f5f3;
+    --bg-tertiary: #eeede9;
+    --text: #1a1a18;
+    --text-secondary: #6b6b66;
+    --border: rgba(0,0,0,0.10);
+    --border-secondary: rgba(0,0,0,0.18);
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: 'SF Mono', 'Fira Mono', 'Consolas', monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1a;
+      --bg-secondary: #252522;
+      --bg-tertiary: #2e2e2b;
+      --text: #e8e7e2;
+      --text-secondary: #8a8a82;
+      --border: rgba(255,255,255,0.10);
+      --border-secondary: rgba(255,255,255,0.18);
+    }
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 2rem 1.5rem 4rem;
+    max-width: 780px;
+    margin: 0 auto;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .cs-title {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 1.25rem;
+  }
+
+  .tool-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 1.75rem;
+  }
+
+  .tab-btn {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 5px 13px;
+    border-radius: 20px;
+    border: 0.5px solid var(--border-secondary);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: var(--font-sans);
+  }
+  .tab-btn:hover { background: var(--bg-secondary); color: var(--text); }
+  .tab-btn.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+  .tool-section { display: none; }
+  .tool-section.visible { display: block; }
+
+  .section-header {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+  .section-sub {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+  }
+
+  .structure-block {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-secondary);
+    background: var(--bg-secondary);
+    border-left: 2px solid var(--border-secondary);
+    padding: 8px 12px;
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    margin: 10px 0 4px;
+    white-space: pre-wrap;
+    line-height: 1.7;
+  }
+
+  .note-global {
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-style: italic;
+    margin-bottom: 1.25rem;
+    padding-left: 2px;
+  }
+
+  .divider {
+    height: 0.5px;
+    background: var(--border);
+    margin: 1.25rem 0;
+  }
+
+  .template-card {
+    background: var(--bg);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    margin-bottom: 8px;
+    overflow: hidden;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.12s;
+  }
+  .card-header:hover { background: var(--bg-secondary); }
+
+  .card-left { display: flex; align-items: center; gap: 0; }
+
+  .card-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .card-tag {
+    font-size: 11px;
+    padding: 2px 9px;
+    border-radius: 10px;
+    font-weight: 500;
+    margin-right: 9px;
+    white-space: nowrap;
+  }
+  .tag-soul    { background: #FAECE7; color: #993C1D; }
+  .tag-hiphop  { background: #E6F1FB; color: #185FA5; }
+  .tag-electro { background: #E1F5EE; color: #0F6E56; }
+  .tag-lyrics  { background: #EEEDFE; color: #534AB7; }
+  .tag-rb      { background: #FAEEDA; color: #854F0B; }
+  .tag-bossa   { background: #E1F5EE; color: #0F6E56; }
+  .tag-instr   { background: #F1EFE8; color: #5F5E5A; }
+  .tag-horn    { background: #FAECE7; color: #993C1D; }
+  .tag-funk    { background: #FAEEDA; color: #854F0B; }
+  .tag-jazz    { background: #E6F1FB; color: #185FA5; }
+  .tag-guitar  { background: #EAF3DE; color: #3B6D11; }
+  .tag-string  { background: #EEEDFE; color: #534AB7; }
+  .tag-synth   { background: #E1F5EE; color: #0F6E56; }
+  .tag-custom  { background: #F1EFE8; color: #5F5E5A; }
+  .tag-lead    { background: #EEEDFE; color: #534AB7; }
+  .tag-back    { background: #FAECE7; color: #993C1D; }
+  .tag-acap    { background: #F1EFE8; color: #5F5E5A; }
+  .tag-vox     { background: #FBEAF0; color: #993556; }
+  .tag-recipe  { background: #FAEEDA; color: #854F0B; }
+
+  .chevron {
+    font-size: 10px;
+    color: var(--text-secondary);
+    transition: transform 0.2s;
+    display: inline-block;
+    line-height: 1;
+  }
+  .card-header.open .chevron { transform: rotate(90deg); }
+
+  .card-body {
+    display: none;
+    padding: 0 14px 14px;
+    border-top: 0.5px solid var(--border);
+  }
+  .card-body.open { display: block; }
+
+  .prompt-block {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    margin-top: 10px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1.7;
+    white-space: pre-wrap;
+    position: relative;
+    padding-right: 60px;
+  }
+
+  .copy-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 11px;
+    font-family: var(--font-sans);
+    padding: 2px 8px;
+    border-radius: 6px;
+    border: 0.5px solid var(--border-secondary);
+    background: var(--bg);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: color 0.12s;
+  }
+  .copy-btn:hover { color: var(--text); }
+
+  .note {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 7px;
+    padding-left: 2px;
+    font-style: italic;
+  }
+
+  .param-table {
+    width: 100%;
+    font-size: 12px;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+  .param-table td {
+    padding: 6px 8px;
+    border-bottom: 0.5px solid var(--border);
+    vertical-align: top;
+    color: var(--text);
+  }
+  .param-table td:first-child {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    width: 130px;
+  }
+</style>
+</head>
+<body>
+
+<div class="cs-title">ACE Studio — Prompt Cheat Sheet</div>
+
+<div class="tool-tabs">
+  <button class="tab-btn active" onclick="showTool('inspire', this)">Inspire Me</button>
+  <button class="tab-btn" onclick="showTool('enhancer', this)">Music Enhancer</button>
+  <button class="tab-btn" onclick="showTool('layer', this)">Add a Layer</button>
+  <button class="tab-btn" onclick="showTool('vocal', this)">Vocal Layer</button>
+  <button class="tab-btn" onclick="showTool('voice', this)">Voice Changer</button>
+</div>
+
+<!-- INSPIRE ME -->
+<div class="tool-section visible" id="tool-inspire">
+  <div class="section-header">Inspire Me</div>
+  <div class="section-sub">Text-to-audio · blank slate idea generator</div>
+  <div class="structure-block">[ERA] [GENRE/SUBGENRE], [MOOD 1], [MOOD 2]
+[INSTRUMENT 1 + SONIC CHARACTER], [INSTRUMENT 2 + SONIC CHARACTER]
+[DRUM FEEL], [SPECIAL ELEMENTS]</div>
+  <p class="note-global">Always describe the sound, not just the instrument name.</p>
+
+  <div class="divider"></div>
+
+  <div class="template-card">
+    <div class="card-header" onclick="toggle(this)">
+      <div class="card-left"><span class="card-tag tag-soul">Soul / R&B</span><span class="card-label">Soul R&B Instrumental</span></div>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="card-body">
+      <div class="prompt-block">1960s soul R&B, upbeat, funky, uplifting
+guitar licks with warm tube amp, Fender Jazz Precision Bass
+syncopated funky drums, Memphis horn section with tenor and baritone sax<button class="copy-btn" onclick="copyPrompt(this)">copy</button></div>
+      <p class="note">Add "instrumental" toggle in ACE — no vocals generated.</p>
+    </div>
+  </div>
+
+  <div class="template-card">
+    <div class="card-header" onclick="toggle(this)">
+      <div class="card-left"><span class="card-tag tag-hiphop">Hip Hop</span><span class="card-label">Boom Bap Instrumental</span></div>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="card-body">
+      <div class="prompt-block">1990s boom bap hip hop, dark and cinematic, dusty
+looped jazz piano sample feel, deep sub bass, vinyl crackle texture
+slow swinging drums 88-95 BPM, distant brass stabs<button class="copy-btn" onclick="copyPrompt(this)">copy</button></div>
+      <p class="note">BPM is approximate — always verify with Get Tempo after generating.</p>
+    </div>
+  </div>
+
+  <div class="template-card">
+    <div class="card-header" onclick="toggle(this)">
+      <div class="card-left"><span class="card-tag tag-electro">Electronic</span><span class="card-label">Ambient Electronic</span></div>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="card-body">
+      <div class="prompt-block">modern ambient electronic, ethereal and spacious, slow-moving
+lush synth pads, filtered arpeggios, subtle sub bass
+minimal percussion, wide reverb tails, no lead melody<button class="copy-btn" onclick="copyPrompt(this)">copy</button></div>
+      <p class="note">Use "no lead melody" or "no vocals" to steer away from unwanted elements.</p>
+    </div>
+  </div>
+
+  <div class="template-card">
+    <div class="card-header" onclick="toggle(this)">
+      <div class="card-left"><span class="card-tag tag-lyrics">Lyrics</span><span class="card-label">Lyrics-Based Song with Structure</span></div>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="card-body">
+      <div class="prompt-block">[Intro]
+(optional intro lyrics or leave blank)
+
+[Verse 1]
+Your verse lyrics here
+Second line of verse
+
+[Pre-chorus]
+Pre-chorus lyrics here
+
+[Chorus]
+Chorus lyrics here
+
+STYLE: 1970s soul ballad, male vocals intimate and raw,
+Rhodes piano, warm upright bass, sparse brushed drums<button class="copy-btn" onclick="copyPrompt(this)">copy</button></div>
+      <p class="note">Square brackets = section markers. Style goes in the style field, not the lyrics field.</p>
+    </div>
+  </div>
+</div>
+
+<!-- MUSIC ENHANCER -->
+<div class="tool-section" id="tool-enhancer">
+  <div class="section-header">Music Enhancer</div>
+  <div class="section-sub">Covers/remixes a selected audio seed · chords come from your audio</div>
+  <div class="structure-block">[GENRE] [SUBGENRE/ERA], [VOCAL DIRECTION if adding lyrics]
+[INSTRUMENT 1 + SONIC DETAIL], [INSTRUMENT 2 + SONIC DETAIL]
+[DRUM CHARACTER], [ENERGY DESCRIPTOR]</div>
+  <p class="note-global">No chord progressions needed — the audio you select IS the harmonic input.</p>
+
+  <div class="divider"></div>
+
+  <div class="template-card">
+    <div class="card-header" onclick="toggle(this)">
+      <div class="card-left"><span class="card-tag tag-rb">R&B</span><span class="card-label">R&B Ballad with Vocals</span></div>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="card-body">
+      <div class="prompt-block">modern R&B ballad, male vocals intimate and breathy
+1970s Rhodes piano warm and round, sparse guitar licks warm tube amp
+Fender bass deep and clean, tight snappy drums, string quartet lush and slow<button class="copy-btn" onclick="copyPrompt(this)">copy</button></div>
+      <p class="note">Consistency: High = stays close to seed. Lower = more creative deviation.</p>
+    </div>
+  </div>
+
+  <div class="template-card">
+    <div class="card-header" onclick="toggle(this)">
+      <div class="card-left"><span class="card-tag tag-bossa">Bossa Nova</span><span class="card-label">Same Seed, Radically Different Style</span></div>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="card-body">
+      <div class="prompt-block">1960s Brazilian bossanova, jazzy and warm
+nylon string guitar fingerpicked, upright bass walking
+light brush percussion, piano comping, intimate room<button class="copy-btn" onclick="copyPrompt(this)">copy</button></div>
+      <p class="note">The Enhancer can transform a demo into a completely different genre.</p>
+    </div>
+  </div>
+
+  <div class="template-card">
+    <div class="card-header" onclick="toggle(this)">
+      <div class="card-left"><span class="card-tag tag-instr">Instrumental</span><span class="card-label">Instrumental Only</span></div>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="card-body">
+      <div class="prompt-block">[GENRE], [MOOD]
+[INSTRUMENTS + SONIC DETAIL]
+[DRUM CHARACTER]
+[Instrumental]<button class="copy-btn" onclick="copyPrompt(this)">copy</button></div>
+      <p class="note">Write [Instrumental] in the lyrics field to suppress all vocals.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ADD A LAYER -->
+<div class="tool-section" id="tool-layer">
+  <div class="section-header">Add a Layer</div>
+  <div class="section-sub">Generates one specific stem on top of your existing arrangement</div>
+  <div class="structure-block">[ERA/REFERENCE] [INSTRUMENT(S) SPECIFIC], [PLAYING STYLE]
+[SONIC CHARACTER / MIC / ROOM], [ENERGY / MOVEMENT]</div>
+  <p class="note-global">ACE listens to ±10–15 seconds around your selection for context before generating.</p>
+
+  <div class="divider"></div>
+
+  <div class="template-card">
+    <div class="card-header" onclick="toggle(this)">
+      <div class="card-left"><span class="card-tag tag-horn">Horns · Soul</span><span class="card-label">Horn Section — Soul / R&B</span></div>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="card-body">
+      <div class="prompt-block">1960s Memphis soul horn section, two trumpets and tenor and baritone saxophone
+punchy short stabs, dry and tight, warm vintage room, no reverb<button class="copy-btn" onclick="copyPrompt(this)">copy</button></div>
+      <p class="note">Layer type: Brass. Paste in the description field.</p>
+    </div>
+  </div>
+
+  <div class="template-card">
+    <div class="card-header" onclick="toggle(this)">
+      <div class="card-left"><span class="card-tag tag-funk">Horns · Funk</span><span class="card-label">Horn Section — Funk</span></div>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="card-body">
+      <div class="prompt-block">1970s funk brass section, trumpet and two saxophones
+tight rhythmic stabs, syncopated, in the pocket, dry and punchy
+James Brown style, no pads no sustain<button class="copy-btn" onclick="copyPrompt(this)">copy</button></div>
+      <p class="note">Layer type: Brass. "Stabs" vs "pads" vs "sustained" changes result significantly.</p>
+    </div>
+  </div>
+
+  <div class="template-card">
+    <div class="card-header" onclick="toggle(this)">
+      <div class="card-left"><span class="card-tag tag-jazz">Horns · Jazz</span><span class="card-label">Horn Section — Jazz / Big Band</span></div>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="card-body">
+      <div class="prompt-block">jazz big band brass, full section with trumpets trombones and saxes
+legato swinging phrases, warm room, slight reverb tail
+1950s bebop energy, melodic and moving<button class="copy-btn" onclick="copyPrompt(this)">copy</button></div>
+      <p class="note">Layer type: Brass. "Legato and moving" for melodic lines vs "stabs" for rhythmic.</p>
+    </div>
+  </div>
+
+  <div class="template-card">
+    <div class="card-header" onclick="toggle(this)">
+      <div class="card-left"><span class="card-tag tag-guitar">Guitar</span><span class="card-label">Guitar Lick — R&B / Soul</span></div>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="card-body">
+      <div class="prompt-block">modern R&B soulful funky guitar lick, Fender Telecaster
+warm tube amp, dry but slightly compressed
+sparse, leaves space, responds to the chord changes<button class="copy-btn" onclick="copyPrompt(this)">copy</button></div>
+      <p class="note">Layer type: Guitar.</p>
+    </div>
+  </div>
+
+  <div class="template-card">
+    <div class="card-header" onclick="toggle(this)">
+      <div class="card-left"><span class="card-tag tag-string">Strings</span><span class="card-label">String Section — Philly Soul</span></div>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="card-body">
+      <div class="prompt-block">1970s Philly soul string ensemble, lush and warm
+slow sustained movements, slight vibrato, vintage close-miked sound
+builds gently, no sharp attacks<button class="copy-btn" onclick="copyPrompt(this)">copy</button></div>
+      <p class="note">Layer type: Strings.</p>
+    </div>
+  </div>
+
+  <div class="template-card">
+    <div class="card-header" onclick="toggle(this)">
+      <div class="card-left"><span class="card-tag tag-synth">Synth</span><span class="card-label">Synth Pad</span></div>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="card-body">
+      <div class="prompt-block">warm sparse poly synth pad, slow attack slow release
+analog feel, slightly detuned, sits behind everything else
+no movement no modulation, just texture and space<button class="copy-btn" onclick="copyPrompt(this)">copy</button></div>
+      <p class="note">Layer type: Synth.</p>
+    </div>
+  </div>
+
+  <div class="template-card">
+    <div class="card-header" onclick="toggle(this)">
+      <div class="card-left"><span class="card-tag tag-custom">Custom</span><span class="card-label">Custom / Unusual Instrument</span></div>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="card-body">
+      <div class="prompt-block">African mbira thumb piano, intimate and dry
+repetitive melodic pattern, natural room, no effects
+sparse and meditative, follows the harmonic movement<button class="copy-btn" onclick="copyPrompt(this)">copy</button></div>
+      <p class="note">Layer type: Custom — for sitar, mbira, kora, duduk, etc.</p>
+    </div>
+  </div>
+</div>
+
+<!-- VOCAL LAYER -->
+<div class="tool-section" id="tool-vocal">
+  <div class="section-header">Vocal · Add a Layer</div>
+  <div class="section-sub">Generates a vocal stem only · lyrics and style go in separate fields</div>
+  <div class="structure-block">LYRICS FIELD: your lyrics (no brackets needed for a single section)
+STYLE FIELD: [VOCAL TYPE + GENDER], [CHARACTER], [EFFECTS]
+             [DELIVERY STYLE], [ENERGY]</div>
+  <div class="divider"></div>
+
+  <div class="template-card">
+    <div class="card-header" onclick="toggle(this)">
+      <div class="card-left"><span class="card-tag tag-lead">Lead</span><span class="card-label">Lead Vocal — R&B</span></div>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="card-body">
+      <div class="prompt-block">STYLE: male R&B lead vocal, warm and intimate
+dry with slight room, no heavy reverb, breathy and close-miked
+soulful delivery, restrained, not oversinging<button class="copy-btn" onclick="copyPrompt(this)">copy</button></div>
+      <p class="note">Layer type: Vocal. Consistency is limited — treat each generation as a seed.</p>
+    </div>
+  </div>
+
+  <div class="template-card">
+    <div class="card-header" onclick="toggle(this)">
+      <div class="card-left"><span class="card-tag tag-back">Backing</span><span class="card-label">Backing Vocals / Harmonies</span></div>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="card-body">
+      <div class="prompt-block">STYLE: female backing vocals, sparse and airy
+light reverb, sits behind the lead, no vibrato
+gospel-influenced, smooth blend, two or three voices<button class="copy-btn" onclick="copyPrompt(this)">copy</button></div>
+      <p class="note">You can omit lyrics and let it generate freely, or write specific harmony syllables.</p>
+    </div>
+  </div>
+
+  <div class="template-card">
+    <div class="card-header" onclick="toggle(this)">
+      <div class="card-left"><span class="card-tag tag-acap">Acapella</span><span class="card-label">Dry Acapella (for Vocal to MIDI)</span></div>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="card-body">
+      <div class="prompt-block">STYLE: dry vocal no reverb no effects no harmonies
+close-miked, mono, natural and raw
+[GENDER], [GENRE] delivery<button class="copy-btn" onclick="copyPrompt(this)">copy</button></div>
+      <p class="note">Use this when piping result into Vocal to MIDI — cleaner source = better transcription.</p>
+    </div>
+  </div>
+</div>
+
+<!-- VOICE CHANGER -->
+<div class="tool-section" id="tool-voice">
+  <div class="section-header">Voice Changer</div>
+  <div class="section-sub">Audio-to-audio timbre transfer · no text prompt · parameter-based</div>
+  <div class="divider"></div>
+
+  <div class="template-card">
+    <div class="card-header" onclick="toggle(this)">
+      <div class="card-left"><span class="card-tag tag-vox">Params</span><span class="card-label">Parameter Reference</span></div>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="card-body">
+      <table class="param-table">
+        <tr><td>Pitch correction</td><td>0–20% → natural feel &nbsp;·&nbsp; 20–40% → lightly corrected &nbsp;·&nbsp; 100% → hard autotune / T-Pain</td></tr>
+        <tr><td>Semitone offset</td><td>0 = same &nbsp;·&nbsp; +7 = fifth up &nbsp;·&nbsp; -7 = fifth down &nbsp;·&nbsp; ±3 = minor/major third &nbsp;·&nbsp; ±12 = octave</td></tr>
+        <tr><td>Correct by scale</td><td>On = quantizes to chosen scale (good for harmony shifts) &nbsp;·&nbsp; Off = free pitch transfer</td></tr>
+        <tr><td>Offset</td><td>Small value = slight timing humanization (use when stacking voices)</td></tr>
+      </table>
+      <p class="note">Right-click audio → AI Tools → Voice Changer. No text prompt needed.</p>
+    </div>
+  </div>
+
+  <div class="template-card">
+    <div class="card-header" onclick="toggle(this)">
+      <div class="card-left"><span class="card-tag tag-recipe">Recipe</span><span class="card-label">Quick Harmony Stack</span></div>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="card-body">
+      <div class="prompt-block">Model 1 → offset 0,   pitch correction 20%, no semitone shift   → unison double
+Model 2 → offset +7,  pitch correction 60%, correct by scale ON  → fifth above
+Model 3 → offset -5,  pitch correction 60%, correct by scale ON  → third below
+Model 4 → small timing offset on each for human feel
+
+→ Pan each model differently in the mixer
+→ Lower all voice changer tracks vs lead vocal<button class="copy-btn" onclick="copyPrompt(this)">copy</button></div>
+      <p class="note">Choose 3–5 different vocal models. Creates harmony stack without MIDI or lyric editing.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+function showTool(id, btn) {
+  document.querySelectorAll('.tool-section').forEach(s => s.classList.remove('visible'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tool-' + id).classList.add('visible');
+  btn.classList.add('active');
+}
+
+function toggle(header) {
+  header.classList.toggle('open');
+  header.nextElementSibling.classList.toggle('open');
+}
+
+function copyPrompt(btn) {
+  const block = btn.parentElement;
+  const clone = block.cloneNode(true);
+  clone.querySelector('.copy-btn').remove();
+  const text = clone.innerText.trim();
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'copied';
+    setTimeout(() => btn.textContent = 'copy', 1500);
+  });
+}
+</script>
+</body>
+</html>

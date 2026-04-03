@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OG System State</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;500;700;800&display=swap');
+
+  :root {
+    --bg: #0a0a0a;
+    --bg2: #111111;
+    --bg3: #1a1a1a;
+    --border: #222;
+    --border2: #2a2a2a;
+    --text: #e8e4dc;
+    --text2: #888;
+    --text3: #444;
+    --green: #4ade80;
+    --green-dim: #1a3d27;
+    --amber: #fbbf24;
+    --amber-dim: #3d2e0a;
+    --red: #f87171;
+    --red-dim: #3d1a1a;
+    --blue: #60a5fa;
+    --blue-dim: #1a2d3d;
+    --accent: #e8e4dc;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+    padding: 2rem;
+  }
+
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .title { font-size: 11px; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text2); margin-bottom: 6px; }
+  .name { font-size: 28px; font-weight: 800; color: var(--text); line-height: 1; }
+  .name span { color: var(--text3); }
+
+  .timestamp { text-align: right; }
+  .ts-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); margin-bottom: 4px; }
+  .ts-val { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text2); }
+
+  .section { margin-bottom: 2rem; }
+  .section-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .grid2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+
+  @media (max-width: 600px) {
+    .grid3 { grid-template-columns: 1fr; }
+    .grid2 { grid-template-columns: 1fr; }
+    body { padding: 1rem; }
+  }
+
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+  }
+
+  .card-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); margin-bottom: 6px; }
+  .card-val { font-size: 16px; font-weight: 700; color: var(--text); }
+  .card-sub { font-size: 11px; color: var(--text2); margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
+
+  .status-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    margin-right: 6px;
+    animation: pulse 2s infinite;
+  }
+  .dot-green { background: var(--green); box-shadow: 0 0 0 2px var(--green-dim); }
+  .dot-amber { background: var(--amber); box-shadow: 0 0 0 2px var(--amber-dim); }
+  .dot-red { background: var(--red); box-shadow: 0 0 0 2px var(--red-dim); }
+  .dot-gray { background: var(--text3); box-shadow: none; animation: none; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .row-list { list-style: none; }
+  .row-list li {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    gap: 1rem;
+  }
+  .row-list li:last-child { border-bottom: none; }
+  .row-key { font-size: 12px; color: var(--text2); flex-shrink: 0; }
+  .row-val-r { font-size: 12px; color: var(--text); text-align: right; font-family: 'JetBrains Mono', monospace; }
+
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin: 2px 2px 0 0;
+  }
+  .badge-green { background: var(--green-dim); color: var(--green); }
+  .badge-amber { background: var(--amber-dim); color: var(--amber); }
+  .badge-blue { background: var(--blue-dim); color: var(--blue); }
+  .badge-gray { background: var(--bg3); color: var(--text2); border: 1px solid var(--border2); }
+
+  .mcp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  @media (max-width: 600px) { .mcp-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  .mcp-item {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text2);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .mcp-item.active { border-color: var(--green-dim); color: var(--text); }
+
+  .pending-list { list-style: none; }
+  .pending-list li {
+    padding: 10px 12px;
+    border-left: 2px solid var(--amber);
+    background: var(--amber-dim);
+    border-radius: 0 6px 6px 0;
+    margin-bottom: 6px;
+    font-size: 12px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .pending-list li .check { cursor: pointer; font-size: 14px; flex-shrink: 0; }
+  .pending-list li.done {
+    border-left-color: var(--green);
+    background: var(--green-dim);
+    opacity: 0.6;
+  }
+  .pending-list li.done .text { text-decoration: line-through; color: var(--text2); }
+
+  .notes-area {
+    width: 100%;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    resize: vertical;
+    min-height: 80px;
+    outline: none;
+  }
+  .notes-area:focus { border-color: var(--border2); }
+
+  .btn {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 8px 16px;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: all 0.15s;
+  }
+  .btn:hover { background: var(--border); border-color: var(--text3); }
+  .btn-accent { background: var(--text); color: var(--bg); border-color: var(--text); }
+  .btn-accent:hover { background: var(--text2); }
+
+  .actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+
+  .edit-field {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 10px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    width: 100%;
+    outline: none;
+  }
+  .edit-field:focus { border-color: var(--border2); }
+
+  .saved-flash {
+    font-size: 11px;
+    color: var(--green);
+    font-family: 'JetBrains Mono', monospace;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .saved-flash.show { opacity: 1; }
+
+  footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .footer-text { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="title">Optional Ganesh · System State</div>
+    <div class="name">OG<span>/</span>OS</div>
+  </div>
+  <div class="timestamp">
+    <div class="ts-label">última actualización</div>
+    <div class="ts-val mono" id="last-updated">—</div>
+  </div>
+</header>
+
+<!-- SERVIDOR -->
+<div class="section">
+  <div class="section-label">Servidor · Hetzner VPS</div>
+  <div class="grid3">
+    <div class="card">
+      <div class="card-label">Estado</div>
+      <div class="card-val"><span class="status-dot dot-green"></span><span id="server-status">active (running)</span></div>
+      <div class="card-sub" id="server-pid">og.service · PID 2233</div>
+      <div style="margin-top:8px"><span class="badge badge-green">systemd</span><span class="badge badge-green">auto-restart</span></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Recursos</div>
+      <div class="card-val" id="server-ram">29.8 MB RAM</div>
+      <div class="card-sub">de 4 GB disponibles</div>
+      <div style="margin-top:8px"><span class="badge badge-green">muy eficiente</span></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Acceso</div>
+      <div class="card-val mono" style="font-size:13px">178.104.77.46</div>
+      <div class="card-sub">SSH · root · Termius</div>
+      <div style="margin-top:8px"><span class="badge badge-blue">Ubuntu 24 · nbg1</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- SISTEMA OG -->
+<div class="section">
+  <div class="section-label">Sistema OG · qué corre</div>
+  <div class="card">
+    <ul class="row-list">
+      <li><span class="row-key"><span class="status-dot dot-green" style="animation:none;opacity:1"></span>Monitor financiero</span><span class="row-val-r">BTC · PAXG · EUR/USD (frankfurter.app)</span></li>
+      <li><span class="row-key"><span class="status-dot dot-green" style="animation:none;opacity:1"></span>Prompts musicales</span><span class="row-val-r">ligados a snapshots del mercado</span></li>
+      <li><span class="row-key"><span class="status-dot dot-green" style="animation:none;opacity:1"></span>Prompts visuales</span><span class="row-val-r">11:00 y 17:00 UTC</span></li>
+      <li><span class="row-key"><span class="status-dot dot-green" style="animation:none;opacity:1"></span>Detección SoundCloud</span><span class="row-val-r">RSS → semilla creativa</span></li>
+      <li><span class="row-key"><span class="status-dot dot-green" style="animation:none;opacity:1"></span>Análisis de audio</span><span class="row-val-r">librosa · descarga → analiza → borra</span></li>
+      <li><span class="row-key"><span class="status-dot dot-green" style="animation:none;opacity:1"></span>Feedback Telegram</span><span class="row-val-r">@optionalganesh_system_bot · /used /skip /status</span></li>
+    </ul>
+  </div>
+</div>
+
+<!-- MÁQUINAS -->
+<div class="section">
+  <div class="section-label">Máquinas locales</div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-label"><span class="status-dot dot-green"></span>Mac Mini M1 — principal</div>
+      <div class="card-val">Studio</div>
+      <div class="card-sub">16 GB · macOS Tahoe · Ollama Mistral 7B</div>
+      <div style="margin-top:8px">
+        <span class="badge badge-green">Claude Code</span>
+        <span class="badge badge-green">CLAUDE.md global</span>
+        <span class="badge badge-green">Cowork</span>
+        <span class="badge badge-green">Desktop Commander</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-label"><span class="status-dot dot-amber"></span>MacBook Pro 2017 — secundario</div>
+      <div class="card-val">Portable</div>
+      <div class="card-sub">8 GB · Intel i5 · Ollama Phi-3 Mini</div>
+      <div style="margin-top:8px">
+        <span class="badge badge-green">Claude Code</span>
+        <span class="badge badge-amber">MCPs por verificar</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MCPs -->
+<div class="section">
+  <div class="section-label">MCPs activos — Mac Mini M1</div>
+  <div class="card">
+    <div class="mcp-grid">
+      <div class="mcp-item active"><span class="status-dot dot-green" style="animation:none"></span>Context7</div>
+      <div class="mcp-item active"><span class="status-dot dot-green" style="animation:none"></span>Sequential Thinking</div>
+      <div class="mcp-item active"><span class="status-dot dot-green" style="animation:none"></span>Gmail</div>
+      <div class="mcp-item active"><span class="status-dot dot-green" style="animation:none"></span>Google Calendar</div>
+      <div class="mcp-item active"><span class="status-dot dot-green" style="animation:none"></span>Figma</div>
+      <div class="mcp-item active"><span class="status-dot dot-green" style="animation:none"></span>Canva</div>
+    </div>
+  </div>
+</div>
+
+<!-- PENDIENTES -->
+<div class="section">
+  <div class="section-label">Pendientes</div>
+  <ul class="pending-list" id="pending-list">
+    <li data-id="0"><span class="check" onclick="toggleDone(0)">○</span><span class="text">Cola de tareas diferidas en servidor — reanudar con créditos o máquina disponible</span></li>
+    <li data-id="1"><span class="check" onclick="toggleDone(1)">○</span><span class="text">Claude API integrada en system.py — prompts generados por IA, no listas fijas</span></li>
+    <li data-id="2"><span class="check" onclick="toggleDone(2)">○</span><span class="text">Verificar MCPs en MacBook Pro</span></li>
+    <li data-id="3"><span class="check" onclick="toggleDone(3)">○</span><span class="text">Acceso Figma slides curso LABASAD — URL /design/ o PDF export</span></li>
+    <li data-id="4"><span class="check" onclick="toggleDone(4)">○</span><span class="text">Curso Gumroad async — packaging del curriculum LABASAD</span></li>
+  </ul>
+  <div class="actions">
+    <input class="edit-field" id="new-task" placeholder="añadir pendiente..." style="flex:1; min-width:200px">
+    <button class="btn" onclick="addTask()">+ añadir</button>
+  </div>
+</div>
+
+<!-- NOTAS -->
+<div class="section">
+  <div class="section-label">Notas de sesión</div>
+  <textarea class="notes-area" id="notes" placeholder="notas, contexto, decisiones recientes..."></textarea>
+  <div class="actions">
+    <button class="btn btn-accent" onclick="saveAll()">guardar estado</button>
+    <span class="saved-flash" id="saved-flash">✓ guardado</span>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-text">Optional Ganesh OS · Diego Lara Vasquez · Barcelona</div>
+  <div class="footer-text mono" id="footer-ts">—</div>
+</footer>
+
+<script>
+const STORAGE_KEY = 'og_system_state_v1';
+
+let state = {
+  lastUpdated: null,
+  notes: '',
+  doneTasks: [],
+  customTasks: []
+};
+
+function load() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) state = { ...state, ...JSON.parse(saved) };
+  } catch(e) {}
+  render();
+}
+
+function save() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+function saveAll() {
+  state.notes = document.getElementById('notes').value;
+  state.lastUpdated = new Date().toISOString();
+  save();
+  updateTimestamp();
+  const flash = document.getElementById('saved-flash');
+  flash.classList.add('show');
+  setTimeout(() => flash.classList.remove('show'), 2000);
+}
+
+function updateTimestamp() {
+  if (!state.lastUpdated) return;
+  const d = new Date(state.lastUpdated);
+  const str = d.toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric' }) + ' · ' + d.toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' });
+  document.getElementById('last-updated').textContent = str;
+  document.getElementById('footer-ts').textContent = str;
+}
+
+function toggleDone(id) {
+  const idx = state.doneTasks.indexOf(id);
+  if (idx > -1) state.doneTasks.splice(idx, 1);
+  else state.doneTasks.push(id);
+  save();
+  renderPending();
+}
+
+function addTask() {
+  const input = document.getElementById('new-task');
+  const val = input.value.trim();
+  if (!val) return;
+  const id = Date.now();
+  state.customTasks.push({ id, text: val });
+  input.value = '';
+  save();
+  renderPending();
+}
+
+function removeTask(id) {
+  state.customTasks = state.customTasks.filter(t => t.id !== id);
+  save();
+  renderPending();
+}
+
+function renderPending() {
+  const list = document.getElementById('pending-list');
+  const items = list.querySelectorAll('li[data-id]');
+  items.forEach(li => {
+    const id = parseInt(li.dataset.id);
+    const done = state.doneTasks.includes(id);
+    li.classList.toggle('done', done);
+    li.querySelector('.check').textContent = done ? '●' : '○';
+  });
+
+  // custom tasks
+  list.querySelectorAll('.custom-task').forEach(el => el.remove());
+  state.customTasks.forEach(task => {
+    const li = document.createElement('li');
+    li.className = 'custom-task';
+    li.dataset.id = task.id;
+    const done = state.doneTasks.includes(task.id);
+    if (done) li.classList.add('done');
+    li.innerHTML = `<span class="check" onclick="toggleDone(${task.id})">${done ? '●' : '○'}</span><span class="text">${task.text}</span><span onclick="removeTask(${task.id})" style="margin-left:auto;cursor:pointer;color:var(--text3);font-size:16px;flex-shrink:0">×</span>`;
+    list.appendChild(li);
+  });
+}
+
+function render() {
+  document.getElementById('notes').value = state.notes || '';
+  updateTimestamp();
+  renderPending();
+}
+
+load();
+</script>
+</body>
+</html>
