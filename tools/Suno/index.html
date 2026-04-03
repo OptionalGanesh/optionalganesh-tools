@@ -1,405 +1,359 @@
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-  let currentMode = 'compress';
+let currentMode = 'compress';
 
-  const panelCompress = document.getElementById('panel-compress');
-  const panelGenerate = document.getElementById('panel-generate');
-  const tabs = document.querySelectorAll('.tab');
-  const runBtn = document.getElementById('run-btn');
-  const inputCompress = document.getElementById('input-compress');
-  const inputGenerate = document.getElementById('input-generate');
-  const styleExtraEl = document.getElementById('style-extra');
-  const moodExtraEl = document.getElementById('mood-extra');
-  const statusBar = document.getElementById('status-bar');
-  const statusDot = document.getElementById('status-dot');
-  const statusText = document.getElementById('status-text');
-  const outputArea = document.getElementById('output-area');
-  const tagButtons = document.querySelectorAll('.tag');
+function switchTab(mode) {
+  currentMode = mode;
 
-  function unique(arr) {
-    return [...new Set(arr.filter(Boolean).map(x => String(x).trim()).filter(Boolean))];
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', (i === 0 && mode === 'compress') || (i === 1 && mode === 'generate'));
+  });
+
+  document.getElementById('panel-compress').classList.toggle('active', mode === 'compress');
+  document.getElementById('panel-generate').classList.toggle('active', mode === 'generate');
+}
+
+function appendTag(t) {
+  const el = document.getElementById('input-generate');
+  el.value = el.value.trim() ? el.value.trim() + ', ' + t : t;
+  el.focus();
+}
+
+function setStatus(state, msg) {
+  const bar = document.getElementById('status-bar');
+  const dot = document.getElementById('status-dot');
+  const txt = document.getElementById('status-text');
+
+  if (!state) {
+    bar.style.display = 'none';
+    return;
   }
 
-  function pick(arr) {
-    return arr[Math.floor(Math.random() * arr.length)];
+  bar.style.display = 'flex';
+  dot.className = 'dot ' + state;
+  txt.textContent = msg;
+}
+
+function charPillClass(n) {
+  if (n > 200) return 'char-pill over';
+  if (n > 180) return 'char-pill close';
+  return 'char-pill';
+}
+
+function esc(s) {
+  return String(s || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+async function copyText(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+
+  await navigator.clipboard.writeText(el.textContent);
+
+  const btn = el.closest('.out-block')?.querySelector('.copy-btn');
+  if (!btn) return;
+
+  const orig = btn.textContent;
+  btn.textContent = '✓';
+  setTimeout(() => {
+    btn.textContent = orig;
+  }, 1500);
+}
+
+function renderOutput(data) {
+  const prompt = data.prompt || '';
+  const title = data.title || '';
+  const style_tags = data.style_tags || '';
+  const len = prompt.length;
+
+  document.getElementById('output-area').innerHTML = `
+    <div class="output">
+      <div class="out-block">
+        <div class="out-header">
+          <span class="out-label">Prompt Suno</span>
+          <div class="out-actions">
+            <span class="${charPillClass(len)}">${len}/200</span>
+            <button class="copy-btn" onclick="copyText('out-prompt')">copiar</button>
+          </div>
+        </div>
+        <div class="out-body" id="out-prompt">${esc(prompt)}</div>
+      </div>
+
+      ${title ? `
+      <div class="out-block">
+        <div class="out-header">
+          <span class="out-label">Título sugerido</span>
+          <button class="copy-btn" onclick="copyText('out-title')">copiar</button>
+        </div>
+        <div class="out-body" id="out-title">${esc(title)}</div>
+      </div>` : ''}
+
+      ${style_tags ? `
+      <div class="out-block">
+        <div class="out-header">
+          <span class="out-label">Style tags (campo Style en Suno)</span>
+          <button class="copy-btn" onclick="copyText('out-tags')">copiar</button>
+        </div>
+        <div class="out-body" id="out-tags">${esc(style_tags)}</div>
+      </div>` : ''}
+
+      <div class="regen-row">
+        <button class="regen-btn" onclick="runGeneration()">↺ Otra versión</button>
+        <button class="regen-btn" onclick="runGeneration(true)">↺ Más experimental</button>
+      </div>
+    </div>
+  `;
+}
+
+function unique(arr) {
+  return [...new Set(arr.filter(Boolean).map(x => String(x).trim()).filter(Boolean))];
+}
+
+function pick(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function normalizeSpaces(s) {
+  return String(s || '').replace(/\s+/g, ' ').replace(/\s+,/g, ',').trim();
+}
+
+function extractLine(label, text) {
+  const re = new RegExp(label + '\\s*:\\s*(.+)', 'i');
+  const m = text.match(re);
+  return m ? m[1].trim() : '';
+}
+
+function parseStructuredInput(raw) {
+  const text = raw.replace(/\r/g, '');
+  const lower = text.toLowerCase();
+
+  const data = {
+    title: extractLine('Title', text),
+    seed: extractLine('Seed', text),
+    concept: extractLine('Concept', text),
+    style: extractLine('Style', text),
+    mood: extractLine('Mood', text),
+    bpm: extractLine('BPM', text),
+    key: extractLine('Key', text),
+    groove: extractLine('Groove', text),
+    focus: extractLine('Focus', text),
+    voiceDirection: extractLine('Voice Direction', text),
+    sunoPrompt: extractLine('Suno Prompt', text),
+    directive: extractLine('Directive', text),
+    coreTexture: extractLine('Core texture', text),
+    secondaryTexture: extractLine('Secondary texture', text),
+    tracesOf: extractLine('Traces of', text),
+    tags: []
+  };
+
+  [data.style, data.mood, data.bpm ? data.bpm + ' bpm' : '', data.key].forEach(v => {
+    if (v) data.tags.push(v);
+  });
+
+  if (/broken|stuttering/.test(lower)) data.tags.push('broken beats');
+  if (/piano/.test(lower)) data.tags.push('haunting piano');
+  if (/lo-fi|grainy/.test(lower)) data.tags.push('lo-fi textures');
+  if (/ethereal|whisper/.test(lower)) data.tags.push('ethereal vocals');
+  if (/vinyl|hiss/.test(lower)) data.tags.push('vinyl crackle');
+  if (/glitch|imperfection/.test(lower)) data.tags.push('subtle glitch');
+  if (/distorted synth/.test(lower)) data.tags.push('distorted synths');
+  if (/longing|mournful/.test(lower)) data.tags.push('yearning tone');
+
+  if (data.focus) data.tags.push(data.focus);
+  if (data.coreTexture) data.tags.push(data.coreTexture);
+  if (data.secondaryTexture) data.tags.push(data.secondaryTexture);
+  if (data.tracesOf) data.tags.push(data.tracesOf);
+
+  if (data.sunoPrompt) {
+    data.tags.unshift(...data.sunoPrompt.split(',').map(s => s.trim()));
   }
 
-  function normalizeSpaces(s) {
-    return String(s || '').replace(/\s+/g, ' ').replace(/\s+,/g, ',').trim();
+  data.tags = unique(data.tags);
+  return data;
+}
+
+function mutateTag(tag) {
+  const map = {
+    'broken beats': ['fractured rhythm', 'off-grid percussion', 'staggered beats'],
+    'haunting piano': ['warped piano', 'detuned piano', 'dusty piano'],
+    'lo-fi textures': ['degraded tape', 'burnt texture', 'dust-coated texture'],
+    'ethereal vocals': ['ghost vocals', 'distant whispers', 'blurred vocals'],
+    'vinyl crackle': ['tape hiss', 'surface noise', 'needle dust'],
+    'subtle glitch': ['glitch residue', 'digital scars', 'micro-failures'],
+    'distorted synths': ['melting synths', 'corroded synths', 'unstable synth bloom'],
+    'yearning tone': ['aching undertow', 'distant ache', 'hollow ache'],
+    'trip-hop': ['fractured trip-hop', 'dusty trip-hop', 'smoked-out trip-hop'],
+    'melancholic': ['bleak melancholy', 'faded melancholy', 'suspended melancholy']
+  };
+
+  const key = String(tag).toLowerCase().trim();
+  const found = Object.keys(map).find(k => k.toLowerCase() === key);
+  return found ? pick(map[found]) : tag;
+}
+
+function makeTitle(data, moreExp) {
+  if (data.title) {
+    if (!moreExp) return data.title;
+    const suffix = pick(['(Alt Cut)', '(Dust Version)', '(Night Edit)', '(Frayed Mix)']);
+    const out = data.title + ' ' + suffix;
+    return out.length <= 48 ? out : data.title;
   }
 
-  function extractLine(label, text) {
-    const re = new RegExp(label + '\\s*:\\s*(.+)', 'i');
-    const m = text.match(re);
-    return m ? m[1].trim() : '';
+  const base = data.seed || data.style || 'Untitled';
+  return moreExp ? base + ' Alt' : base;
+}
+
+function makeStyleTags(data, styleExtra, moodExtra, moreExp) {
+  let tags = unique([
+    data.style,
+    moodExtra || data.mood,
+    styleExtra,
+    /broken|stuttering/i.test(data.groove || '') ? 'broken beats' : '',
+    /lo-fi|grainy/i.test(data.coreTexture || '') ? 'lo-fi' : '',
+    /vocal|whisper/i.test(data.secondaryTexture || '') ? 'ethereal vocals' : '',
+    /vinyl|hiss/i.test(data.tracesOf || '') ? 'vinyl' : ''
+  ]);
+
+  if (moreExp) {
+    tags = unique(tags.map(mutateTag).concat(['experimental']));
   }
 
-  function esc(s) {
-    return String(s || '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
+  let out = '';
+  for (const tag of tags) {
+    const next = out ? out + ', ' + tag : tag;
+    if (next.length <= 60) out = next;
+  }
+  return out;
+}
+
+function compressPrompt(data, styleExtra, moodExtra, moreExp) {
+  let tags = [...data.tags];
+
+  if (styleExtra) tags.push(styleExtra);
+  if (moodExtra) tags.push(moodExtra);
+
+  tags = unique(tags);
+
+  if (moreExp) {
+    tags = unique(
+      tags.map(mutateTag).concat([
+        pick(['ghost reverb', 'blurred transients', 'unstable low end']),
+        pick(['smoked-out atmosphere', 'frayed edges', 'off-balance texture'])
+      ])
+    );
   }
 
-  function charPillClass(n) {
-    if (n > 200) return 'char-pill over';
-    if (n > 180) return 'char-pill close';
-    return 'char-pill';
+  const priority = [
+    data.style,
+    data.mood,
+    data.bpm ? data.bpm + ' bpm' : '',
+    data.key,
+    moreExp ? 'fractured rhythm' : 'broken beats',
+    moreExp ? 'warped piano' : 'haunting piano',
+    moreExp ? 'degraded tape' : 'lo-fi textures',
+    moreExp ? 'ghost vocals' : 'ethereal vocals',
+    moreExp ? 'tape hiss' : 'vinyl crackle',
+    moreExp ? 'glitch residue' : 'subtle glitch'
+  ];
+
+  const ordered = [];
+
+  priority.forEach(p => {
+    const found = tags.find(t => t.toLowerCase() === String(p).toLowerCase());
+    if (found && !ordered.includes(found)) ordered.push(found);
+  });
+
+  tags.forEach(t => {
+    if (!ordered.includes(t)) ordered.push(t);
+  });
+
+  let prompt = '';
+  for (const tag of ordered) {
+    const next = prompt ? prompt + ', ' + tag : tag;
+    if (next.length <= 200) prompt = next;
   }
 
-  function setStatus(state, msg) {
-    if (!state) {
-      statusBar.style.display = 'none';
+  return {
+    prompt: normalizeSpaces(prompt),
+    title: makeTitle(data, moreExp),
+    style_tags: makeStyleTags(data, styleExtra, moodExtra, moreExp)
+  };
+}
+
+function generateFromScratch(raw, moreExp) {
+  let tags = unique(raw.split(',').map(s => s.trim()).filter(Boolean));
+
+  if (moreExp) {
+    tags = unique(
+      tags.map(mutateTag).concat([
+        pick(['ghost reverb', 'fractured textures', 'blurred low end']),
+        pick(['degraded tape', 'smoked-out atmosphere', 'off-grid pulse'])
+      ])
+    );
+  } else {
+    tags = unique(tags.concat(['textured production', 'moody atmosphere']));
+  }
+
+  let prompt = '';
+  for (const tag of tags) {
+    const next = prompt ? prompt + ', ' + tag : tag;
+    if (next.length <= 200) prompt = next;
+  }
+
+  let style_tags = '';
+  for (const tag of tags) {
+    const next = style_tags ? style_tags + ', ' + tag : tag;
+    if (next.length <= 60) style_tags = next;
+  }
+
+  const titleBase = (raw.split(',')[0] || 'Untitled').trim();
+
+  return {
+    prompt: normalizeSpaces(prompt),
+    title: moreExp ? titleBase + ' Alt' : titleBase,
+    style_tags
+  };
+}
+
+function runGeneration(moreExp = false) {
+  const btn = document.getElementById('run-btn');
+  let inputText = '';
+
+  if (currentMode === 'compress') {
+    inputText = document.getElementById('input-compress').value.trim();
+    if (!inputText) {
+      setStatus('err', 'Escribe o pega algo primero.');
       return;
     }
-
-    statusBar.style.display = 'flex';
-    statusDot.className = 'dot ' + state;
-    statusText.textContent = msg;
-  }
-
-  function switchTab(mode) {
-    currentMode = mode;
-
-    tabs.forEach((tab, i) => {
-      tab.classList.toggle('active', (i === 0 && mode === 'compress') || (i === 1 && mode === 'generate'));
-    });
-
-    panelCompress.classList.toggle('active', mode === 'compress');
-    panelGenerate.classList.toggle('active', mode === 'generate');
-  }
-
-  function appendTag(t) {
-    inputGenerate.value = inputGenerate.value.trim()
-      ? inputGenerate.value.trim() + ', ' + t
-      : t;
-    inputGenerate.focus();
-  }
-
-  async function copyText(id) {
-    const el = document.getElementById(id);
-    if (!el) return;
-
-    await navigator.clipboard.writeText(el.textContent);
-
-    const btn = el.closest('.out-block')?.querySelector('.copy-btn');
-    if (!btn) return;
-
-    const orig = btn.textContent;
-    btn.textContent = '✓';
-    setTimeout(() => {
-      btn.textContent = orig;
-    }, 1500);
-  }
-
-  function renderOutput(data) {
-    const prompt = data.prompt || '';
-    const title = data.title || '';
-    const style_tags = data.style_tags || '';
-    const len = prompt.length;
-
-    outputArea.innerHTML = `
-      <div class="output">
-        <div class="out-block">
-          <div class="out-header">
-            <span class="out-label">Prompt Suno</span>
-            <div class="out-actions">
-              <span class="${charPillClass(len)}">${len}/200</span>
-              <button class="copy-btn" data-copy="out-prompt">copiar</button>
-            </div>
-          </div>
-          <div class="out-body" id="out-prompt">${esc(prompt)}</div>
-        </div>
-
-        ${title ? `
-        <div class="out-block">
-          <div class="out-header">
-            <span class="out-label">Título sugerido</span>
-            <button class="copy-btn" data-copy="out-title">copiar</button>
-          </div>
-          <div class="out-body" id="out-title">${esc(title)}</div>
-        </div>` : ''}
-
-        ${style_tags ? `
-        <div class="out-block">
-          <div class="out-header">
-            <span class="out-label">Style tags (campo Style en Suno)</span>
-            <button class="copy-btn" data-copy="out-tags">copiar</button>
-          </div>
-          <div class="out-body" id="out-tags">${esc(style_tags)}</div>
-        </div>` : ''}
-
-        <div class="regen-row">
-          <button class="regen-btn" id="regen-normal">↺ Otra versión</button>
-          <button class="regen-btn" id="regen-exp">↺ Más experimental</button>
-        </div>
-      </div>
-    `;
-
-    outputArea.querySelectorAll('[data-copy]').forEach(btn => {
-      btn.addEventListener('click', function () {
-        copyText(this.getAttribute('data-copy'));
-      });
-    });
-
-    const regenNormal = document.getElementById('regen-normal');
-    const regenExp = document.getElementById('regen-exp');
-
-    if (regenNormal) {
-      regenNormal.addEventListener('click', () => runGeneration(false));
-    }
-    if (regenExp) {
-      regenExp.addEventListener('click', () => runGeneration(true));
+  } else {
+    inputText = document.getElementById('input-generate').value.trim();
+    if (!inputText) {
+      setStatus('err', 'Describe el sonido primero.');
+      return;
     }
   }
 
-  function parseStructuredInput(raw) {
-    const text = raw.replace(/\r/g, '');
-    const lower = text.toLowerCase();
+  const styleExtra = document.getElementById('style-extra') ? document.getElementById('style-extra').value.trim() : '';
+  const moodExtra = document.getElementById('mood-extra') ? document.getElementById('mood-extra').value.trim() : '';
 
-    const data = {
-      title: extractLine('Title', text),
-      seed: extractLine('Seed', text),
-      concept: extractLine('Concept', text),
-      style: extractLine('Style', text),
-      mood: extractLine('Mood', text),
-      bpm: extractLine('BPM', text),
-      key: extractLine('Key', text),
-      groove: extractLine('Groove', text),
-      focus: extractLine('Focus', text),
-      voiceDirection: extractLine('Voice Direction', text),
-      sunoPrompt: extractLine('Suno Prompt', text),
-      directive: extractLine('Directive', text),
-      coreTexture: extractLine('Core texture', text),
-      secondaryTexture: extractLine('Secondary texture', text),
-      tracesOf: extractLine('Traces of', text),
-      tags: []
-    };
+  btn.disabled = true;
+  setStatus('loading', moreExp ? 'Mutando prompt...' : 'Sintetizando prompt...');
 
-    [data.style, data.mood, data.bpm ? data.bpm + ' bpm' : '', data.key].forEach(v => {
-      if (v) data.tags.push(v);
-    });
+  try {
+    const result = currentMode === 'compress'
+      ? compressPrompt(parseStructuredInput(inputText), styleExtra, moodExtra, moreExp)
+      : generateFromScratch(inputText, moreExp);
 
-    if (/broken|stuttering/.test(lower)) data.tags.push('broken beats');
-    if (/piano/.test(lower)) data.tags.push('haunting piano');
-    if (/lo-fi|grainy/.test(lower)) data.tags.push('lo-fi textures');
-    if (/ethereal|whisper/.test(lower)) data.tags.push('ethereal vocals');
-    if (/vinyl|hiss/.test(lower)) data.tags.push('vinyl crackle');
-    if (/glitch|imperfection/.test(lower)) data.tags.push('subtle glitch');
-    if (/distorted synth/.test(lower)) data.tags.push('distorted synths');
-    if (/longing|mournful/.test(lower)) data.tags.push('yearning tone');
-
-    if (data.focus) data.tags.push(data.focus);
-    if (data.coreTexture) data.tags.push(data.coreTexture);
-    if (data.secondaryTexture) data.tags.push(data.secondaryTexture);
-    if (data.tracesOf) data.tags.push(data.tracesOf);
-
-    if (data.sunoPrompt) {
-      data.tags.unshift(...data.sunoPrompt.split(',').map(s => s.trim()));
-    }
-
-    data.tags = unique(data.tags);
-    return data;
+    renderOutput(result);
+    setStatus('ok', 'Listo — ' + result.prompt.length + ' chars');
+    setTimeout(() => setStatus(null), 3000);
+  } catch (e) {
+    console.error(e);
+    setStatus('err', 'Error: ' + e.message);
   }
 
-  function mutateTag(tag) {
-    const map = {
-      'broken beats': ['fractured rhythm', 'off-grid percussion', 'staggered beats'],
-      'haunting piano': ['warped piano', 'detuned piano', 'dusty piano'],
-      'lo-fi textures': ['degraded tape', 'burnt texture', 'dust-coated texture'],
-      'ethereal vocals': ['ghost vocals', 'distant whispers', 'blurred vocals'],
-      'vinyl crackle': ['tape hiss', 'surface noise', 'needle dust'],
-      'subtle glitch': ['glitch residue', 'digital scars', 'micro-failures'],
-      'distorted synths': ['melting synths', 'corroded synths', 'unstable synth bloom'],
-      'yearning tone': ['aching undertow', 'distant ache', 'hollow ache'],
-      'trip-hop': ['fractured trip-hop', 'dusty trip-hop', 'smoked-out trip-hop'],
-      'melancholic': ['bleak melancholy', 'faded melancholy', 'suspended melancholy']
-    };
-
-    const key = String(tag).toLowerCase().trim();
-    const found = Object.keys(map).find(k => k.toLowerCase() === key);
-    return found ? pick(map[found]) : tag;
-  }
-
-  function makeTitle(data, moreExp) {
-    if (data.title) {
-      if (!moreExp) return data.title;
-      const suffix = pick(['(Alt Cut)', '(Dust Version)', '(Night Edit)', '(Frayed Mix)']);
-      const out = data.title + ' ' + suffix;
-      return out.length <= 48 ? out : data.title;
-    }
-
-    const base = data.seed || data.style || 'Untitled';
-    return moreExp ? base + ' Alt' : base;
-  }
-
-  function makeStyleTags(data, styleExtra, moodExtra, moreExp) {
-    let tags = unique([
-      data.style,
-      moodExtra || data.mood,
-      styleExtra,
-      /broken|stuttering/i.test(data.groove || '') ? 'broken beats' : '',
-      /lo-fi|grainy/i.test(data.coreTexture || '') ? 'lo-fi' : '',
-      /vocal|whisper/i.test(data.secondaryTexture || '') ? 'ethereal vocals' : '',
-      /vinyl|hiss/i.test(data.tracesOf || '') ? 'vinyl' : ''
-    ]);
-
-    if (moreExp) {
-      tags = unique(tags.map(mutateTag).concat(['experimental']));
-    }
-
-    let out = '';
-    for (const tag of tags) {
-      const next = out ? out + ', ' + tag : tag;
-      if (next.length <= 60) out = next;
-    }
-    return out;
-  }
-
-  function compressPrompt(data, styleExtra, moodExtra, moreExp) {
-    let tags = [...data.tags];
-
-    if (styleExtra) tags.push(styleExtra);
-    if (moodExtra) tags.push(moodExtra);
-
-    tags = unique(tags);
-
-    if (moreExp) {
-      tags = unique(
-        tags.map(mutateTag).concat([
-          pick(['ghost reverb', 'blurred transients', 'unstable low end']),
-          pick(['smoked-out atmosphere', 'frayed edges', 'off-balance texture'])
-        ])
-      );
-    }
-
-    const priority = [
-      data.style,
-      data.mood,
-      data.bpm ? data.bpm + ' bpm' : '',
-      data.key,
-      moreExp ? 'fractured rhythm' : 'broken beats',
-      moreExp ? 'warped piano' : 'haunting piano',
-      moreExp ? 'degraded tape' : 'lo-fi textures',
-      moreExp ? 'ghost vocals' : 'ethereal vocals',
-      moreExp ? 'tape hiss' : 'vinyl crackle',
-      moreExp ? 'glitch residue' : 'subtle glitch'
-    ];
-
-    const ordered = [];
-
-    priority.forEach(p => {
-      const found = tags.find(t => t.toLowerCase() === String(p).toLowerCase());
-      if (found && !ordered.includes(found)) ordered.push(found);
-    });
-
-    tags.forEach(t => {
-      if (!ordered.includes(t)) ordered.push(t);
-    });
-
-    let prompt = '';
-    for (const tag of ordered) {
-      const next = prompt ? prompt + ', ' + tag : tag;
-      if (next.length <= 200) prompt = next;
-    }
-
-    return {
-      prompt: normalizeSpaces(prompt),
-      title: makeTitle(data, moreExp),
-      style_tags: makeStyleTags(data, styleExtra, moodExtra, moreExp)
-    };
-  }
-
-  function generateFromScratch(raw, moreExp) {
-    let tags = unique(raw.split(',').map(s => s.trim()).filter(Boolean));
-
-    if (moreExp) {
-      tags = unique(
-        tags.map(mutateTag).concat([
-          pick(['ghost reverb', 'fractured textures', 'blurred low end']),
-          pick(['degraded tape', 'smoked-out atmosphere', 'off-grid pulse'])
-        ])
-      );
-    } else {
-      tags = unique(tags.concat(['textured production', 'moody atmosphere']));
-    }
-
-    let prompt = '';
-    for (const tag of tags) {
-      const next = prompt ? prompt + ', ' + tag : tag;
-      if (next.length <= 200) prompt = next;
-    }
-
-    let style_tags = '';
-    for (const tag of tags) {
-      const next = style_tags ? style_tags + ', ' + tag : tag;
-      if (next.length <= 60) style_tags = next;
-    }
-
-    const titleBase = (raw.split(',')[0] || 'Untitled').trim();
-
-    return {
-      prompt: normalizeSpaces(prompt),
-      title: moreExp ? titleBase + ' Alt' : titleBase,
-      style_tags
-    };
-  }
-
-  function runGeneration(moreExp) {
-    let inputText = '';
-
-    if (currentMode === 'compress') {
-      inputText = inputCompress.value.trim();
-      if (!inputText) {
-        setStatus('err', 'Escribe o pega algo primero.');
-        return;
-      }
-    } else {
-      inputText = inputGenerate.value.trim();
-      if (!inputText) {
-        setStatus('err', 'Describe el sonido primero.');
-        return;
-      }
-    }
-
-    const styleExtra = styleExtraEl ? styleExtraEl.value.trim() : '';
-    const moodExtra = moodExtraEl ? moodExtraEl.value.trim() : '';
-
-    runBtn.disabled = true;
-    setStatus('loading', moreExp ? 'Mutando prompt...' : 'Sintetizando prompt...');
-
-    try {
-      const result = currentMode === 'compress'
-        ? compressPrompt(parseStructuredInput(inputText), styleExtra, moodExtra, !!moreExp)
-        : generateFromScratch(inputText, !!moreExp);
-
-      renderOutput(result);
-      setStatus('ok', 'Listo — ' + result.prompt.length + ' chars');
-      setTimeout(() => setStatus(null), 3000);
-    } catch (e) {
-      console.error(e);
-      setStatus('err', 'Error: ' + e.message);
-    }
-
-    runBtn.disabled = false;
-  }
-
-  tabs.forEach((tab, i) => {
-    tab.addEventListener('click', function () {
-      switchTab(i === 0 ? 'compress' : 'generate');
-    });
-  });
-
-  tagButtons.forEach(btn => {
-    btn.addEventListener('click', function () {
-      appendTag(this.textContent.trim());
-    });
-  });
-
-  runBtn.addEventListener('click', function () {
-    runGeneration(false);
-  });
-
-  window.runGeneration = runGeneration;
-});
+  btn.disabled = false;
+}
 </script>
