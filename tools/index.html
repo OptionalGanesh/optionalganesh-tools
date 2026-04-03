@@ -1,45 +1,338 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Optional Ganesh — Tools</title>
   <style>
+    :root {
+      --bg: #050505;
+      --bg-soft: #0c0c0c;
+      --line: rgba(255,255,255,0.08);
+      --text: rgba(255,255,255,0.92);
+      --muted: rgba(255,255,255,0.45);
+      --hover: rgba(255,255,255,0.08);
+      --glow: rgba(255,255,255,0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(255,255,255,0.035), transparent 30%),
+        radial-gradient(circle at 80% 30%, rgba(255,255,255,0.025), transparent 28%),
+        linear-gradient(180deg, #070707 0%, #020202 100%);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      letter-spacing: 0.01em;
+    }
+
     body {
-      background: black;
-      color: white;
-      font-family: sans-serif;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 100vh;
-      margin: 0;
+      padding: 32px;
     }
+
+    .frame {
+      width: 100%;
+      max-width: 1180px;
+      min-height: 78vh;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.015) inset, 0 24px 80px rgba(0,0,0,0.45);
+      display: grid;
+      grid-template-columns: 1.1fr 1.4fr;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .frame::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+      background-size: 28px 28px;
+      pointer-events: none;
+      opacity: 0.35;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,0.55), rgba(0,0,0,0.08));
+    }
+
+    .left, .right {
+      position: relative;
+      z-index: 1;
+    }
+
+    .left {
+      padding: 56px 44px 40px;
+      border-right: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .label {
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+
     h1 {
+      margin: 0;
+      font-size: clamp(2.2rem, 4vw, 4.6rem);
       font-weight: 300;
-      letter-spacing: 3px;
-      margin-bottom: 40px;
+      line-height: 0.95;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
     }
-    a {
-      color: white;
+
+    .subtitle {
+      margin-top: 18px;
+      max-width: 480px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .quote {
+      margin-top: 42px;
+      padding-left: 16px;
+      border-left: 1px solid var(--line);
+      color: rgba(255,255,255,0.62);
+      font-size: 13px;
+      line-height: 1.8;
+      max-width: 420px;
+    }
+
+    .footer-note {
+      color: rgba(255,255,255,0.33);
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .right {
+      padding: 34px 28px 28px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 18px;
+    }
+
+    .topbar-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.22em;
+      color: var(--muted);
+    }
+
+    .status {
+      font-size: 11px;
+      color: rgba(255,255,255,0.55);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(220px, 1fr));
+      gap: 14px;
+      flex: 1;
+      align-content: start;
+    }
+
+    .card {
       text-decoration: none;
-      margin: 8px;
-      font-size: 18px;
+      color: var(--text);
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.02));
+      min-height: 148px;
+      padding: 18px 18px 16px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
     }
-    a:hover {
-      opacity: 0.5;
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.05), transparent 45%);
+      opacity: 0;
+      transition: opacity 180ms ease;
+      pointer-events: none;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255,255,255,0.18);
+      background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.025));
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3), 0 0 24px var(--glow);
+    }
+
+    .card:hover::before {
+      opacity: 1;
+    }
+
+    .card-tag {
+      display: inline-block;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.42);
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 20px;
+      font-weight: 300;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .card-desc {
+      color: rgba(255,255,255,0.58);
+      font-size: 13px;
+      line-height: 1.65;
+      max-width: 90%;
+    }
+
+    .card-arrow {
+      position: absolute;
+      right: 16px;
+      bottom: 14px;
+      color: rgba(255,255,255,0.34);
+      font-size: 18px;
+      transition: transform 180ms ease, color 180ms ease;
+    }
+
+    .card:hover .card-arrow {
+      transform: translateX(4px);
+      color: rgba(255,255,255,0.7);
+    }
+
+    @media (max-width: 920px) {
+      .frame {
+        grid-template-columns: 1fr;
+      }
+
+      .left {
+        border-right: none;
+        border-bottom: 1px solid var(--line);
+        gap: 28px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 14px;
+      }
+
+      .left {
+        padding: 34px 22px 28px;
+      }
+
+      .right {
+        padding: 22px 16px 16px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        letter-spacing: 0.12em;
+      }
     }
   </style>
 </head>
 <body>
+  <main class="frame">
+    <section class="left">
+      <div>
+        <div class="label">Optional Ganesh</div>
+        <h1>Tools</h1>
+        <p class="subtitle">
+          A small operational space for building, shaping, testing and moving.
+          Not content. Not noise. Just instruments.
+        </p>
+        <div class="quote">
+          Rough systems for precise intentions.
+        </div>
+      </div>
 
-<h1>Optional Ganesh — Tools</h1>
+      <div class="footer-note">
+        Barcelona · Creative System Node
+      </div>
+    </section>
 
-<a href="/Suno/">Suno Converter</a>
-<a href="/MG-30/">MG30 Patch Builder</a>
-<a href="/ACEStudio/">ACE Studio</a>
-<a href="/PluginArsenal/">Plugin Arsenal</a>
-<a href="/MasterSystem/">Master System</a>
-<a href="/OGSystemState/">OG System State</a>
+    <section class="right">
+      <div class="topbar">
+        <div class="topbar-title">Access Points</div>
+        <div class="status">Online</div>
+      </div>
 
+      <div class="grid">
+        <a class="card" href="/Suno/">
+          <div class="card-tag">Prompt Tool</div>
+          <div class="card-title">Suno</div>
+          <div class="card-desc">Compress, mutate and generate song prompts with speed and less fluff.</div>
+          <div class="card-arrow">→</div>
+        </a>
+
+        <a class="card" href="/MG-30/">
+          <div class="card-tag">Patch Utility</div>
+          <div class="card-title">MG-30</div>
+          <div class="card-desc">Build and export patch structures from a cleaner control surface.</div>
+          <div class="card-arrow">→</div>
+        </a>
+
+        <a class="card" href="/ACEStudio/">
+          <div class="card-tag">Cheatsheet</div>
+          <div class="card-title">ACE Studio</div>
+          <div class="card-desc">Fast access to the voice-first composition logic in your working environment.</div>
+          <div class="card-arrow">→</div>
+        </a>
+
+        <a class="card" href="/PluginArsenal/">
+          <div class="card-tag">Cheatsheet</div>
+          <div class="card-title">Plugin Arsenal</div>
+          <div class="card-desc">A compact view of your sonic weapons, chains, moves and technical instincts.</div>
+          <div class="card-arrow">→</div>
+        </a>
+
+        <a class="card" href="/MasterSystem/">
+          <div class="card-tag">Cheatsheet</div>
+          <div class="card-title">Master System</div>
+          <div class="card-desc">A direct path into your mastering logic, structure and repeatable finishing moves.</div>
+          <div class="card-arrow">→</div>
+        </a>
+
+        <a class="card" href="/OGSystemState/">
+          <div class="card-tag">Cheatsheet</div>
+          <div class="card-title">OG State</div>
+          <div class="card-desc">A quick return to the operational mindset behind your creative and technical decisions.</div>
+          <div class="card-arrow">→</div>
+        </a>
+      </div>
+    </section>
+  </main>
 </body>
 </html>
