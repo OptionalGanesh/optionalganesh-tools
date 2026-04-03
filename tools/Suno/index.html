@@ -1,227 +1,3 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Suno Prompt Converter — Optional Ganesh</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Syne:wght@400;600;700&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg: #0a0a0a;
-    --surface: #111111;
-    --surface2: #181818;
-    --border: rgba(255,255,255,0.08);
-    --border2: rgba(255,255,255,0.14);
-    --text: #f0ede8;
-    --muted: #888580;
-    --hint: #4a4845;
-    --accent: #c8b89a;
-    --accent2: #7a6e5f;
-    --green: #4caf7d;
-    --warn: #d4853a;
-    --red: #c0504a;
-    --mono: 'DM Mono', monospace;
-    --sans: 'Syne', sans-serif;
-  }
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 16px; }
-  body { min-height: 100vh; padding: 0; }
-
-  body::before {
-    content: '';
-    position: fixed; inset: 0; z-index: 0; pointer-events: none;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-    opacity: 0.4;
-  }
-
-  .page { position: relative; z-index: 1; max-width: 740px; margin: 0 auto; padding: 3rem 2rem 5rem; }
-
-  header { margin-bottom: 3rem; }
-  .logo { font-size: 11px; font-family: var(--mono); letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase; margin-bottom: 1.2rem; }
-  h1 { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 700; letter-spacing: -0.03em; line-height: 1.05; color: var(--text); }
-  h1 span { color: var(--accent); }
-  .subtitle { margin-top: 0.75rem; font-family: var(--mono); font-size: 13px; color: var(--muted); }
-
-  .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 2rem; }
-  .tab {
-    padding: 0.6rem 1.4rem; font-size: 13px; font-family: var(--mono); letter-spacing: 0.05em;
-    color: var(--muted); cursor: pointer; background: none; border: none; border-bottom: 2px solid transparent;
-    margin-bottom: -1px; transition: color 0.2s, border-color 0.2s;
-  }
-  .tab:hover { color: var(--text); }
-  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-
-  .panel { display: none; }
-  .panel.active { display: block; }
-
-  .field { margin-bottom: 1.5rem; }
-  .field label {
-    display: block; font-family: var(--mono); font-size: 11px; letter-spacing: 0.15em;
-    text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem;
-  }
-  textarea, input[type="text"] {
-    width: 100%; background: var(--surface); border: 1px solid var(--border);
-    color: var(--text); font-family: var(--mono); font-size: 13px; line-height: 1.6;
-    padding: 0.75rem 1rem; border-radius: 4px; outline: none; resize: vertical;
-    transition: border-color 0.2s;
-  }
-  textarea:focus, input[type="text"]:focus { border-color: var(--border2); }
-  textarea { min-height: 110px; }
-  input[type="text"] { height: 38px; }
-
-  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-
-  .tags-cloud { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 0.5rem; }
-  .tag {
-    font-family: var(--mono); font-size: 11px; padding: 3px 10px;
-    border: 1px solid var(--border); border-radius: 2px; color: var(--muted);
-    cursor: pointer; background: none; transition: all 0.15s;
-  }
-  .tag:hover { border-color: var(--accent2); color: var(--accent); }
-
-  .api-section { margin-bottom: 2rem; }
-  .api-hint { font-family: var(--mono); font-size: 11px; color: var(--hint); margin-top: 6px; }
-
-  .run-btn {
-    width: 100%; padding: 0.85rem; font-family: var(--sans); font-size: 15px; font-weight: 600;
-    letter-spacing: 0.05em; background: var(--accent); color: #0a0a0a; border: none;
-    border-radius: 4px; cursor: pointer; transition: opacity 0.2s, transform 0.1s;
-    margin-bottom: 2rem;
-  }
-  .run-btn:hover { opacity: 0.88; }
-  .run-btn:active { transform: scale(0.99); }
-  .run-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
-
-  .output { animation: fadeIn 0.3s ease; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-
-  .out-block { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; margin-bottom: 1rem; overflow: hidden; }
-  .out-header {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 0.5rem 0.9rem; border-bottom: 1px solid var(--border);
-    background: var(--surface2);
-  }
-  .out-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
-  .out-actions { display: flex; gap: 8px; align-items: center; }
-  .char-pill {
-    font-family: var(--mono); font-size: 11px; padding: 2px 8px;
-    border-radius: 2px; background: rgba(76,175,125,0.15); color: var(--green);
-  }
-  .char-pill.over { background: rgba(192,80,74,0.15); color: var(--red); }
-  .char-pill.close { background: rgba(212,133,58,0.15); color: var(--warn); }
-  .copy-btn {
-    font-family: var(--mono); font-size: 11px; color: var(--muted); background: none;
-    border: 1px solid var(--border); border-radius: 2px; padding: 2px 8px; cursor: pointer;
-    transition: all 0.15s;
-  }
-  .copy-btn:hover { color: var(--accent); border-color: var(--accent2); }
-  .out-body { padding: 0.9rem 1rem; font-family: var(--mono); font-size: 13px; line-height: 1.65; color: var(--text); word-break: break-word; }
-
-  .regen-row { display: flex; gap: 10px; }
-  .regen-btn {
-    flex: 1; padding: 0.6rem; font-family: var(--mono); font-size: 12px;
-    color: var(--muted); background: none; border: 1px solid var(--border);
-    border-radius: 4px; cursor: pointer; transition: all 0.2s;
-  }
-  .regen-btn:hover { color: var(--accent); border-color: var(--accent2); }
-
-  .status-bar {
-    display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem;
-    font-family: var(--mono); font-size: 12px; color: var(--muted);
-    min-height: 24px;
-  }
-  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
-  .dot.loading { background: var(--warn); animation: pulse 1s infinite; }
-  .dot.ok { background: var(--green); }
-  .dot.err { background: var(--red); }
-  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
-
-  footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-family: var(--mono); font-size: 11px; color: var(--hint); letter-spacing: 0.05em; }
-
-  @media (max-width: 520px) {
-    .page { padding: 2rem 1.2rem 4rem; }
-    .row2 { grid-template-columns: 1fr; }
-    h1 { font-size: 2rem; }
-  }
-</style>
-</head>
-<body>
-<div class="page">
-  <header>
-    <div class="logo">Optional Ganesh / Tools</div>
-    <h1>Suno <span>Prompt</span><br>Converter</h1>
-    <p class="subtitle">// Comprime cualquier idea a &lt;200 chars para Suno AI</p>
-  </header>
-
-  <div class="api-section">
-    <div class="field">
-      <label>Modo</label>
-      <div class="api-hint">
-        Offline / sin API — sintetiza prompts desde la estructura que pegues, sin salir del navegador.
-      </div>
-    </div>
-  </div>
-
-  <div class="tabs">
-    <button class="tab active" onclick="switchTab('compress')">Comprimir prompt</button>
-    <button class="tab" onclick="switchTab('generate')">Generar desde cero</button>
-  </div>
-
-  <div class="panel active" id="panel-compress">
-    <div class="field">
-      <label>Texto de entrada</label>
-      <textarea id="input-compress" placeholder="Pega el prompt largo del bot de Telegram, o cualquier descripción libre del sonido que quieres..."></textarea>
-    </div>
-    <div class="row2">
-      <div class="field">
-        <label>Estilo extra (opcional)</label>
-        <input type="text" id="style-extra" placeholder="lo-fi, dark ambient, flamenco fusion…" />
-      </div>
-      <div class="field">
-        <label>Mood (opcional)</label>
-        <input type="text" id="mood-extra" placeholder="melancholic, hypnotic, raw…" />
-      </div>
-    </div>
-  </div>
-
-  <div class="panel" id="panel-generate">
-    <div class="field">
-      <label>Concepto sonoro</label>
-      <textarea id="input-generate" placeholder="ej. Burial meets Floating Points, percusión industrial oxidada, voz fantasma con reverb de catedral, medianoche en el metro de Tokyo…"></textarea>
-    </div>
-    <div class="field">
-      <label>Tags rápidos</label>
-      <div class="tags-cloud">
-        <button class="tag" onclick="appendTag('dark ambient')">dark ambient</button>
-        <button class="tag" onclick="appendTag('lo-fi hip hop')">lo-fi hip hop</button>
-        <button class="tag" onclick="appendTag('cinematic')">cinematic</button>
-        <button class="tag" onclick="appendTag('experimental')">experimental</button>
-        <button class="tag" onclick="appendTag('trip-hop')">trip-hop</button>
-        <button class="tag" onclick="appendTag('jazz fusion')">jazz fusion</button>
-        <button class="tag" onclick="appendTag('post-rock')">post-rock</button>
-        <button class="tag" onclick="appendTag('glitch')">glitch</button>
-        <button class="tag" onclick="appendTag('neo-soul')">neo-soul</button>
-        <button class="tag" onclick="appendTag('drone')">drone</button>
-        <button class="tag" onclick="appendTag('flamenco fusion')">flamenco fusion</button>
-        <button class="tag" onclick="appendTag('balearic')">balearic</button>
-        <button class="tag" onclick="appendTag('afrobeat')">afrobeat</button>
-        <button class="tag" onclick="appendTag('dub techno')">dub techno</button>
-      </div>
-    </div>
-  </div>
-
-  <button class="run-btn" id="run-btn" onclick="runGeneration()">Generar →</button>
-
-  <div class="status-bar" id="status-bar" style="display:none">
-    <div class="dot loading" id="status-dot"></div>
-    <span id="status-text">Procesando...</span>
-  </div>
-
-  <div id="output-area"></div>
-
-  <footer>optionalganesh.com / herramientas internas — modo local sin API</footer>
-</div>
-
 <script>
 let currentMode = 'compress';
 
@@ -381,17 +157,47 @@ function parseStructuredInput(raw) {
   if (/distorted synth/.test(lower)) data.tags.push('distorted synths');
   if (/glitch|imperfection/.test(lower)) data.tags.push('subtle glitch');
   if (/mournful|longing/.test(lower)) data.tags.push('yearning tone');
+  if (/ambient|ominous/.test(lower)) data.tags.push('dark ambience');
 
   data.tags = unique(data.tags);
   return data;
 }
 
+function mutateExperimentalTags(tags) {
+  const experimentalMap = {
+    'trip-hop': ['fractured trip-hop', 'smoked-out trip-hop', 'dusty trip-hop'],
+    'melancholic': ['suspended melancholy', 'bleak melancholy', 'faded melancholy'],
+    'broken beats': ['fractured rhythm', 'off-grid percussion', 'staggered beats'],
+    'stuttering beats': ['fractured rhythm', 'off-grid percussion', 'staggered beats'],
+    'haunting piano': ['warped piano', 'detuned piano', 'dusty piano'],
+    'distorted, haunting piano melodies': ['warped piano', 'detuned piano', 'dusty piano'],
+    'lo-fi textures': ['degraded tape', 'burnt texture', 'dust-coated texture'],
+    'grainy samples': ['shredded samples', 'degraded samples', 'dusty fragments'],
+    'ethereal vocals': ['ghost vocals', 'distant whispers', 'blurred vocals'],
+    'whispery, ethereal vocal layers': ['ghost vocals', 'distant whispers', 'blurred vocals'],
+    'vinyl crackle': ['tape hiss', 'surface noise', 'needle dust'],
+    'distorted synths': ['melting synths', 'corroded synths', 'unstable synth bloom'],
+    'subtle glitch': ['glitch residue', 'digital scars', 'micro-failures'],
+    'yearning tone': ['aching undertow', 'hollow ache', 'distant ache'],
+    'dark ambience': ['unstable ambience', 'smoked-out atmosphere', 'shadowy air'],
+    'b harmonic minor': ['B harmonic minor', 'B minor shadows'],
+    'old vinyl crackle and hiss': ['tape hiss', 'surface noise', 'needle dust']
+  };
+
+  return unique(tags.map(tag => {
+    const key = String(tag).toLowerCase().trim();
+    const foundKey = Object.keys(experimentalMap).find(k => k.toLowerCase() === key);
+    if (foundKey) return pick(experimentalMap[foundKey]);
+    return tag;
+  }));
+}
+
 function makeTitle(data, moreExp) {
   if (data.title) {
     if (!moreExp) return data.title;
-    const suffix = pick(['(Alt Cut)', '(Dust Version)', '(Frayed Mix)', '(Night Edit)']);
+    const suffix = pick(['(Alt Cut)', '(Dust Version)', '(Frayed Mix)', '(Night Edit)', '(Burnt Signal)']);
     const out = data.title + ' ' + suffix;
-    return out.length <= 44 ? out : data.title;
+    return out.length <= 46 ? out : data.title;
   }
   const base = data.seed || data.style || 'Untitled';
   return moreExp ? (base + ' Frayed') : (base + ' Sketch');
@@ -405,9 +211,14 @@ function makeStyleTags(data, styleExtra, moodExtra, moreExp) {
     /broken|stuttering/i.test(data.groove || '') ? 'broken beats' : '',
     /lo-fi|grainy/i.test(data.coreTexture || '') ? 'lo-fi' : '',
     /vocal|whisper/i.test(data.secondaryTexture || '') ? 'ethereal vocals' : '',
-    /vinyl|hiss/i.test(data.tracesOf || '') ? 'vinyl' : '',
-    moreExp ? 'experimental' : ''
+    /vinyl|hiss/i.test(data.tracesOf || '') ? 'vinyl' : ''
   ]);
+
+  if (moreExp) {
+    tags = mutateExperimentalTags(tags);
+    tags.push('experimental');
+    tags = unique(tags);
+  }
 
   let out = '';
   for (const tag of tags) {
@@ -429,15 +240,18 @@ function compressPrompt(data, styleExtra, moodExtra, moreExp) {
   if (styleExtra) tags.push(styleExtra);
   if (moodExtra) tags.push(moodExtra);
 
-  const extras = moreExp
-    ? ['fractured rhythm', 'blurred transients', 'ghost reverb']
-    : [];
-
-  tags.push(...extras);
-
   tags = unique(tags);
 
-  const priority = [
+  if (moreExp) {
+    tags = mutateExperimentalTags(tags);
+    tags.push(
+      pick(['blurred transients', 'ghost reverb', 'unstable low end']),
+      pick(['off-balance texture', 'frayed edges', 'smoked-out space'])
+    );
+    tags = unique(tags);
+  }
+
+  const priorityNormal = [
     data.style,
     data.mood,
     data.bpm ? data.bpm + ' bpm' : '',
@@ -453,6 +267,28 @@ function compressPrompt(data, styleExtra, moodExtra, moreExp) {
     'subtle glitch'
   ];
 
+  const priorityExperimental = [
+    data.style ? mutateExperimentalTags([data.style])[0] : '',
+    data.mood ? mutateExperimentalTags([data.mood])[0] : '',
+    data.bpm ? data.bpm + ' bpm' : '',
+    data.key ? mutateExperimentalTags([data.key])[0] || data.key : '',
+    'fractured rhythm',
+    'off-grid percussion',
+    'warped piano',
+    'detuned piano',
+    'degraded tape',
+    'burnt texture',
+    'ghost vocals',
+    'distant whispers',
+    'tape hiss',
+    'surface noise',
+    'melting synths',
+    'glitch residue',
+    'aching undertow'
+  ];
+
+  const priority = moreExp ? priorityExperimental : priorityNormal;
+
   const ordered = [];
   priority.forEach(p => {
     const found = tags.find(t => t.toLowerCase() === String(p).toLowerCase());
@@ -465,7 +301,9 @@ function compressPrompt(data, styleExtra, moodExtra, moreExp) {
   let prompt = '';
   for (const tag of ordered) {
     const next = prompt ? prompt + ', ' + tag : tag;
-    if (next.length <= 200) prompt = next;
+    if (next.length <= 200) {
+      prompt = next;
+    }
   }
 
   return {
@@ -476,11 +314,15 @@ function compressPrompt(data, styleExtra, moodExtra, moreExp) {
 }
 
 function generateFromScratch(raw, moreExp) {
-  const bits = raw.split(',').map(s => s.trim()).filter(Boolean);
+  let bits = raw.split(',').map(s => s.trim()).filter(Boolean);
   let tags = unique(bits);
 
   if (moreExp) {
-    tags.push('fractured textures', 'ghost reverb', 'blurred low end');
+    tags = mutateExperimentalTags(tags);
+    tags.push(
+      pick(['fractured textures', 'ghost reverb', 'blurred low end']),
+      pick(['degraded tape', 'off-grid pulse', 'smoked-out atmosphere'])
+    );
   } else {
     tags.push('textured production', 'moody atmosphere');
   }
@@ -499,7 +341,11 @@ function generateFromScratch(raw, moreExp) {
     if (next.length <= 60) style_tags = next;
   }
 
-  const titleBase = bits[0] || 'Untitled';
+  const titleBase = (bits[0] || 'Untitled')
+    .split(' ')
+    .slice(0, 3)
+    .join(' ');
+
   return {
     prompt: normalizeSpaces(prompt),
     title: moreExp ? titleBase + ' Alt' : titleBase,
@@ -529,7 +375,7 @@ function runGeneration(moreExp) {
   const moodExtra = document.getElementById('mood-extra') ? document.getElementById('mood-extra').value.trim() : '';
 
   btn.disabled = true;
-  setStatus('loading', 'Sintetizando prompt...');
+  setStatus('loading', moreExp ? 'Mutando prompt...' : 'Sintetizando prompt...');
 
   try {
     let result;
@@ -551,5 +397,3 @@ function runGeneration(moreExp) {
   btn.disabled = false;
 }
 </script>
-</body>
-</html>
