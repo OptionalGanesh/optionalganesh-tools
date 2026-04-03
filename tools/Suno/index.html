@@ -20,10 +20,12 @@ function setStatus(state, msg) {
   const bar = document.getElementById('status-bar');
   const dot = document.getElementById('status-dot');
   const txt = document.getElementById('status-text');
+
   if (!state) {
     bar.style.display = 'none';
     return;
   }
+
   bar.style.display = 'flex';
   dot.className = 'dot ' + state;
   txt.textContent = msg;
@@ -42,14 +44,20 @@ function esc(s) {
     .replace(/>/g, '&gt;');
 }
 
-async function copyText(id, btnEl) {
+async function copyText(id) {
   const el = document.getElementById(id);
   if (!el) return;
+
   await navigator.clipboard.writeText(el.textContent);
-  if (!btnEl) return;
-  const orig = btnEl.textContent;
-  btnEl.textContent = '✓';
-  setTimeout(() => btnEl.textContent = orig, 1500);
+
+  const btn = el.closest('.out-block').querySelector('.copy-btn');
+  if (!btn) return;
+
+  const orig = btn.textContent;
+  btn.textContent = '✓';
+  setTimeout(() => {
+    btn.textContent = orig;
+  }, 1500);
 }
 
 function renderOutput(data) {
@@ -65,32 +73,36 @@ function renderOutput(data) {
           <span class="out-label">Prompt Suno</span>
           <div class="out-actions">
             <span class="${charPillClass(len)}">${len}/200</span>
-            <button class="copy-btn" onclick="copyText('out-prompt', this)">copiar</button>
+            <button class="copy-btn" onclick="copyText('out-prompt')">copiar</button>
           </div>
         </div>
         <div class="out-body" id="out-prompt">${esc(prompt)}</div>
       </div>
+
       ${title ? `
       <div class="out-block">
         <div class="out-header">
           <span class="out-label">Título sugerido</span>
-          <button class="copy-btn" onclick="copyText('out-title', this)">copiar</button>
+          <button class="copy-btn" onclick="copyText('out-title')">copiar</button>
         </div>
         <div class="out-body" id="out-title">${esc(title)}</div>
       </div>` : ''}
+
       ${style_tags ? `
       <div class="out-block">
         <div class="out-header">
           <span class="out-label">Style tags (campo Style en Suno)</span>
-          <button class="copy-btn" onclick="copyText('out-tags', this)">copiar</button>
+          <button class="copy-btn" onclick="copyText('out-tags')">copiar</button>
         </div>
         <div class="out-body" id="out-tags">${esc(style_tags)}</div>
       </div>` : ''}
+
       <div class="regen-row">
         <button class="regen-btn" onclick="runGeneration()">↺ Otra versión</button>
         <button class="regen-btn" onclick="runGeneration(true)">↺ Más experimental</button>
       </div>
-    </div>`;
+    </div>
+  `;
 }
 
 function unique(arr) {
@@ -102,7 +114,10 @@ function pick(arr) {
 }
 
 function normalizeSpaces(s) {
-  return String(s || '').replace(/\s+/g, ' ').replace(/\s+,/g, ',').trim();
+  return String(s || '')
+    .replace(/\s+/g, ' ')
+    .replace(/\s+,/g, ',')
+    .trim();
 }
 
 function extractLine(label, text) {
@@ -138,69 +153,62 @@ function parseStructuredInput(raw) {
     data.style,
     data.mood,
     data.bpm ? data.bpm + ' bpm' : '',
-    data.key,
-    data.groove,
-    data.focus,
-    data.coreTexture,
-    data.secondaryTexture,
-    data.tracesOf
-  ].forEach(v => { if (v) data.tags.push(v); });
+    data.key
+  ].forEach(v => {
+    if (v) data.tags.push(v);
+  });
 
-  if (/lo-fi/.test(lower)) data.tags.push('lo-fi textures');
-  if (/trip-hop/.test(lower)) data.tags.push('trip-hop');
-  if (/melancholic/.test(lower)) data.tags.push('melancholic');
-  if (/piano/.test(lower)) data.tags.push('haunting piano');
   if (/broken|stuttering/.test(lower)) data.tags.push('broken beats');
+  if (/piano/.test(lower)) data.tags.push('haunting piano');
+  if (/lo-fi|grainy/.test(lower)) data.tags.push('lo-fi textures');
   if (/ethereal|whisper/.test(lower)) data.tags.push('ethereal vocals');
   if (/vinyl|hiss/.test(lower)) data.tags.push('vinyl crackle');
-  if (/grainy/.test(lower)) data.tags.push('grainy samples');
-  if (/distorted synth/.test(lower)) data.tags.push('distorted synths');
   if (/glitch|imperfection/.test(lower)) data.tags.push('subtle glitch');
-  if (/mournful|longing/.test(lower)) data.tags.push('yearning tone');
-  if (/ambient|ominous/.test(lower)) data.tags.push('dark ambience');
+  if (/distorted synth/.test(lower)) data.tags.push('distorted synths');
+  if (/longing|mournful/.test(lower)) data.tags.push('yearning tone');
+
+  if (data.focus) data.tags.push(data.focus);
+  if (data.coreTexture) data.tags.push(data.coreTexture);
+  if (data.secondaryTexture) data.tags.push(data.secondaryTexture);
+  if (data.tracesOf) data.tags.push(data.tracesOf);
+
+  if (data.sunoPrompt) {
+    data.tags.unshift(...data.sunoPrompt.split(',').map(s => s.trim()));
+  }
 
   data.tags = unique(data.tags);
   return data;
 }
 
-function mutateExperimentalTags(tags) {
-  const experimentalMap = {
-    'trip-hop': ['fractured trip-hop', 'smoked-out trip-hop', 'dusty trip-hop'],
-    'melancholic': ['suspended melancholy', 'bleak melancholy', 'faded melancholy'],
+function mutateTag(tag) {
+  const map = {
     'broken beats': ['fractured rhythm', 'off-grid percussion', 'staggered beats'],
-    'stuttering beats': ['fractured rhythm', 'off-grid percussion', 'staggered beats'],
     'haunting piano': ['warped piano', 'detuned piano', 'dusty piano'],
-    'distorted, haunting piano melodies': ['warped piano', 'detuned piano', 'dusty piano'],
     'lo-fi textures': ['degraded tape', 'burnt texture', 'dust-coated texture'],
-    'grainy samples': ['shredded samples', 'degraded samples', 'dusty fragments'],
     'ethereal vocals': ['ghost vocals', 'distant whispers', 'blurred vocals'],
-    'whispery, ethereal vocal layers': ['ghost vocals', 'distant whispers', 'blurred vocals'],
     'vinyl crackle': ['tape hiss', 'surface noise', 'needle dust'],
-    'distorted synths': ['melting synths', 'corroded synths', 'unstable synth bloom'],
     'subtle glitch': ['glitch residue', 'digital scars', 'micro-failures'],
-    'yearning tone': ['aching undertow', 'hollow ache', 'distant ache'],
-    'dark ambience': ['unstable ambience', 'smoked-out atmosphere', 'shadowy air'],
-    'b harmonic minor': ['B harmonic minor', 'B minor shadows'],
-    'old vinyl crackle and hiss': ['tape hiss', 'surface noise', 'needle dust']
+    'distorted synths': ['melting synths', 'corroded synths', 'unstable synth bloom'],
+    'yearning tone': ['aching undertow', 'distant ache', 'hollow ache'],
+    'trip-hop': ['fractured trip-hop', 'dusty trip-hop', 'smoked-out trip-hop'],
+    'melancholic': ['bleak melancholy', 'faded melancholy', 'suspended melancholy']
   };
 
-  return unique(tags.map(tag => {
-    const key = String(tag).toLowerCase().trim();
-    const foundKey = Object.keys(experimentalMap).find(k => k.toLowerCase() === key);
-    if (foundKey) return pick(experimentalMap[foundKey]);
-    return tag;
-  }));
+  const key = String(tag).toLowerCase().trim();
+  const found = Object.keys(map).find(k => k.toLowerCase() === key);
+  return found ? pick(map[found]) : tag;
 }
 
 function makeTitle(data, moreExp) {
   if (data.title) {
     if (!moreExp) return data.title;
-    const suffix = pick(['(Alt Cut)', '(Dust Version)', '(Frayed Mix)', '(Night Edit)', '(Burnt Signal)']);
+    const suffix = pick(['(Alt Cut)', '(Dust Version)', '(Night Edit)', '(Frayed Mix)']);
     const out = data.title + ' ' + suffix;
-    return out.length <= 46 ? out : data.title;
+    return out.length <= 48 ? out : data.title;
   }
+
   const base = data.seed || data.style || 'Untitled';
-  return moreExp ? (base + ' Frayed') : (base + ' Sketch');
+  return moreExp ? base + ' Alt' : base;
 }
 
 function makeStyleTags(data, styleExtra, moodExtra, moreExp) {
@@ -215,9 +223,7 @@ function makeStyleTags(data, styleExtra, moodExtra, moreExp) {
   ]);
 
   if (moreExp) {
-    tags = mutateExperimentalTags(tags);
-    tags.push('experimental');
-    tags = unique(tags);
+    tags = unique(tags.map(mutateTag).concat(['experimental']));
   }
 
   let out = '';
@@ -229,13 +235,7 @@ function makeStyleTags(data, styleExtra, moodExtra, moreExp) {
 }
 
 function compressPrompt(data, styleExtra, moodExtra, moreExp) {
-  let tags = [];
-
-  if (data.sunoPrompt) {
-    tags.push(...data.sunoPrompt.split(',').map(s => s.trim()));
-  }
-
-  tags.push(...data.tags);
+  let tags = [...data.tags];
 
   if (styleExtra) tags.push(styleExtra);
   if (moodExtra) tags.push(moodExtra);
@@ -243,57 +243,34 @@ function compressPrompt(data, styleExtra, moodExtra, moreExp) {
   tags = unique(tags);
 
   if (moreExp) {
-    tags = mutateExperimentalTags(tags);
-    tags.push(
-      pick(['blurred transients', 'ghost reverb', 'unstable low end']),
-      pick(['off-balance texture', 'frayed edges', 'smoked-out space'])
+    tags = unique(
+      tags.map(mutateTag).concat([
+        pick(['ghost reverb', 'blurred transients', 'unstable low end']),
+        pick(['smoked-out atmosphere', 'frayed edges', 'off-balance texture'])
+      ])
     );
-    tags = unique(tags);
   }
 
-  const priorityNormal = [
+  const priority = [
     data.style,
     data.mood,
     data.bpm ? data.bpm + ' bpm' : '',
     data.key,
-    'broken beats',
-    'haunting piano',
-    'lo-fi textures',
-    'grainy samples',
-    'ethereal vocals',
-    'vinyl crackle',
-    'distorted synths',
-    'yearning tone',
-    'subtle glitch'
+    moreExp ? 'fractured rhythm' : 'broken beats',
+    moreExp ? 'warped piano' : 'haunting piano',
+    moreExp ? 'degraded tape' : 'lo-fi textures',
+    moreExp ? 'ghost vocals' : 'ethereal vocals',
+    moreExp ? 'tape hiss' : 'vinyl crackle',
+    moreExp ? 'glitch residue' : 'subtle glitch'
   ];
-
-  const priorityExperimental = [
-    data.style ? mutateExperimentalTags([data.style])[0] : '',
-    data.mood ? mutateExperimentalTags([data.mood])[0] : '',
-    data.bpm ? data.bpm + ' bpm' : '',
-    data.key ? mutateExperimentalTags([data.key])[0] || data.key : '',
-    'fractured rhythm',
-    'off-grid percussion',
-    'warped piano',
-    'detuned piano',
-    'degraded tape',
-    'burnt texture',
-    'ghost vocals',
-    'distant whispers',
-    'tape hiss',
-    'surface noise',
-    'melting synths',
-    'glitch residue',
-    'aching undertow'
-  ];
-
-  const priority = moreExp ? priorityExperimental : priorityNormal;
 
   const ordered = [];
+
   priority.forEach(p => {
     const found = tags.find(t => t.toLowerCase() === String(p).toLowerCase());
     if (found && !ordered.includes(found)) ordered.push(found);
   });
+
   tags.forEach(t => {
     if (!ordered.includes(t)) ordered.push(t);
   });
@@ -301,9 +278,7 @@ function compressPrompt(data, styleExtra, moodExtra, moreExp) {
   let prompt = '';
   for (const tag of ordered) {
     const next = prompt ? prompt + ', ' + tag : tag;
-    if (next.length <= 200) {
-      prompt = next;
-    }
+    if (next.length <= 200) prompt = next;
   }
 
   return {
@@ -314,20 +289,18 @@ function compressPrompt(data, styleExtra, moodExtra, moreExp) {
 }
 
 function generateFromScratch(raw, moreExp) {
-  let bits = raw.split(',').map(s => s.trim()).filter(Boolean);
-  let tags = unique(bits);
+  let tags = unique(raw.split(',').map(s => s.trim()).filter(Boolean));
 
   if (moreExp) {
-    tags = mutateExperimentalTags(tags);
-    tags.push(
-      pick(['fractured textures', 'ghost reverb', 'blurred low end']),
-      pick(['degraded tape', 'off-grid pulse', 'smoked-out atmosphere'])
+    tags = unique(
+      tags.map(mutateTag).concat([
+        pick(['ghost reverb', 'fractured textures', 'blurred low end']),
+        pick(['degraded tape', 'smoked-out atmosphere', 'off-grid pulse'])
+      ])
     );
   } else {
-    tags.push('textured production', 'moody atmosphere');
+    tags = unique(tags.concat(['textured production', 'moody atmosphere']));
   }
-
-  tags = unique(tags);
 
   let prompt = '';
   for (const tag of tags) {
@@ -341,10 +314,7 @@ function generateFromScratch(raw, moreExp) {
     if (next.length <= 60) style_tags = next;
   }
 
-  const titleBase = (bits[0] || 'Untitled')
-    .split(' ')
-    .slice(0, 3)
-    .join(' ');
+  const titleBase = (raw.split(',')[0] || 'Untitled').trim();
 
   return {
     prompt: normalizeSpaces(prompt),
@@ -353,7 +323,7 @@ function generateFromScratch(raw, moreExp) {
   };
 }
 
-function runGeneration(moreExp) {
+function runGeneration(moreExp = false) {
   const btn = document.getElementById('run-btn');
   let inputText = '';
 
@@ -378,13 +348,9 @@ function runGeneration(moreExp) {
   setStatus('loading', moreExp ? 'Mutando prompt...' : 'Sintetizando prompt...');
 
   try {
-    let result;
-    if (currentMode === 'compress') {
-      const parsed = parseStructuredInput(inputText);
-      result = compressPrompt(parsed, styleExtra, moodExtra, !!moreExp);
-    } else {
-      result = generateFromScratch(inputText, !!moreExp);
-    }
+    const result = currentMode === 'compress'
+      ? compressPrompt(parseStructuredInput(inputText), styleExtra, moodExtra, moreExp)
+      : generateFromScratch(inputText, moreExp);
 
     renderOutput(result);
     setStatus('ok', 'Listo — ' + result.prompt.length + ' chars');
