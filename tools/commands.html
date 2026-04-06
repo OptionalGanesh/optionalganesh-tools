@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optional Ganesh — Commands</title>
+    <style>
+        :root {
+            --bg: #050505;
+            --line: rgba(255,255,255,0.08);
+            --text: rgba(255,255,255,0.92);
+            --muted: rgba(255,255,255,0.45);
+            --glow: rgba(255,255,255,0.12);
+        }
+
+        * { box-sizing: border-box; }
+
+        html, body {
+            margin: 0;
+            min-height: 100%;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(255,255,255,0.035), transparent 30%),
+                radial-gradient(circle at 80% 30%, rgba(255,255,255,0.025), transparent 28%),
+                linear-gradient(180deg, #070707 0%, #020202 100%);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            letter-spacing: 0.01em;
+        }
+
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 32px;
+            min-height: 100vh;
+        }
+
+        .frame {
+            width: 100%;
+            max-width: 1180px;
+            min-height: 78vh;
+            border: 1px solid var(--line);
+            background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.015) inset, 0 24px 80px rgba(0,0,0,0.45);
+            display: grid;
+            grid-template-columns: 1.1fr 1.4fr;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .frame::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+            background-size: 28px 28px;
+            pointer-events: none;
+            opacity: 0.35;
+            mask-image: linear-gradient(to bottom, rgba(0,0,0,0.55), rgba(0,0,0,0.08));
+        }
+
+        .left, .right { position: relative; z-index: 1; }
+
+        .left {
+            padding: 56px 44px 40px;
+            border-right: 1px solid var(--line);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255,255,255,0.32);
+            font-size: 11px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            text-decoration: none;
+            margin-bottom: 32px;
+            transition: color 180ms ease;
+        }
+        .back-link:hover { color: rgba(255,255,255,0.65); }
+
+        .label {
+            color: var(--muted);
+            font-size: 11px;
+            letter-spacing: 0.28em;
+            text-transform: uppercase;
+            margin-bottom: 18px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(2.2rem, 4vw, 4.6rem);
+            font-weight: 300;
+            line-height: 0.95;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+
+        .subtitle {
+            margin-top: 18px;
+            max-width: 480px;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .quote {
+            margin-top: 42px;
+            padding-left: 16px;
+            border-left: 1px solid var(--line);
+            color: rgba(255,255,255,0.62);
+            font-size: 13px;
+            line-height: 1.8;
+            max-width: 420px;
+        }
+
+        .footer-note {
+            color: rgba(255,255,255,0.33);
+            font-size: 11px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+
+        /* ── right panel ── */
+
+        .right {
+            padding: 34px 28px 28px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--line);
+            margin-bottom: 0;
+            flex-shrink: 0;
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .topbar-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.22em;
+            color: var(--muted);
+        }
+
+        .cmd-count {
+            font-size: 11px;
+            color: rgba(255,255,255,0.28);
+            letter-spacing: 0.08em;
+        }
+
+        .search {
+            background: transparent;
+            border: 1px solid var(--line);
+            color: var(--text);
+            font-size: 12px;
+            letter-spacing: 0.1em;
+            padding: 7px 12px;
+            outline: none;
+            width: 190px;
+            transition: border-color 180ms ease;
+            font-family: inherit;
+        }
+        .search::placeholder { color: rgba(255,255,255,0.22); }
+        .search:focus { border-color: rgba(255,255,255,0.22); }
+
+        /* ── tabs ── */
+
+        .tabs {
+            display: flex;
+            gap: 0;
+            border-bottom: 1px solid var(--line);
+            flex-shrink: 0;
+            margin-bottom: 18px;
+        }
+
+        .tab {
+            font-size: 11px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.32);
+            padding: 10px 18px;
+            cursor: pointer;
+            border-bottom: 1px solid transparent;
+            margin-bottom: -1px;
+            transition: color 180ms ease, border-color 180ms ease;
+            user-select: none;
+        }
+
+        .tab:hover { color: rgba(255,255,255,0.6); }
+
+        .tab.active {
+            color: var(--text);
+            border-bottom-color: rgba(255,255,255,0.55);
+        }
+
+        /* ── command list ── */
+
+        .cmd-panel {
+            display: none;
+            overflow-y: auto;
+            flex: 1;
+            padding-right: 4px;
+        }
+
+        .cmd-panel.active { display: block; }
+
+        .cmd-panel::-webkit-scrollbar { width: 2px; }
+        .cmd-panel::-webkit-scrollbar-thumb { background: var(--line); }
+
+        .cmd-group {
+            margin-bottom: 26px;
+        }
+
+        .cmd-group-label {
+            font-size: 10px;
+            letter-spacing: 0.24em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.28);
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--line);
+            margin-bottom: 2px;
+        }
+
+        .cmd-row {
+            display: flex;
+            align-items: baseline;
+            gap: 16px;
+            padding: 9px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            transition: background 150ms ease;
+        }
+
+        .cmd-row:last-child { border-bottom: none; }
+
+        .cmd-name {
+            font-family: "SF Mono", "Fira Code", "Fira Mono", monospace;
+            font-size: 13px;
+            color: var(--text);
+            min-width: 220px;
+            flex-shrink: 0;
+            letter-spacing: 0.02em;
+        }
+
+        .cmd-name .slash {
+            color: rgba(255,255,255,0.35);
+        }
+
+        .cmd-desc {
+            font-size: 12px;
+            color: rgba(255,255,255,0.52);
+            line-height: 1.55;
+            flex: 1;
+        }
+
+        .cmd-tag {
+            font-size: 10px;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.28);
+            flex-shrink: 0;
+            text-align: right;
+            min-width: 70px;
+        }
+
+        .state-msg {
+            text-align: center;
+            color: rgba(255,255,255,0.28);
+            font-size: 11px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            padding: 48px 0;
+        }
+
+        /* hidden rows during search */
+        .cmd-row.hidden { display: none; }
+        .cmd-group.all-hidden { display: none; }
+
+        @media (max-width: 920px) {
+            .frame { grid-template-columns: 1fr; }
+            .left { border-right: none; border-bottom: 1px solid var(--line); }
+        }
+        @media (max-width: 640px) {
+            body { padding: 14px; }
+            .left { padding: 34px 22px 28px; }
+            .right { padding: 22px 16px 16px; }
+            h1 { letter-spacing: 0.12em; }
+            .search { width: 130px; }
+            .cmd-name { min-width: 160px; font-size: 12px; }
+            .cmd-tag { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="frame">
+    <div class="left">
+        <div>
+            <a href="/" class="back-link">← Tools</a>
+            <span class="label">Optional Ganesh</span>
+            <h1>Commands</h1>
+            <p class="subtitle">Every <code style="font-size:13px;background:rgba(255,255,255,0.06);padding:2px 6px">/</code> command available in your Claude Code sessions. Built-ins are fixed. Custom skills update as you build them.</p>
+            <div class="quote">Know your instruments.<br>Use them without thinking.</div>
+        </div>
+        <div class="footer-note" id="footer-note">Loading...</div>
+    </div>
+
+    <div class="right">
+        <div class="topbar">
+            <div class="topbar-left">
+                <span class="topbar-title">Command Reference</span>
+                <span class="cmd-count" id="cmd-count"></span>
+            </div>
+            <input type="search" class="search" id="search-input" placeholder="Search commands..." autocomplete="off" />
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" data-panel="panel-all">All</div>
+            <div class="tab" data-panel="panel-builtin">Built-in</div>
+            <div class="tab" data-panel="panel-skills">Skills</div>
+        </div>
+
+        <!-- ALL panel -->
+        <div class="cmd-panel active" id="panel-all">
+            <div id="all-builtin"></div>
+            <div id="all-skills-group" class="cmd-group">
+                <div class="cmd-group-label">Custom Skills</div>
+                <div id="all-skills-rows">
+                    <div class="state-msg">Loading skills...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BUILT-IN panel -->
+        <div class="cmd-panel" id="panel-builtin">
+            <div id="builtin-content"></div>
+        </div>
+
+        <!-- SKILLS panel -->
+        <div class="cmd-panel" id="panel-skills">
+            <div class="cmd-group">
+                <div class="cmd-group-label">Custom Skills — from github.com/OptionalGanesh/claude-skills</div>
+                <div id="skills-rows">
+                    <div class="state-msg">Loading skills...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* ── built-in commands data ── */
+
+    const BUILTIN = [
+        {
+            group: 'Conversation',
+            cmds: [
+                { name: '/help',              desc: 'Show available commands and keybindings.',                        tag: 'Meta' },
+                { name: '/clear',             desc: 'Clear conversation history and start fresh.',                    tag: 'Meta' },
+                { name: '/compact',           desc: 'Compress conversation to save context window. Accepts optional focus instructions.', tag: 'Context' },
+                { name: '/cost',              desc: 'Show token usage and estimated cost for the current session.',   tag: 'Meta' },
+            ]
+        },
+        {
+            group: 'Memory & Config',
+            cmds: [
+                { name: '/memory',            desc: 'Open and edit your CLAUDE.md memory files directly.',            tag: 'Config' },
+                { name: '/init',              desc: 'Create a CLAUDE.md file in the current project directory.',      tag: 'Config' },
+                { name: '/config',            desc: 'Open the Claude Code settings.json file.',                       tag: 'Config' },
+                { name: '/permissions',       desc: 'View currently allowed and denied tools for this session.',      tag: 'Config' },
+            ]
+        },
+        {
+            group: 'Git & Code',
+            cmds: [
+                { name: '/commit',            desc: 'Stage changes and create a git commit with a generated message.', tag: 'Git' },
+                { name: '/review-pr [num]',   desc: 'Review a GitHub pull request. Pass PR number or leave blank for current branch.', tag: 'Git' },
+            ]
+        },
+        {
+            group: 'Model & Mode',
+            cmds: [
+                { name: '/model',             desc: 'Switch the active Claude model for this session.',               tag: 'Model' },
+                { name: '/fast',              desc: 'Toggle fast mode — same Opus model, prioritised output speed.',  tag: 'Model' },
+                { name: '/vim',               desc: 'Toggle vim keybindings for the input field.',                   tag: 'Mode' },
+            ]
+        },
+        {
+            group: 'Account & System',
+            cmds: [
+                { name: '/login',             desc: 'Switch to a different Anthropic account.',                       tag: 'Auth' },
+                { name: '/logout',            desc: 'Log out of the current Anthropic account.',                      tag: 'Auth' },
+                { name: '/status',            desc: 'View account info, plan, and billing status.',                   tag: 'Account' },
+                { name: '/doctor',            desc: 'Run a health check on your Claude Code installation.',           tag: 'System' },
+                { name: '/terminal-setup',    desc: 'Configure shell integration and terminal autocomplete.',         tag: 'System' },
+                { name: '/bug',               desc: 'Open a pre-filled GitHub issue to report a Claude Code bug.',   tag: 'System' },
+            ]
+        },
+    ];
+
+    /* ── render built-ins ── */
+
+    function renderBuiltin(targetEl) {
+        let html = '';
+        BUILTIN.forEach(section => {
+            html += `<div class="cmd-group">
+                <div class="cmd-group-label">${section.group}</div>`;
+            section.cmds.forEach(c => {
+                const slash = c.name.split(' ')[0];
+                const rest  = c.name.includes(' ') ? ' ' + c.name.split(' ').slice(1).join(' ') : '';
+                html += `<div class="cmd-row" data-search="${c.name.toLowerCase()} ${c.desc.toLowerCase()}">
+                    <span class="cmd-name"><span class="slash">/</span>${slash.slice(1)}${rest ? `<span style="color:rgba(255,255,255,0.35)"> ${rest.trim()}</span>` : ''}</span>
+                    <span class="cmd-desc">${c.desc}</span>
+                    <span class="cmd-tag">${c.tag}</span>
+                </div>`;
+            });
+            html += `</div>`;
+        });
+        targetEl.innerHTML = html;
+    }
+
+    renderBuiltin(document.getElementById('builtin-content'));
+    renderBuiltin(document.getElementById('all-builtin'));
+
+    /* ── load skills from GitHub ── */
+
+    const REPO   = 'OptionalGanesh/claude-skills';
+    const BRANCH = 'main';
+    const RAW    = `https://raw.githubusercontent.com/${REPO}/${BRANCH}/`;
+    const TREE   = `https://api.github.com/repos/${REPO}/git/trees/${BRANCH}?recursive=1`;
+
+    function parseFrontmatter(src) {
+        const m = src.match(/^---\n([\s\S]*?)\n---/);
+        if (!m) return { name: '', description: '' };
+        const block = m[1];
+        const get = k => {
+            const re = new RegExp(`^${k}:\\s*([\\s\\S]*?)(?=\\n[\\w-]+:|\\n---\\s*$|$)`, 'm');
+            const hit = block.match(re);
+            return hit ? hit[1].trim().replace(/\n[ \t]+/g, ' ').replace(/^['"]|['"]$/g, '') : '';
+        };
+        return { name: get('name'), description: get('description') };
+    }
+
+    function skillRows(skills) {
+        if (!skills.length) return '<div class="state-msg">No skills found.</div>';
+        return skills.map(s => `
+            <div class="cmd-row" data-search="/${s.slug} ${s.name.toLowerCase()} ${s.description.toLowerCase()}">
+                <span class="cmd-name"><span class="slash">/</span>${s.slug}</span>
+                <span class="cmd-desc">${s.description || s.name}</span>
+                <span class="cmd-tag">Skill</span>
+            </div>`).join('');
+    }
+
+    async function loadSkills() {
+        try {
+            const res  = await fetch(TREE);
+            if (!res.ok) throw new Error(`GitHub API ${res.status}`);
+            const tree = await res.json();
+
+            const files = tree.tree.filter(f =>
+                f.type === 'blob' && f.path.endsWith('/SKILL.md')
+            );
+
+            const skills = await Promise.all(files.map(async f => {
+                const slug = f.path.replace('/SKILL.md', '');
+                try {
+                    const r   = await fetch(RAW + f.path);
+                    const txt = await r.text();
+                    const fm  = parseFrontmatter(txt);
+                    return { slug, name: fm.name || slug, description: fm.description };
+                } catch {
+                    return { slug, name: slug, description: '' };
+                }
+            }));
+
+            const sorted = skills.sort((a, b) => a.slug.localeCompare(b.slug));
+
+            document.getElementById('all-skills-rows').innerHTML = skillRows(sorted);
+            document.getElementById('skills-rows').innerHTML     = skillRows(sorted);
+
+            // total count
+            const builtinTotal = BUILTIN.reduce((n, s) => n + s.cmds.length, 0);
+            const total = builtinTotal + sorted.length;
+            document.getElementById('cmd-count').textContent = total;
+            document.getElementById('footer-note').textContent =
+                `${builtinTotal} built-in · ${sorted.length} skills · Barcelona · Creative System Node`;
+
+        } catch (err) {
+            const msg = `<div class="state-msg">Could not load skills.<br><small style="opacity:.5">${err.message}</small></div>`;
+            document.getElementById('all-skills-rows').innerHTML = msg;
+            document.getElementById('skills-rows').innerHTML     = msg;
+        }
+    }
+
+    loadSkills();
+
+    /* ── tabs ── */
+
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.cmd-panel').forEach(p => p.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById(tab.dataset.panel).classList.add('active');
+        });
+    });
+
+    /* ── search ── */
+
+    document.getElementById('search-input').addEventListener('input', e => {
+        const q = e.target.value.toLowerCase().trim();
+        document.querySelectorAll('.cmd-panel.active .cmd-row').forEach(row => {
+            const match = !q || (row.dataset.search || '').includes(q);
+            row.classList.toggle('hidden', !match);
+        });
+        // hide empty groups
+        document.querySelectorAll('.cmd-panel.active .cmd-group').forEach(group => {
+            const visible = group.querySelectorAll('.cmd-row:not(.hidden)').length;
+            group.classList.toggle('all-hidden', visible === 0);
+        });
+    });
+</script>
+</body>
+</html>
