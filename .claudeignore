@@ -1,0 +1,54 @@
+# Dependencies (if ever added)
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Audio / media (binary, irrelevant to HTML tool work)
+*.wav
+*.mp3
+*.aiff
+*.aif
+*.flac
+*.ogg
+*.m4a
+*.opus
+*.mid
+*.midi
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.psd
+*.mp4
+*.mov
+*.avi
+
+# n8n / automation exports
+*.n8n.json
+n8n-exports/
+workflows/
+
+# Build / cache artifacts
+dist/
+build/
+*.bundle.js
+*.min.js
+*.min.css
+*.map
+
+# Logs & temp
+*.log
+*.tmp
+*.cache
+.DS_Store
+Thumbs.db
+
+# Secrets
+.env
+.env.*
+*.pem
+*.key
+secrets/
