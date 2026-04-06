@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optional Ganesh — Skills</title>
+    <style>
+        :root {
+            --bg: #050505;
+            --line: rgba(255,255,255,0.08);
+            --text: rgba(255,255,255,0.92);
+            --muted: rgba(255,255,255,0.45);
+            --glow: rgba(255,255,255,0.12);
+        }
+
+        * { box-sizing: border-box; }
+
+        html, body {
+            margin: 0;
+            min-height: 100%;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(255,255,255,0.035), transparent 30%),
+                radial-gradient(circle at 80% 30%, rgba(255,255,255,0.025), transparent 28%),
+                linear-gradient(180deg, #070707 0%, #020202 100%);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            letter-spacing: 0.01em;
+        }
+
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 32px;
+            min-height: 100vh;
+        }
+
+        .frame {
+            width: 100%;
+            max-width: 1180px;
+            min-height: 78vh;
+            border: 1px solid var(--line);
+            background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.015) inset, 0 24px 80px rgba(0,0,0,0.45);
+            display: grid;
+            grid-template-columns: 1.1fr 1.4fr;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .frame::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+            background-size: 28px 28px;
+            pointer-events: none;
+            opacity: 0.35;
+            mask-image: linear-gradient(to bottom, rgba(0,0,0,0.55), rgba(0,0,0,0.08));
+        }
+
+        .left, .right { position: relative; z-index: 1; }
+
+        .left {
+            padding: 56px 44px 40px;
+            border-right: 1px solid var(--line);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255,255,255,0.32);
+            font-size: 11px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            text-decoration: none;
+            margin-bottom: 32px;
+            transition: color 180ms ease;
+        }
+        .back-link:hover { color: rgba(255,255,255,0.65); }
+
+        .label {
+            color: var(--muted);
+            font-size: 11px;
+            letter-spacing: 0.28em;
+            text-transform: uppercase;
+            margin-bottom: 18px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(2.2rem, 4vw, 4.6rem);
+            font-weight: 300;
+            line-height: 0.95;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+
+        .subtitle {
+            margin-top: 18px;
+            max-width: 480px;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .quote {
+            margin-top: 42px;
+            padding-left: 16px;
+            border-left: 1px solid var(--line);
+            color: rgba(255,255,255,0.62);
+            font-size: 13px;
+            line-height: 1.8;
+            max-width: 420px;
+        }
+
+        .footer-note {
+            color: rgba(255,255,255,0.33);
+            font-size: 11px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+
+        .right {
+            padding: 34px 28px 28px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid var(--line);
+            margin-bottom: 18px;
+            flex-shrink: 0;
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .topbar-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.22em;
+            color: var(--muted);
+        }
+
+        .skill-count {
+            font-size: 11px;
+            color: rgba(255,255,255,0.28);
+            letter-spacing: 0.08em;
+        }
+
+        .search {
+            background: transparent;
+            border: 1px solid var(--line);
+            color: var(--text);
+            font-size: 12px;
+            letter-spacing: 0.1em;
+            padding: 7px 12px;
+            outline: none;
+            width: 190px;
+            transition: border-color 180ms ease;
+            font-family: inherit;
+        }
+        .search::placeholder { color: rgba(255,255,255,0.22); }
+        .search:focus { border-color: rgba(255,255,255,0.22); }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(200px, 1fr));
+            gap: 12px;
+            overflow-y: auto;
+            align-content: start;
+            padding-right: 2px;
+        }
+
+        .grid::-webkit-scrollbar { width: 2px; }
+        .grid::-webkit-scrollbar-track { background: transparent; }
+        .grid::-webkit-scrollbar-thumb { background: var(--line); }
+
+        .card {
+            color: var(--text);
+            border: 1px solid var(--line);
+            background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.02));
+            min-height: 140px;
+            padding: 16px 16px 14px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
+            cursor: pointer;
+        }
+
+        .card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.05), transparent 45%);
+            opacity: 0;
+            transition: opacity 180ms ease;
+            pointer-events: none;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255,255,255,0.18);
+            background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.025));
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3), 0 0 24px var(--glow);
+        }
+
+        .card:hover::before { opacity: 1; }
+
+        .card-tag {
+            display: inline-block;
+            font-size: 10px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.38);
+            margin-bottom: 12px;
+        }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 300;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin: 0 0 8px;
+        }
+
+        .card-desc {
+            color: rgba(255,255,255,0.52);
+            font-size: 12px;
+            line-height: 1.6;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            padding-right: 24px;
+        }
+
+        .card-arrow {
+            position: absolute;
+            right: 14px;
+            bottom: 12px;
+            color: rgba(255,255,255,0.28);
+            font-size: 16px;
+            transition: transform 180ms ease, color 180ms ease;
+        }
+
+        .card:hover .card-arrow {
+            transform: translateX(4px);
+            color: rgba(255,255,255,0.65);
+        }
+
+        .state-msg {
+            grid-column: 1 / -1;
+            text-align: center;
+            color: rgba(255,255,255,0.3);
+            font-size: 11px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            padding: 48px 0;
+        }
+
+        /* Modal */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.84);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            padding: 32px;
+        }
+        .modal-backdrop.open { display: flex; }
+
+        .modal {
+            width: 100%;
+            max-width: 760px;
+            max-height: 82vh;
+            border: 1px solid rgba(255,255,255,0.11);
+            background: #090909;
+            box-shadow: 0 40px 120px rgba(0,0,0,0.72);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--line);
+            flex-shrink: 0;
+        }
+
+        .modal-title {
+            font-size: 11px;
+            letter-spacing: 0.24em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.4);
+            cursor: pointer;
+            font-size: 22px;
+            line-height: 1;
+            padding: 0;
+            transition: color 180ms ease;
+            font-family: inherit;
+        }
+        .modal-close:hover { color: var(--text); }
+
+        .modal-body {
+            padding: 28px 32px 36px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .modal-body::-webkit-scrollbar { width: 2px; }
+        .modal-body::-webkit-scrollbar-thumb { background: var(--line); }
+
+        .modal-body h1,
+        .modal-body h2,
+        .modal-body h3 {
+            font-weight: 300;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text);
+            border-bottom: 1px solid var(--line);
+            padding-bottom: 7px;
+            margin-top: 32px;
+            margin-bottom: 14px;
+        }
+        .modal-body h1 { font-size: 17px; }
+        .modal-body h2 { font-size: 14px; }
+        .modal-body h3 { font-size: 12px; color: var(--muted); }
+
+        .modal-body p {
+            color: rgba(255,255,255,0.68);
+            font-size: 13px;
+            line-height: 1.85;
+            margin: 0 0 14px;
+        }
+
+        .modal-body code {
+            background: rgba(255,255,255,0.06);
+            padding: 2px 6px;
+            font-size: 12px;
+            font-family: "SF Mono", "Fira Code", "Fira Mono", monospace;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .modal-body pre {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--line);
+            padding: 16px 18px;
+            overflow-x: auto;
+            margin: 0 0 18px;
+        }
+        .modal-body pre code { background: none; padding: 0; font-size: 12px; }
+
+        .modal-body table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            margin-bottom: 18px;
+        }
+        .modal-body th {
+            text-align: left;
+            color: var(--muted);
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            font-size: 10px;
+            font-weight: 400;
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--line);
+        }
+        .modal-body td {
+            padding: 8px 12px;
+            color: rgba(255,255,255,0.62);
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .modal-body ul,
+        .modal-body ol {
+            color: rgba(255,255,255,0.65);
+            font-size: 13px;
+            line-height: 1.8;
+            padding-left: 22px;
+            margin: 0 0 14px;
+        }
+        .modal-body li { margin-bottom: 4px; }
+
+        .modal-body blockquote {
+            border-left: 2px solid var(--line);
+            margin: 0 0 14px;
+            padding: 4px 0 4px 16px;
+            color: rgba(255,255,255,0.45);
+            font-size: 13px;
+        }
+
+        .modal-body a { color: rgba(255,255,255,0.62); }
+        .modal-body strong { color: var(--text); font-weight: 500; }
+
+        @media (max-width: 920px) {
+            .frame { grid-template-columns: 1fr; }
+            .left { border-right: none; border-bottom: 1px solid var(--line); }
+        }
+        @media (max-width: 640px) {
+            body { padding: 14px; }
+            .left { padding: 34px 22px 28px; }
+            .right { padding: 22px 16px 16px; }
+            .grid { grid-template-columns: 1fr; }
+            h1 { letter-spacing: 0.12em; }
+            .search { width: 130px; }
+            .modal-body { padding: 20px 18px 28px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="frame">
+    <div class="left">
+        <div>
+            <a href="/" class="back-link">← Tools</a>
+            <span class="label">Optional Ganesh</span>
+            <h1>Skills</h1>
+            <p class="subtitle">Claude Code slash commands and reusable workflows. Each one solves a problem that came up more than once. Built in real sessions, tested in real sessions.</p>
+            <div class="quote">Process documentation as code.<br>Test it or it doesn't exist.</div>
+        </div>
+        <div class="footer-note" id="footer-note">Loading...</div>
+    </div>
+    <div class="right">
+        <div class="topbar">
+            <div class="topbar-left">
+                <span class="topbar-title">Skill Library</span>
+                <span class="skill-count" id="skill-count"></span>
+            </div>
+            <input type="search" class="search" id="search-input" placeholder="Search skills..." autocomplete="off" />
+        </div>
+        <div class="grid" id="skill-grid">
+            <div class="state-msg">Fetching from GitHub...</div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-backdrop" id="modal-backdrop">
+    <div class="modal">
+        <div class="modal-header">
+            <span class="modal-title" id="modal-title"></span>
+            <button class="modal-close" id="modal-close" aria-label="Close">×</button>
+        </div>
+        <div class="modal-body" id="modal-body"></div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
+<script>
+    const REPO   = 'OptionalGanesh/claude-skills';
+    const BRANCH = 'main';
+    const RAW    = `https://raw.githubusercontent.com/${REPO}/${BRANCH}/`;
+    const TREE   = `https://api.github.com/repos/${REPO}/git/trees/${BRANCH}?recursive=1`;
+
+    let allSkills = [];
+
+    /* ── helpers ── */
+
+    function parseFrontmatter(src) {
+        const m = src.match(/^---\n([\s\S]*?)\n---/);
+        if (!m) return { name: '', description: '', type: '' };
+        const block = m[1];
+        const get = k => {
+            // handles single-line and multi-line (indented continuation) YAML values
+            const re = new RegExp(`^${k}:\\s*([\\s\\S]*?)(?=\\n[\\w-]+:|\\n---\\s*$|$)`, 'm');
+            const hit = block.match(re);
+            return hit ? hit[1].trim().replace(/\n[ \t]+/g, ' ').replace(/^['"]|['"]$/g, '') : '';
+        };
+        return { name: get('name'), description: get('description'), type: get('type') };
+    }
+
+    function stripFrontmatter(src) {
+        return src.replace(/^---\n[\s\S]*?\n---\n?/, '');
+    }
+
+    function typeLabel(t) {
+        return { technique: 'Technique', pattern: 'Pattern', reference: 'Reference', workflow: 'Workflow' }[t?.toLowerCase()] || 'Skill';
+    }
+
+    /* ── render ── */
+
+    function makeCard(skill) {
+        const el = document.createElement('div');
+        el.className = 'card';
+        el.innerHTML = `
+            <span class="card-tag">${typeLabel(skill.type)}</span>
+            <h2 class="card-title">${skill.name}</h2>
+            <p class="card-desc">${skill.description}</p>
+            <span class="card-arrow">→</span>`;
+        el.addEventListener('click', () => openModal(skill));
+        return el;
+    }
+
+    function renderGrid(list) {
+        const grid = document.getElementById('skill-grid');
+        grid.innerHTML = '';
+        if (!list.length) {
+            grid.innerHTML = '<div class="state-msg">No skills match.</div>';
+            return;
+        }
+        list.forEach(s => grid.appendChild(makeCard(s)));
+    }
+
+    /* ── modal ── */
+
+    function openModal(skill) {
+        document.getElementById('modal-title').textContent = skill.name;
+        document.getElementById('modal-backdrop').classList.add('open');
+        document.body.style.overflow = 'hidden';
+        const body = stripFrontmatter(skill.content || '');
+        document.getElementById('modal-body').innerHTML = marked.parse(body);
+    }
+
+    function closeModal() {
+        document.getElementById('modal-backdrop').classList.remove('open');
+        document.body.style.overflow = '';
+    }
+
+    document.getElementById('modal-close').addEventListener('click', closeModal);
+    document.getElementById('modal-backdrop').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+    /* ── search ── */
+
+    document.getElementById('search-input').addEventListener('input', e => {
+        const q = e.target.value.toLowerCase().trim();
+        const filtered = q
+            ? allSkills.filter(s =>
+                s.name.toLowerCase().includes(q) ||
+                s.description.toLowerCase().includes(q) ||
+                s.slug.toLowerCase().includes(q))
+            : allSkills;
+        renderGrid(filtered);
+        document.getElementById('skill-count').textContent =
+            q ? `${filtered.length} of ${allSkills.length}` : `${allSkills.length}`;
+    });
+
+    /* ── load ── */
+
+    async function loadSkills() {
+        try {
+            const treeRes = await fetch(TREE);
+            if (!treeRes.ok) throw new Error(`GitHub API ${treeRes.status}`);
+            const tree = await treeRes.json();
+
+            const files = tree.tree.filter(f =>
+                f.type === 'blob' && f.path.endsWith('/SKILL.md')
+            );
+
+            if (!files.length) {
+                document.getElementById('skill-grid').innerHTML =
+                    '<div class="state-msg">No skills found in repo.</div>';
+                document.getElementById('footer-note').textContent = '0 skills · Barcelona · Creative System Node';
+                return;
+            }
+
+            // Fetch all SKILL.md raw files in parallel (raw CDN, no rate limits)
+            const skills = await Promise.all(files.map(async f => {
+                const slug = f.path.replace('/SKILL.md', '');
+                try {
+                    const r = await fetch(RAW + f.path);
+                    const content = await r.text();
+                    const fm = parseFrontmatter(content);
+                    return {
+                        slug,
+                        name: fm.name || slug,
+                        description: fm.description,
+                        type: fm.type,
+                        content,
+                    };
+                } catch {
+                    return { slug, name: slug, description: '', type: '', content: '' };
+                }
+            }));
+
+            allSkills = skills
+                .filter(s => s.name)
+                .sort((a, b) => a.name.localeCompare(b.name));
+
+            renderGrid(allSkills);
+            document.getElementById('skill-count').textContent = allSkills.length;
+            document.getElementById('footer-note').textContent =
+                `${allSkills.length} skills · Barcelona · Creative System Node`;
+
+        } catch (err) {
+            document.getElementById('skill-grid').innerHTML =
+                `<div class="state-msg">Could not load skills.<br><small style="opacity:.5">${err.message}</small></div>`;
+            document.getElementById('footer-note').textContent = 'Error · Check repo is public';
+        }
+    }
+
+    loadSkills();
+</script>
+</body>
+</html>
