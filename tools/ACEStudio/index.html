@@ -8,39 +8,31 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg: #ffffff;
-    --bg-secondary: #f5f5f3;
-    --bg-tertiary: #eeede9;
-    --text: #1a1a18;
-    --text-secondary: #6b6b66;
-    --border: rgba(0,0,0,0.10);
-    --border-secondary: rgba(0,0,0,0.18);
+    --bg: #050505;
+    --bg2: #0c0c0c;
+    --bg3: #111111;
+    --line: rgba(255,255,255,0.08);
+    --line2: rgba(255,255,255,0.14);
+    --text: rgba(255,255,255,0.92);
+    --text2: rgba(255,255,255,0.45);
+    --text3: rgba(255,255,255,0.22);
     --radius-md: 8px;
     --radius-lg: 12px;
-    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    --font-mono: 'SF Mono', 'Fira Mono', 'Consolas', monospace;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #1c1c1a;
-      --bg-secondary: #252522;
-      --bg-tertiary: #2e2e2b;
-      --text: #e8e7e2;
-      --text-secondary: #8a8a82;
-      --border: rgba(255,255,255,0.10);
-      --border-secondary: rgba(255,255,255,0.18);
-    }
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: "SF Mono", "Fira Mono", "Consolas", monospace;
   }
 
   body {
     font-family: var(--font-sans);
-    background: var(--bg);
+    background:
+      radial-gradient(circle at 20% 20%, rgba(255,255,255,0.035), transparent 30%),
+      radial-gradient(circle at 80% 30%, rgba(255,255,255,0.025), transparent 28%),
+      linear-gradient(180deg, #070707 0%, #020202 100%);
     color: var(--text);
     min-height: 100vh;
-    padding: 2rem 1.5rem 4rem;
-    max-width: 780px;
+    max-width: 860px;
     margin: 0 auto;
+    padding: 4.5rem 2rem 5rem;
     font-size: 14px;
     line-height: 1.6;
   }
@@ -50,7 +42,7 @@
     font-weight: 500;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--text-secondary);
+    color: var(--text2);
     margin-bottom: 1.25rem;
   }
 
@@ -66,15 +58,15 @@
     font-weight: 500;
     padding: 5px 13px;
     border-radius: 20px;
-    border: 0.5px solid var(--border-secondary);
+    border: 1px solid var(--line2);
     background: transparent;
-    color: var(--text-secondary);
+    color: var(--text2);
     cursor: pointer;
     transition: all 0.15s;
     font-family: var(--font-sans);
   }
-  .tab-btn:hover { background: var(--bg-secondary); color: var(--text); }
-  .tab-btn.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+  .tab-btn:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+  .tab-btn.active { background: rgba(255,255,255,0.1); color: var(--text); border-color: var(--line2); }
 
   .tool-section { display: none; }
   .tool-section.visible { display: block; }
@@ -87,18 +79,18 @@
   }
   .section-sub {
     font-size: 12px;
-    color: var(--text-secondary);
+    color: var(--text2);
     margin-bottom: 1rem;
   }
 
   .structure-block {
     font-family: var(--font-mono);
     font-size: 11px;
-    color: var(--text-secondary);
-    background: var(--bg-secondary);
-    border-left: 2px solid var(--border-secondary);
+    color: var(--text2);
+    background: rgba(255,255,255,0.04);
+    border-left: 2px solid var(--line2);
     padding: 8px 12px;
-    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    border-radius: 0;
     margin: 10px 0 4px;
     white-space: pre-wrap;
     line-height: 1.7;
@@ -106,7 +98,7 @@
 
   .note-global {
     font-size: 11px;
-    color: var(--text-secondary);
+    color: var(--text2);
     font-style: italic;
     margin-bottom: 1.25rem;
     padding-left: 2px;
@@ -114,13 +106,13 @@
 
   .divider {
     height: 0.5px;
-    background: var(--border);
+    background: var(--line);
     margin: 1.25rem 0;
   }
 
   .template-card {
-    background: var(--bg);
-    border: 0.5px solid var(--border);
+    background: transparent;
+    border: 1px solid var(--line);
     border-radius: var(--radius-lg);
     margin-bottom: 8px;
     overflow: hidden;
@@ -135,7 +127,7 @@
     user-select: none;
     transition: background 0.12s;
   }
-  .card-header:hover { background: var(--bg-secondary); }
+  .card-header:hover { background: rgba(255,255,255,0.03); }
 
   .card-left { display: flex; align-items: center; gap: 0; }
 
@@ -153,29 +145,29 @@
     margin-right: 9px;
     white-space: nowrap;
   }
-  .tag-soul    { background: #FAECE7; color: #993C1D; }
-  .tag-hiphop  { background: #E6F1FB; color: #185FA5; }
-  .tag-electro { background: #E1F5EE; color: #0F6E56; }
-  .tag-lyrics  { background: #EEEDFE; color: #534AB7; }
-  .tag-rb      { background: #FAEEDA; color: #854F0B; }
-  .tag-bossa   { background: #E1F5EE; color: #0F6E56; }
-  .tag-instr   { background: #F1EFE8; color: #5F5E5A; }
-  .tag-horn    { background: #FAECE7; color: #993C1D; }
-  .tag-funk    { background: #FAEEDA; color: #854F0B; }
-  .tag-jazz    { background: #E6F1FB; color: #185FA5; }
-  .tag-guitar  { background: #EAF3DE; color: #3B6D11; }
-  .tag-string  { background: #EEEDFE; color: #534AB7; }
-  .tag-synth   { background: #E1F5EE; color: #0F6E56; }
-  .tag-custom  { background: #F1EFE8; color: #5F5E5A; }
-  .tag-lead    { background: #EEEDFE; color: #534AB7; }
-  .tag-back    { background: #FAECE7; color: #993C1D; }
-  .tag-acap    { background: #F1EFE8; color: #5F5E5A; }
-  .tag-vox     { background: #FBEAF0; color: #993556; }
-  .tag-recipe  { background: #FAEEDA; color: #854F0B; }
+  .tag-soul    { background: rgba(153,60,29,0.15); color: rgba(230,140,110,0.9); }
+  .tag-hiphop  { background: rgba(24,95,165,0.15); color: rgba(100,170,240,0.9); }
+  .tag-electro { background: rgba(15,110,86,0.15); color: rgba(80,210,170,0.9); }
+  .tag-lyrics  { background: rgba(83,74,183,0.15); color: rgba(170,160,240,0.9); }
+  .tag-rb      { background: rgba(133,79,11,0.15); color: rgba(220,170,80,0.9); }
+  .tag-bossa   { background: rgba(15,110,86,0.15); color: rgba(80,210,170,0.9); }
+  .tag-instr   { background: rgba(95,94,90,0.12); color: rgba(180,178,170,0.9); }
+  .tag-horn    { background: rgba(153,60,29,0.15); color: rgba(230,140,110,0.9); }
+  .tag-funk    { background: rgba(133,79,11,0.15); color: rgba(220,170,80,0.9); }
+  .tag-jazz    { background: rgba(24,95,165,0.15); color: rgba(100,170,240,0.9); }
+  .tag-guitar  { background: rgba(59,109,17,0.15); color: rgba(130,200,80,0.9); }
+  .tag-string  { background: rgba(83,74,183,0.15); color: rgba(170,160,240,0.9); }
+  .tag-synth   { background: rgba(15,110,86,0.15); color: rgba(80,210,170,0.9); }
+  .tag-custom  { background: rgba(95,94,90,0.12); color: rgba(180,178,170,0.9); }
+  .tag-lead    { background: rgba(83,74,183,0.15); color: rgba(170,160,240,0.9); }
+  .tag-back    { background: rgba(153,60,29,0.15); color: rgba(230,140,110,0.9); }
+  .tag-acap    { background: rgba(95,94,90,0.12); color: rgba(180,178,170,0.9); }
+  .tag-vox     { background: rgba(153,53,86,0.15); color: rgba(230,120,150,0.9); }
+  .tag-recipe  { background: rgba(133,79,11,0.15); color: rgba(220,170,80,0.9); }
 
   .chevron {
     font-size: 10px;
-    color: var(--text-secondary);
+    color: var(--text2);
     transition: transform 0.2s;
     display: inline-block;
     line-height: 1;
@@ -185,13 +177,15 @@
   .card-body {
     display: none;
     padding: 0 14px 14px;
-    border-top: 0.5px solid var(--border);
+    border-top: 1px solid var(--line);
+    background: transparent;
   }
   .card-body.open { display: block; }
 
   .prompt-block {
-    background: var(--bg-secondary);
-    border-radius: var(--radius-md);
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--line);
+    border-radius: 0;
     padding: 10px 12px;
     margin-top: 10px;
     font-family: var(--font-mono);
@@ -210,10 +204,10 @@
     font-size: 11px;
     font-family: var(--font-sans);
     padding: 2px 8px;
-    border-radius: 6px;
-    border: 0.5px solid var(--border-secondary);
-    background: var(--bg);
-    color: var(--text-secondary);
+    border-radius: 0;
+    border: 1px solid var(--line2);
+    background: rgba(255,255,255,0.06);
+    color: var(--text2);
     cursor: pointer;
     transition: color 0.12s;
   }
@@ -221,7 +215,7 @@
 
   .note {
     font-size: 11px;
-    color: var(--text-secondary);
+    color: var(--text2);
     margin-top: 7px;
     padding-left: 2px;
     font-style: italic;
@@ -235,20 +229,22 @@
   }
   .param-table td {
     padding: 6px 8px;
-    border-bottom: 0.5px solid var(--border);
+    border-bottom: 1px solid var(--line);
     vertical-align: top;
     color: var(--text);
   }
   .param-table td:first-child {
     font-family: var(--font-mono);
     font-size: 11px;
-    color: var(--text-secondary);
+    color: var(--text2);
     white-space: nowrap;
     width: 130px;
   }
 </style>
 </head>
 <body>
+
+<a href="/" style="display:inline-flex;align-items:center;gap:6px;color:rgba(255,255,255,0.32);font-size:11px;letter-spacing:0.2em;text-transform:uppercase;text-decoration:none;margin-bottom:28px;transition:color 180ms ease;" onmouseover="this.style.color='rgba(255,255,255,0.65)'" onmouseout="this.style.color='rgba(255,255,255,0.32)'">← Tools</a>
 
 <div class="cs-title">ACE Studio — Prompt Cheat Sheet</div>
 

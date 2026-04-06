@@ -4,27 +4,34 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Suno Prompt Converter — Optional Ganesh</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Syne:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0a0a0a;
-    --surface: #111111;
-    --surface2: #181818;
-    --border: rgba(255,255,255,0.08);
-    --border2: rgba(255,255,255,0.14);
-    --text: #f0ede8;
-    --muted: #888580;
-    --hint: #4a4845;
-    --accent: #c8b89a;
-    --accent2: #7a6e5f;
-    --green: #4caf7d;
-    --warn: #d4853a;
-    --red: #c0504a;
-    --mono: 'DM Mono', monospace;
-    --sans: 'Syne', sans-serif;
+    --bg: #050505;
+    --surface: #0c0c0c;
+    --surface2: #111111;
+    --line: rgba(255,255,255,0.08);
+    --line2: rgba(255,255,255,0.14);
+    --text: rgba(255,255,255,0.92);
+    --muted: rgba(255,255,255,0.45);
+    --hint: rgba(255,255,255,0.18);
+    --accent: rgba(255,255,255,0.85);
+    --green: rgba(120,210,140,0.9);
+    --warn: rgba(220,170,80,0.9);
+    --red: rgba(210,90,80,0.9);
+    --mono: "SF Mono", "Fira Code", "Fira Mono", Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 16px; }
+  html, body {
+    background:
+      radial-gradient(circle at 20% 20%, rgba(255,255,255,0.035), transparent 30%),
+      radial-gradient(circle at 80% 30%, rgba(255,255,255,0.025), transparent 28%),
+      linear-gradient(180deg, #070707 0%, #020202 100%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    letter-spacing: 0.01em;
+  }
+  html { font-size: 16px; }
   body { min-height: 100vh; padding: 0; }
 
   body::before {
@@ -34,15 +41,17 @@
     opacity: 0.4;
   }
 
-  .page { position: relative; z-index: 1; max-width: 740px; margin: 0 auto; padding: 3rem 2rem 5rem; }
+  .page { position: relative; z-index: 1; max-width: 740px; margin: 0 auto; padding: 4.5rem 2rem 5rem; }
 
   header { margin-bottom: 3rem; }
   .logo { font-size: 11px; font-family: var(--mono); letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase; margin-bottom: 1.2rem; }
+  .logo a { color: var(--muted); text-decoration: none; transition: color 180ms ease; }
+  .logo a:hover { color: var(--text); }
   h1 { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 700; letter-spacing: -0.03em; line-height: 1.05; color: var(--text); }
   h1 span { color: var(--accent); }
   .subtitle { margin-top: 0.75rem; font-family: var(--mono); font-size: 13px; color: var(--muted); }
 
-  .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 2rem; }
+  .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--line); margin-bottom: 2rem; }
   .tab {
     padding: 0.6rem 1.4rem; font-size: 13px; font-family: var(--mono); letter-spacing: 0.05em;
     color: var(--muted); cursor: pointer; background: none; border: none; border-bottom: 2px solid transparent;
@@ -60,12 +69,12 @@
     text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem;
   }
   textarea, input[type="text"] {
-    width: 100%; background: var(--surface); border: 1px solid var(--border);
+    width: 100%; background: var(--surface); border: 1px solid var(--line);
     color: var(--text); font-family: var(--mono); font-size: 13px; line-height: 1.6;
     padding: 0.75rem 1rem; border-radius: 4px; outline: none; resize: vertical;
     transition: border-color 0.2s;
   }
-  textarea:focus, input[type="text"]:focus { border-color: var(--border2); }
+  textarea:focus, input[type="text"]:focus { border-color: var(--line2); }
   textarea { min-height: 110px; }
   input[type="text"] { height: 38px; }
 
@@ -74,56 +83,57 @@
   .tags-cloud { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 0.5rem; }
   .tag {
     font-family: var(--mono); font-size: 11px; padding: 3px 10px;
-    border: 1px solid var(--border); border-radius: 2px; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 2px; color: var(--muted);
     cursor: pointer; background: none; transition: all 0.15s;
   }
-  .tag:hover { border-color: var(--accent2); color: var(--accent); }
+  .tag:hover { border-color: var(--line2); color: var(--text); }
 
   .api-section { margin-bottom: 2rem; }
   .api-hint { font-family: var(--mono); font-size: 11px; color: var(--hint); margin-top: 6px; }
 
   .run-btn {
     width: 100%; padding: 0.85rem; font-family: var(--sans); font-size: 15px; font-weight: 600;
-    letter-spacing: 0.05em; background: var(--accent); color: #0a0a0a; border: none;
-    border-radius: 4px; cursor: pointer; transition: opacity 0.2s, transform 0.1s;
+    letter-spacing: 0.05em; background: rgba(255,255,255,0.12); color: var(--text);
+    border: 1px solid var(--line2); border-radius: 4px; cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
     margin-bottom: 2rem;
   }
-  .run-btn:hover { opacity: 0.88; }
+  .run-btn:hover { background: rgba(255,255,255,0.18); }
   .run-btn:active { transform: scale(0.99); }
   .run-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
 
   .output { animation: fadeIn 0.3s ease; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
-  .out-block { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; margin-bottom: 1rem; overflow: hidden; }
+  .out-block { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; margin-bottom: 1rem; overflow: hidden; }
   .out-header {
     display: flex; justify-content: space-between; align-items: center;
-    padding: 0.5rem 0.9rem; border-bottom: 1px solid var(--border);
+    padding: 0.5rem 0.9rem; border-bottom: 1px solid var(--line);
     background: var(--surface2);
   }
   .out-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
   .out-actions { display: flex; gap: 8px; align-items: center; }
   .char-pill {
     font-family: var(--mono); font-size: 11px; padding: 2px 8px;
-    border-radius: 2px; background: rgba(76,175,125,0.15); color: var(--green);
+    border-radius: 2px; background: rgba(120,210,140,0.15); color: var(--green);
   }
-  .char-pill.over { background: rgba(192,80,74,0.15); color: var(--red); }
-  .char-pill.close { background: rgba(212,133,58,0.15); color: var(--warn); }
+  .char-pill.over { background: rgba(210,90,80,0.15); color: var(--red); }
+  .char-pill.close { background: rgba(220,170,80,0.15); color: var(--warn); }
   .copy-btn {
     font-family: var(--mono); font-size: 11px; color: var(--muted); background: none;
-    border: 1px solid var(--border); border-radius: 2px; padding: 2px 8px; cursor: pointer;
+    border: 1px solid var(--line); border-radius: 2px; padding: 2px 8px; cursor: pointer;
     transition: all 0.15s;
   }
-  .copy-btn:hover { color: var(--accent); border-color: var(--accent2); }
+  .copy-btn:hover { color: var(--text); border-color: var(--line2); }
   .out-body { padding: 0.9rem 1rem; font-family: var(--mono); font-size: 13px; line-height: 1.65; color: var(--text); word-break: break-word; }
 
   .regen-row { display: flex; gap: 10px; }
   .regen-btn {
     flex: 1; padding: 0.6rem; font-family: var(--mono); font-size: 12px;
-    color: var(--muted); background: none; border: 1px solid var(--border);
+    color: var(--muted); background: none; border: 1px solid var(--line);
     border-radius: 4px; cursor: pointer; transition: all 0.2s;
   }
-  .regen-btn:hover { color: var(--accent); border-color: var(--accent2); }
+  .regen-btn:hover { color: var(--text); border-color: var(--line2); }
 
   .status-bar {
     display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem;
@@ -136,7 +146,7 @@
   .dot.err { background: var(--red); }
   @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-  footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-family: var(--mono); font-size: 11px; color: var(--hint); letter-spacing: 0.05em; }
+  footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--line); font-family: var(--mono); font-size: 11px; color: var(--hint); letter-spacing: 0.05em; }
 
   @media (max-width: 520px) {
     .page { padding: 2rem 1.2rem 4rem; }
@@ -146,9 +156,10 @@
 </style>
 </head>
 <body>
+<a href="/" style="position:fixed;top:18px;left:24px;z-index:50;display:inline-flex;align-items:center;gap:6px;color:rgba(255,255,255,0.32);font-size:11px;letter-spacing:0.2em;text-transform:uppercase;text-decoration:none;transition:color 180ms ease;" onmouseover="this.style.color='rgba(255,255,255,0.65)'" onmouseout="this.style.color='rgba(255,255,255,0.32)'">← Tools</a>
 <div class="page">
   <header>
-    <div class="logo">Optional Ganesh / Tools</div>
+    <div class="logo"><a href="/">Optional Ganesh / Tools</a></div>
     <h1>Suno <span>Prompt</span><br>Converter</h1>
     <p class="subtitle">// Comprime cualquier idea a &lt;200 chars para Suno AI</p>
   </header>
