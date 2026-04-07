@@ -1,0 +1,130 @@
+{
+  "version": "5.0",
+  "date": "2025-01",
+  "notes": "V5 firmware — Pro Scene support added. All amp and effect models current as of firmware 5.0.",
+
+  "wah": [
+    { "id": 0, "name": "Clyde",       "ref": "Fulltone Clyde Wah" },
+    { "id": 1, "name": "Cry BB",      "ref": "Dunlop Cry Baby" },
+    { "id": 2, "name": "V847",        "ref": "Vox V847" },
+    { "id": 3, "name": "Horse",       "ref": "Morley Bad Horsie" },
+    { "id": 4, "name": "Oct Shift",   "ref": "Digitech Whammy" }
+  ],
+
+  "comp": [
+    { "id": 0, "name": "Rose Comp",   "ref": "Ross Compressor" },
+    { "id": 1, "name": "K Comp",      "ref": "Keeley C4 4-knob" },
+    { "id": 2, "name": "Studio Comp", "ref": "Studio Compressor" }
+  ],
+
+  "efx": [
+    { "id": 0,  "name": "Dist+",       "ref": "MXR Distortion+" },
+    { "id": 1,  "name": "RC Boost",    "ref": "Xotic RC Booster" },
+    { "id": 2,  "name": "AC Boost",    "ref": "Xotic AC Booster" },
+    { "id": 3,  "name": "Dist One",    "ref": "ProCo RAT" },
+    { "id": 4,  "name": "T Scream",    "ref": "Ibanez TS808 Tubescreamer" },
+    { "id": 5,  "name": "Blues Drv",   "ref": "Boss BD-2 Blues Driver" },
+    { "id": 6,  "name": "Morning Drv", "ref": "Walrus Audio Morning Glory" },
+    { "id": 7,  "name": "EAT",         "ref": "EAT Knucklehead" },
+    { "id": 8,  "name": "Red Dirt",    "ref": "Bearfoot FX Red Dirt" },
+    { "id": 9,  "name": "Crunch",      "ref": "Marshall Crunch" },
+    { "id": 10, "name": "Muff Fuzz",   "ref": "Electro-Harmonix Big Muff" },
+    { "id": 11, "name": "Katana Bst",  "ref": "Boss Katana Boost" },
+    { "id": 12, "name": "Red Fuzz",    "ref": "Red Fuzz" },
+    { "id": 13, "name": "Touch Wah",   "ref": "Auto-wah / Envelope Filter" }
+  ],
+
+  "amps": [
+    { "id": 0,  "name": "JC Clean",    "ref": "Roland JC-120",             "type": "guitar" },
+    { "id": 1,  "name": "Twin Reverb", "ref": "Fender Twin Reverb",        "type": "guitar" },
+    { "id": 2,  "name": "Deluxe Rvb",  "ref": "Fender Deluxe Reverb",     "type": "guitar" },
+    { "id": 3,  "name": "Princeton",   "ref": "Fender Princeton Reverb",   "type": "guitar" },
+    { "id": 4,  "name": "Tweed Dlx",   "ref": "Fender Tweed Deluxe 5E3",  "type": "guitar" },
+    { "id": 5,  "name": "Bassman",     "ref": "Fender 59 Bassman",         "type": "guitar" },
+    { "id": 6,  "name": "AC 15",       "ref": "Vox AC15",                  "type": "guitar" },
+    { "id": 7,  "name": "AC 30",       "ref": "Vox AC30 Top Boost",        "type": "guitar" },
+    { "id": 8,  "name": "Plexi 50",    "ref": "Marshall 1959 Super Lead",  "type": "guitar" },
+    { "id": 9,  "name": "JCM 800",     "ref": "Marshall JCM 800 2203",     "type": "guitar" },
+    { "id": 10, "name": "JCM 2000",    "ref": "Marshall JCM 2000 DSL",     "type": "guitar" },
+    { "id": 11, "name": "JVM",         "ref": "Marshall JVM410",           "type": "guitar" },
+    { "id": 12, "name": "ODS",         "ref": "Dumble Overdrive Special",  "type": "guitar" },
+    { "id": 13, "name": "SLO 100",     "ref": "Soldano SLO-100",           "type": "guitar" },
+    { "id": 14, "name": "Recto",       "ref": "Mesa Boogie Dual Rectifier","type": "guitar" },
+    { "id": 15, "name": "Mark IV",     "ref": "Mesa Boogie Mark IV",       "type": "guitar" },
+    { "id": 16, "name": "5150",        "ref": "Peavey 5150",               "type": "guitar" },
+    { "id": 17, "name": "Ecstasy",     "ref": "Bogner Ecstasy",            "type": "guitar" },
+    { "id": 18, "name": "Rockerverb", "ref": "Orange Rockerverb 50",       "type": "guitar" },
+    { "id": 19, "name": "Hiwatt",      "ref": "Hiwatt DR103",              "type": "guitar" },
+    { "id": 20, "name": "Dr. Z",       "ref": "Dr. Z Carmen Ghia",         "type": "guitar" },
+    { "id": 21, "name": "Cornford",    "ref": "Cornford MK50H",            "type": "guitar" },
+    { "id": 22, "name": "Acoustic",    "ref": "Acoustic Simulator",        "type": "acoustic" },
+    { "id": 23, "name": "Acoustic 2",  "ref": "Acoustic Simulator 2",      "type": "acoustic" },
+    { "id": 24, "name": "SVT",         "ref": "Ampeg SVT",                 "type": "bass" },
+    { "id": 25, "name": "B-15",        "ref": "Ampeg B-15 Portaflex",      "type": "bass" },
+    { "id": 26, "name": "Microtubes",  "ref": "Darkglass Microtubes B7K",  "type": "bass" }
+  ],
+
+  "ir_guitar": [
+    { "id": 0, "name": "A212",   "ref": "Allen 2×12" },
+    { "id": 1, "name": "JZ120",  "ref": "JC-120 2×12" },
+    { "id": 2, "name": "BS410",  "ref": "Blues 4×10" },
+    { "id": 3, "name": "GB412",  "ref": "Greenback 4×12" },
+    { "id": 4, "name": "TR212",  "ref": "Twin Reverb 2×12" },
+    { "id": 5, "name": "DR112",  "ref": "Deluxe Reverb 1×12" },
+    { "id": 6, "name": "V412",   "ref": "Vintage 4×12" },
+    { "id": 7, "name": "1960",   "ref": "Marshall 1960 4×12" }
+  ],
+
+  "ir_mics": [
+    { "id": 0, "name": "S57",    "ref": "Shure SM57" },
+    { "id": 1, "name": "R112",   "ref": "Royer R-112" },
+    { "id": 2, "name": "R121",   "ref": "Royer R-121" },
+    { "id": 3, "name": "U87",    "ref": "Neumann U87" },
+    { "id": 4, "name": "C414",   "ref": "AKG C414" },
+    { "id": 5, "name": "C3000",  "ref": "AKG C3000" },
+    { "id": 6, "name": "B52",    "ref": "Shure Beta 52" },
+    { "id": 7, "name": "MD421",  "ref": "Sennheiser MD421" }
+  ],
+
+  "ir_bass": [
+    { "id": 0, "name": "Bass 1×15", "ref": "Bass 1×15 cab" },
+    { "id": 1, "name": "Bass 4×10", "ref": "Bass 4×10 cab" },
+    { "id": 2, "name": "Bass 8×10", "ref": "Ampeg 8×10" },
+    { "id": 3, "name": "Bass 1×12", "ref": "Bass 1×12 cab" }
+  ],
+
+  "mod": [
+    { "id": 0,  "name": "CE-1",       "ref": "Boss CE-1 Chorus Ensemble" },
+    { "id": 1,  "name": "CE-2",       "ref": "Boss CE-2 Chorus" },
+    { "id": 2,  "name": "ST Chorus",  "ref": "Stereo Chorus" },
+    { "id": 3,  "name": "Vibrator",   "ref": "Vibrato" },
+    { "id": 4,  "name": "Detune",     "ref": "Detune / Pitch Shift" },
+    { "id": 5,  "name": "Flanger",    "ref": "MXR Flanger" },
+    { "id": 6,  "name": "Phase 90",   "ref": "MXR Phase 90" },
+    { "id": 7,  "name": "Phase 100",  "ref": "MXR Phase 100" },
+    { "id": 8,  "name": "S.C.F.",     "ref": "Boss Slow Gear / CF-2" },
+    { "id": 9,  "name": "U-Vibe",     "ref": "Uni-Vibe" },
+    { "id": 10, "name": "Tremolo",    "ref": "Tremolo" },
+    { "id": 11, "name": "Rotary",     "ref": "Rotary Speaker" },
+    { "id": 12, "name": "Harmonist",  "ref": "Pitch Harmony / Correction" }
+  ],
+
+  "delay": [
+    { "id": 0, "name": "Analog",   "ref": "Boss DM-2" },
+    { "id": 1, "name": "Digital",  "ref": "Boss DD-7" },
+    { "id": 2, "name": "Mod Dly",  "ref": "Ibanez DML 10 Modulation Delay" },
+    { "id": 3, "name": "Tape",     "ref": "Roland RE-101 Space Echo" },
+    { "id": 4, "name": "Reverse",  "ref": "TC Electronic Alter Ego Reverse" },
+    { "id": 5, "name": "Pan",      "ref": "Ibanez DPL 10 Stereo Pan Delay" },
+    { "id": 6, "name": "Duotime",  "ref": "NUX DuoTime Dual Delay" },
+    { "id": 7, "name": "Phi",      "ref": "Phi Golden Ratio Delay" }
+  ],
+
+  "reverb": [
+    { "id": 0, "name": "Room",    "ref": "MXR M300 Room" },
+    { "id": 1, "name": "Hall",    "ref": "Lexicon 480L Hall" },
+    { "id": 2, "name": "Plate",   "ref": "EMT 140 Plate" },
+    { "id": 3, "name": "Spring",  "ref": "Boss FRV-1 Spring" },
+    { "id": 4, "name": "Shimmer", "ref": "Neunaber Seraphim Shimmer" }
+  ]
+}

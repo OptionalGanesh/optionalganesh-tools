@@ -1,737 +1,988 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MG-30 Patch Builder — Optional Ganesh</title>
+<title>MG-30 Pack Builder — Optional Ganesh</title>
 <style>
   :root {
-    --bg: #050505;
-    --surface: #0c0c0c;
-    --surface2: #111111;
-    --line: rgba(255,255,255,0.08);
-    --line2: rgba(255,255,255,0.14);
-    --text: rgba(255,255,255,0.92);
-    --muted: rgba(255,255,255,0.45);
-    --hint: rgba(255,255,255,0.18);
-    --accent: rgba(255,255,255,0.85);
-    --dim: rgba(255,255,255,0.22);
-    --red: rgba(210,90,80,0.9);
-    --amber: rgba(220,170,80,0.9);
-    --mono: "SF Mono", "Fira Code", "Fira Mono", Consolas, monospace;
-    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --bg:#050505; --surface:#0c0c0c; --s2:#111; --s3:#171717;
+    --line:rgba(255,255,255,0.08); --line2:rgba(255,255,255,0.15);
+    --text:rgba(255,255,255,0.92); --muted:rgba(255,255,255,0.45);
+    --dim:rgba(255,255,255,0.22); --hint:rgba(255,255,255,0.07);
+    --on:rgba(190,255,170,0.85); --on-bg:rgba(130,210,90,0.1); --on-border:rgba(130,210,90,0.28);
+    --sel-border:rgba(255,255,255,0.32); --sel-bg:rgba(255,255,255,0.1);
+    --fw-ok:rgba(100,210,100,0.8); --fw-warn:rgba(220,180,60,0.8);
+    --mono:"SF Mono","Fira Code",Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   }
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { background: var(--bg); color: var(--text); font-family: var(--sans); }
-  body {
-    min-height: 100vh;
-    background:
-      radial-gradient(circle at 20% 20%, rgba(255,255,255,0.035), transparent 30%),
-      radial-gradient(circle at 80% 30%, rgba(255,255,255,0.025), transparent 28%),
-      linear-gradient(180deg, #070707 0%, #020202 100%);
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px}
+  body{min-height:100vh;background:
+    radial-gradient(circle at 18% 18%,rgba(255,255,255,0.03),transparent 26%),
+    radial-gradient(circle at 82% 28%,rgba(255,255,255,0.02),transparent 24%),
+    linear-gradient(180deg,#070707 0%,#020202 100%)}
+  .page{max-width:940px;margin:0 auto;padding:2.5rem 1.5rem 6rem}
+
+  /* HEADER */
+  header{margin-bottom:1.8rem}
+  .logo{font-size:11px;font-family:var(--mono);letter-spacing:.18em;color:var(--muted);margin-bottom:.9rem}
+  .logo a{color:var(--muted);text-decoration:none}.logo a:hover{color:var(--text)}
+  h1{font-size:clamp(1.6rem,4vw,2.3rem);font-weight:700;letter-spacing:-.03em;line-height:1.1}
+  h1 span{color:rgba(255,255,255,.88)}
+  .subtitle{margin-top:.5rem;font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.04em}
+
+  /* FIRMWARE BAR */
+  .fw-bar{
+    display:flex;align-items:center;gap:.7rem;padding:.6rem 1rem;
+    background:var(--surface);border:1px solid var(--line);border-radius:4px;
+    margin-bottom:1rem;font-family:var(--mono);font-size:10px;
+  }
+  .fw-badge{
+    padding:2px 8px;border-radius:2px;letter-spacing:.1em;text-transform:uppercase;
+    border:1px solid var(--on-border);color:var(--on);background:var(--on-bg);
+  }
+  .fw-badge.checking{color:var(--muted);border-color:var(--line);background:none}
+  .fw-badge.update{color:var(--fw-warn);border-color:rgba(220,180,60,.3);background:rgba(220,180,60,.08)}
+  .fw-label{color:var(--muted);flex:1}
+  .fw-btn{
+    font-family:var(--mono);font-size:9px;letter-spacing:.1em;padding:3px 10px;
+    background:none;border:1px solid var(--line);color:var(--dim);
+    border-radius:2px;cursor:pointer;transition:all .12s
+  }
+  .fw-btn:hover{color:var(--text);border-color:var(--line2)}
+
+  /* IMPORT */
+  .import-bar{
+    display:flex;align-items:center;gap:.7rem;padding:.65rem 1rem;
+    background:var(--surface);border:1px solid var(--line);border-radius:4px;margin-bottom:1.2rem
+  }
+  .import-label{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;flex:1}
+  .import-hint{font-family:var(--mono);font-size:10px;color:var(--dim)}
+  .import-btn{
+    font-family:var(--mono);font-size:10px;letter-spacing:.1em;padding:5px 14px;
+    background:none;border:1px solid var(--line2);color:var(--text);border-radius:2px;
+    cursor:pointer;transition:all .15s;white-space:nowrap
+  }
+  .import-btn:hover{background:var(--hint)}
+  #file-in{display:none}
+
+  /* BUILDER */
+  .builder{background:var(--surface);border:1px solid var(--line);border-radius:4px;margin-bottom:0;overflow:hidden}
+
+  /* SCENE TABS */
+  .scene-row{
+    display:flex;align-items:center;gap:0;border-bottom:1px solid var(--line);
+    background:var(--s2);padding:0 1rem
+  }
+  .scene-label{font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--dim);text-transform:uppercase;margin-right:.8rem}
+  .scene-btn{
+    font-family:var(--mono);font-size:11px;letter-spacing:.08em;padding:.5rem .85rem;
+    background:none;border:none;border-right:1px solid var(--line);color:var(--muted);
+    cursor:pointer;transition:all .12s
+  }
+  .scene-btn.active{color:var(--text);background:var(--sel-bg)}
+  .scene-btn:hover:not(.active){color:var(--text)}
+  .scene-copy{
+    margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:.1em;
+    color:var(--dim);background:none;border:1px solid var(--line);border-radius:2px;
+    padding:3px 10px;cursor:pointer;transition:all .12s
+  }
+  .scene-copy:hover{color:var(--text);border-color:var(--line2)}
+
+  /* CHAIN STRIP */
+  .chain-wrap{padding:1.1rem 1rem .7rem;overflow-x:auto;border-bottom:1px solid var(--line)}
+  .chain-strip{display:flex;align-items:stretch;gap:0;min-width:max-content}
+  .chain-block{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:5px;padding:9px 10px;border:1px solid var(--line);border-radius:3px;
+    cursor:pointer;transition:all .13s;background:var(--s2);user-select:none;min-width:52px
+  }
+  .chain-block:hover{border-color:var(--line2);background:var(--s3)}
+  .chain-block.selected{border-color:var(--sel-border);background:var(--sel-bg)}
+  .chain-block.active{border-color:var(--on-border);background:var(--on-bg)}
+  .chain-block.active.selected{border-color:rgba(190,255,170,.5);background:rgba(130,210,90,.14)}
+  .chain-block.bypass{opacity:.4}
+  .block-label{font-family:var(--mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+  .chain-block.active .block-label{color:var(--on)}
+  .chain-block.selected .block-label{color:var(--text)}
+  .block-dot{width:5px;height:5px;border-radius:50%;background:var(--dim);transition:background .12s;flex-shrink:0}
+  .chain-block.active .block-dot{background:var(--on)}
+  .chain-arrow{font-family:var(--mono);font-size:11px;color:var(--dim);padding:0 4px;display:flex;align-items:center;flex-shrink:0}
+
+  /* PARAMS PANEL */
+  .params-panel{padding:1.1rem 1rem 1rem;min-height:120px;background:var(--bg)}
+  .params-head{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:.9rem
+  }
+  .params-block-name{font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .params-ref{font-family:var(--mono);font-size:9px;color:var(--dim);margin-left:.6rem}
+  .toggle-btn{
+    font-family:var(--mono);font-size:9px;letter-spacing:.1em;padding:3px 11px;
+    border-radius:2px;cursor:pointer;transition:all .12s;background:none;
+    border:1px solid var(--line);color:var(--muted)
+  }
+  .toggle-btn.on{color:var(--on);border-color:var(--on-border);background:var(--on-bg)}
+  .toggle-btn:hover{border-color:var(--line2)}
+  .pg{display:grid;grid-template-columns:1fr 1fr;gap:.6rem 1.4rem}
+  .pg.w3{grid-template-columns:1fr 1fr 1fr}
+  .pg.w1{grid-template-columns:1fr}
+  .pr{display:flex;flex-direction:column;gap:4px}
+  .pr.full{grid-column:1/-1}
+  .pl{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.04em;display:flex;justify-content:space-between}
+  .pl span{color:var(--dim)}
+  select.ps{
+    width:100%;background:var(--s2);border:1px solid var(--line);color:var(--text);
+    font-family:var(--mono);font-size:12px;padding:5px 8px;border-radius:3px;
+    outline:none;cursor:pointer;transition:border-color .12s
+  }
+  select.ps:focus{border-color:var(--line2)}
+  select.ps option{background:var(--s2)}
+  input[type=range]{
+    width:100%;-webkit-appearance:none;height:3px;background:var(--hint);
+    border-radius:2px;outline:none;cursor:pointer
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:13px;height:13px;border-radius:50%;
+    background:rgba(255,255,255,.62);cursor:pointer;transition:background .1s
+  }
+  input[type=range]:hover::-webkit-slider-thumb{background:rgba(255,255,255,.88)}
+  input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:rgba(255,255,255,.62);border:none;cursor:pointer}
+  .pempty{font-family:var(--mono);font-size:11px;color:var(--dim);padding:.5rem 0}
+
+  /* PRESET ROW */
+  .preset-row{
+    display:flex;align-items:center;gap:.8rem;padding:.9rem 1rem;
+    background:var(--surface);border:1px solid var(--line);border-top:none;
+    border-radius:0 0 4px 4px;margin-bottom:1.4rem
+  }
+  .pname-wrap{flex:1;display:flex;flex-direction:column;gap:3px}
+  .pname-hint{font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:.07em}
+  .pname-input{
+    width:100%;background:var(--s2);border:1px solid var(--line);color:var(--text);
+    font-family:var(--mono);font-size:13px;padding:6px 10px;border-radius:3px;
+    outline:none;transition:border-color .12s
+  }
+  .pname-input:focus{border-color:var(--line2)}
+  .add-btn{
+    font-family:var(--mono);font-size:11px;letter-spacing:.08em;padding:8px 18px;
+    background:none;border:1px solid var(--line2);color:var(--text);border-radius:3px;
+    cursor:pointer;transition:all .15s;white-space:nowrap
+  }
+  .add-btn:hover{background:var(--hint);border-color:rgba(255,255,255,.28)}
+
+  /* PACK */
+  .pack{background:var(--surface);border:1px solid var(--line);border-radius:4px;overflow:hidden}
+  .pack-head{
+    display:flex;align-items:center;padding:.75rem 1rem;
+    border-bottom:1px solid var(--line);background:var(--s2)
+  }
+  .pack-title{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);flex:1}
+  .pack-count{font-family:var(--mono);font-size:10px;color:var(--dim)}
+  .pack-list{min-height:52px}
+  .pack-empty{font-family:var(--mono);font-size:11px;color:var(--dim);padding:1.4rem 1rem}
+  .pack-item{
+    display:flex;align-items:center;gap:.75rem;padding:.7rem 1rem;
+    border-bottom:1px solid var(--line);transition:background .1s
+  }
+  .pack-item:last-child{border-bottom:none}
+  .pack-item:hover{background:var(--hint)}
+  .pi-name{font-family:var(--mono);font-size:12px;color:var(--text);flex:1}
+  .pi-scenes{display:flex;gap:3px;align-items:center}
+  .pi-dot{width:6px;height:6px;border-radius:50%;background:var(--on)}
+  .pi-btn{
+    font-family:var(--mono);font-size:9px;letter-spacing:.08em;padding:3px 9px;
+    background:none;border:1px solid var(--line);color:var(--muted);border-radius:2px;
+    cursor:pointer;transition:all .12s
+  }
+  .pi-btn:hover{color:var(--text);border-color:var(--line2)}
+  .pi-btn.del:hover{color:rgba(220,80,80,.9);border-color:rgba(220,80,80,.3)}
+  .pack-foot{
+    display:flex;align-items:center;justify-content:flex-end;gap:.8rem;
+    padding:.75rem 1rem;border-top:1px solid var(--line);background:var(--s2)
+  }
+  .exp-btn{
+    font-family:var(--mono);font-size:11px;letter-spacing:.1em;padding:7px 18px;
+    background:none;border:1px solid var(--line2);color:var(--text);border-radius:3px;
+    cursor:pointer;transition:all .15s
+  }
+  .exp-btn:hover{background:var(--hint)}
+  .exp-btn:disabled{opacity:.3;cursor:default}
+  .pack-status{font-family:var(--mono);font-size:10px;color:var(--on);opacity:0;transition:opacity .3s}
+  .pack-status.show{opacity:1}
+
+  footer{
+    margin-top:3rem;padding-top:1.1rem;border-top:1px solid var(--line);
+    font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.06em
   }
 
-  .page { position:relative; z-index:1; max-width:820px; margin:0 auto; padding:2.5rem 2rem 5rem; }
-
-  header { margin-bottom:2.5rem; }
-  .logo { font-size:11px; font-family:var(--mono); letter-spacing:0.2em; color:var(--muted); margin-bottom:1rem; }
-  h1 { font-size:clamp(1.8rem,5vw,2.8rem); font-weight:700; letter-spacing:-0.03em; line-height:1.1; }
-  h1 span { color:var(--accent); }
-  .subtitle { margin-top:0.6rem; font-family:var(--mono); font-size:12px; color:var(--muted); }
-
-  /* ── layout ── */
-  .grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
-  .grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; }
-  .full { grid-column:1/-1; }
-
-  .card {
-    background:var(--surface); border:1px solid var(--line);
-    border-radius:4px; padding:1.2rem 1.1rem;
-  }
-  .card-title {
-    font-family:var(--mono); font-size:10px; letter-spacing:0.18em;
-    text-transform:uppercase; color:var(--muted); margin-bottom:1rem;
-    border-bottom:1px solid var(--line); padding-bottom:0.6rem;
-  }
-
-  label.fl { display:block; font-family:var(--mono); font-size:11px; color:var(--muted); margin-bottom:4px; letter-spacing:0.05em; }
-  input[type=text], input[type=number], select {
-    width:100%; background:var(--surface2); border:1px solid var(--line);
-    color:var(--text); font-family:var(--mono); font-size:13px;
-    padding:6px 10px; border-radius:3px; outline:none; height:34px;
-    transition:border-color 0.15s;
-  }
-  input:focus, select:focus { border-color:var(--line2); }
-  select option { background:var(--surface2); }
-
-  .field { margin-bottom:0.9rem; }
-
-  /* slider */
-  .slider-row { display:flex; align-items:center; gap:8px; }
-  input[type=range] {
-    flex:1; -webkit-appearance:none; height:3px; background:var(--hint);
-    border-radius:2px; outline:none; cursor:pointer;
-  }
-  input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance:none; width:14px; height:14px; border-radius:50%;
-    background:rgba(255,255,255,0.7); cursor:pointer;
-  }
-  input[type=range]::-moz-range-thumb {
-    width:14px; height:14px; border-radius:50%; background:rgba(255,255,255,0.7);
-    border:none; cursor:pointer;
-  }
-  .val-badge {
-    font-family:var(--mono); font-size:11px; color:var(--accent);
-    min-width:30px; text-align:right;
-  }
-
-  /* toggle */
-  .toggle-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:0.7rem; }
-  .toggle-label { font-family:var(--mono); font-size:12px; color:var(--text); }
-  .toggle {
-    width:36px; height:20px; background:var(--hint); border:none;
-    border-radius:10px; cursor:pointer; position:relative; transition:background 0.2s;
-    flex-shrink:0;
-  }
-  .toggle.on { background:rgba(255,255,255,0.35); }
-  .toggle::after {
-    content:''; position:absolute; top:3px; left:3px; width:14px; height:14px;
-    background:var(--text); border-radius:50%; transition:left 0.2s;
-  }
-  .toggle.on::after { left:19px; }
-
-  /* FX chain */
-  .chain { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:1rem; }
-  .fx-slot {
-    font-family:var(--mono); font-size:11px; padding:4px 10px;
-    border:1px solid var(--line); border-radius:3px; color:var(--muted);
-    cursor:pointer; user-select:none; transition:all 0.15s; background:none;
-    display:flex; align-items:center; gap:4px;
-  }
-  .fx-slot.active { border-color:rgba(255,255,255,0.35); color:var(--accent); background:rgba(255,255,255,0.06); }
-  .fx-slot .dot { width:5px; height:5px; border-radius:50%; background:var(--muted); }
-  .fx-slot.active .dot { background:var(--accent); }
-
-  /* scenes */
-  .scene-tabs { display:flex; gap:0; border-bottom:1px solid var(--line); margin-bottom:1.5rem; }
-  .scene-tab {
-    padding:0.5rem 1.2rem; font-family:var(--mono); font-size:12px; color:var(--muted);
-    background:none; border:none; border-bottom:2px solid transparent;
-    margin-bottom:-1px; cursor:pointer; transition:all 0.15s;
-  }
-  .scene-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
-
-  /* action buttons */
-  .btn-row { display:flex; gap:10px; margin-top:1.5rem; }
-  .btn {
-    flex:1; padding:0.7rem 1rem; font-family:var(--sans); font-size:14px; font-weight:600;
-    border-radius:3px; cursor:pointer; transition:all 0.15s; border:none;
-  }
-  .btn-primary {
-    background:rgba(255,255,255,0.1); color:var(--text); border:1px solid var(--line2);
-  }
-  .btn-primary:hover { background:rgba(255,255,255,0.16); }
-  .btn-secondary {
-    background:none; color:var(--muted); border:1px solid var(--line);
-  }
-  .btn-secondary:hover { color:var(--text); border-color:var(--line2); }
-
-  /* status */
-  .status { font-family:var(--mono); font-size:12px; color:var(--muted); margin-top:1rem; min-height:20px; }
-  .status.ok { color:var(--accent); }
-  .status.err { color:var(--red); }
-
-  /* import */
-  .drop-zone {
-    border:1px dashed var(--line2); border-radius:4px; padding:2rem;
-    text-align:center; cursor:pointer; transition:all 0.2s;
-    font-family:var(--mono); font-size:13px; color:var(--muted);
-  }
-  .drop-zone:hover, .drop-zone.over { border-color:rgba(255,255,255,0.35); color:var(--accent); }
-  .drop-zone input { display:none; }
-
-  /* divider */
-  hr { border:none; border-top:1px solid var(--line); margin:1.5rem 0; }
-
-  footer { margin-top:3rem; font-family:var(--mono); font-size:11px; color:var(--hint); }
-
-  @media(max-width:540px) {
-    .grid, .grid3 { grid-template-columns:1fr; }
-    .full { grid-column:1; }
+  @media(max-width:580px){
+    .pg{grid-template-columns:1fr}
+    .pg.w3{grid-template-columns:1fr 1fr}
+    .preset-row{flex-direction:column;align-items:stretch}
+    .import-bar{flex-wrap:wrap}
+    .chain-block{min-width:44px;padding:7px 7px}
+    .block-label{font-size:8px}
   }
 </style>
 </head>
 <body>
 <div class="page">
 
-  <a href="/" style="display:inline-flex;align-items:center;gap:6px;color:rgba(255,255,255,0.32);font-size:11px;letter-spacing:0.2em;text-transform:uppercase;text-decoration:none;margin-bottom:28px;transition:color 180ms ease;" onmouseover="this.style.color='rgba(255,255,255,0.65)'" onmouseout="this.style.color='rgba(255,255,255,0.32)'">← Tools</a>
-
   <header>
-    <div class="logo">Optional Ganesh / Tools</div>
-    <h1>MG-30 <span>Patch</span> Builder</h1>
-    <p class="subtitle">// Crea y descarga patches .mg30patch para NUX MG-30</p>
+    <div class="logo"><a href="/">← Tools</a> / MG-30</div>
+    <h1>MG-30 <span>Pack Builder</span></h1>
+    <div class="subtitle">// Configure chain visually · 3 scenes · export as .mg30patch or ZIP pack</div>
   </header>
 
-  <!-- Import -->
-  <div class="card" style="margin-bottom:1.5rem;">
-    <div class="card-title">Importar patch existente (opcional)</div>
-    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-in').click()" ondragover="ev(event,'over')" ondragleave="ev(event,'out')" ondrop="dropFile(event)">
-      <input type="file" id="file-in" accept=".mg30patch" onchange="loadFile(this)">
-      Arrastra un .mg30patch aquí o haz click para abrir
+  <!-- FIRMWARE BAR -->
+  <div class="fw-bar">
+    <span class="fw-badge" id="fw-badge">FW —</span>
+    <span class="fw-label" id="fw-label">Loading firmware data…</span>
+    <button class="fw-btn" onclick="checkFirmware()">Check for updates</button>
+  </div>
+
+  <!-- IMPORT -->
+  <div class="import-bar" ondrop="dropFile(event)" ondragover="event.preventDefault()">
+    <span class="import-label">Import patch</span>
+    <span class="import-hint" id="import-hint">drag .mg30patch here or →</span>
+    <button class="import-btn" onclick="document.getElementById('file-in').click()">Open .mg30patch</button>
+    <input type="file" id="file-in" accept=".mg30patch" onchange="loadFile(this)">
+  </div>
+
+  <!-- BUILDER -->
+  <div class="builder">
+    <div class="scene-row">
+      <span class="scene-label">Scene</span>
+      <button class="scene-btn active" onclick="switchScene(0,this)">A</button>
+      <button class="scene-btn" onclick="switchScene(1,this)">B</button>
+      <button class="scene-btn" onclick="switchScene(2,this)">C</button>
+      <button class="scene-copy" onclick="copyScenes()">Copy A → B C</button>
     </div>
-    <div class="status" id="import-status"></div>
+    <div class="chain-wrap">
+      <div class="chain-strip" id="chain-strip"></div>
+    </div>
+    <div class="params-panel" id="params-panel"></div>
   </div>
 
-  <!-- Scene tabs -->
-  <div class="scene-tabs">
-    <button class="scene-tab active" onclick="switchScene(0)">Escena A</button>
-    <button class="scene-tab" onclick="switchScene(1)">Escena B</button>
-    <button class="scene-tab" onclick="switchScene(2)">Escena C</button>
+  <!-- PRESET NAME + ADD -->
+  <div class="preset-row">
+    <div class="pname-wrap">
+      <span class="pname-hint">[INST]-[ROLE]-[CHARACTER]_v[N] · e.g. EG-CLN-SOUL_v1</span>
+      <input class="pname-input" id="pname" type="text" value="EG-CLN-SOUL_v1" placeholder="preset name">
+    </div>
+    <button class="add-btn" onclick="addToPack()">+ Add to Pack</button>
   </div>
 
-  <!-- Patch name -->
-  <div class="card" style="margin-bottom:1rem;">
-    <div class="card-title">Nombre del patch</div>
-    <input type="text" id="patch-name" maxlength="13" placeholder="mi_patch (máx 13 chars)" oninput="syncName()">
-  </div>
-
-  <!-- AMP -->
-  <div class="card" style="margin-bottom:1rem;">
-    <div class="card-title">Amplificador</div>
-    <div class="grid">
-      <div class="field">
-        <label class="fl">Modelo</label>
-        <select id="amp-model" onchange="buildPreview()">
-          <option value="0">Clean — Fender Twin</option>
-          <option value="1">Crunch — Marshall Plexi</option>
-          <option value="2">Hi-Gain — Mesa Rectifier</option>
-          <option value="3">Brit — JCM800</option>
-          <option value="4">AC — Vox AC30</option>
-          <option value="5">Blues — Bassman</option>
-          <option value="6">Modern — 5150</option>
-          <option value="7">Metal — Dual Rectifier</option>
-        </select>
-      </div>
-      <div class="field">
-        <label class="fl">Ganancia</label>
-        <div class="slider-row">
-          <input type="range" id="amp-gain" min="0" max="100" value="50" oninput="sv(this,'gain-val')">
-          <span class="val-badge" id="gain-val">50</span>
-        </div>
-      </div>
-      <div class="field">
-        <label class="fl">Bass</label>
-        <div class="slider-row">
-          <input type="range" id="amp-bass" min="0" max="100" value="50" oninput="sv(this,'bass-val')">
-          <span class="val-badge" id="bass-val">50</span>
-        </div>
-      </div>
-      <div class="field">
-        <label class="fl">Mid</label>
-        <div class="slider-row">
-          <input type="range" id="amp-mid" min="0" max="100" value="50" oninput="sv(this,'mid-val')">
-          <span class="val-badge" id="mid-val">50</span>
-        </div>
-      </div>
-      <div class="field">
-        <label class="fl">Treble</label>
-        <div class="slider-row">
-          <input type="range" id="amp-treble" min="0" max="100" value="50" oninput="sv(this,'treble-val')">
-          <span class="val-badge" id="treble-val">50</span>
-        </div>
-      </div>
-      <div class="field">
-        <label class="fl">Presencia</label>
-        <div class="slider-row">
-          <input type="range" id="amp-presence" min="0" max="100" value="50" oninput="sv(this,'pres-val')">
-          <span class="val-badge" id="pres-val">50</span>
-        </div>
-      </div>
-      <div class="field">
-        <label class="fl">Volumen master</label>
-        <div class="slider-row">
-          <input type="range" id="amp-vol" min="0" max="100" value="100" oninput="sv(this,'vol-val')">
-          <span class="val-badge" id="vol-val">100</span>
-        </div>
-      </div>
+  <!-- PACK -->
+  <div class="pack">
+    <div class="pack-head">
+      <span class="pack-title">Pack</span>
+      <span class="pack-count" id="pack-count">0 presets</span>
+    </div>
+    <div class="pack-list" id="pack-list">
+      <div class="pack-empty">No presets yet.</div>
+    </div>
+    <div class="pack-foot">
+      <span class="pack-status" id="pack-status"></span>
+      <button class="exp-btn" id="exp-btn" onclick="exportPack()" disabled>Export Pack →</button>
     </div>
   </div>
 
-  <!-- GATE + COMP -->
-  <div class="grid" style="margin-bottom:1rem;">
-    <div class="card">
-      <div class="card-title">Noise Gate</div>
-      <div class="toggle-row">
-        <span class="toggle-label">Activar</span>
-        <button class="toggle" id="gate-on" onclick="tog(this)"></button>
-      </div>
-      <div class="field">
-        <label class="fl">Threshold</label>
-        <div class="slider-row">
-          <input type="range" id="gate-thr" min="0" max="100" value="30" oninput="sv(this,'gthr-v')">
-          <span class="val-badge" id="gthr-v">30</span>
-        </div>
-      </div>
-      <div class="field">
-        <label class="fl">Release</label>
-        <div class="slider-row">
-          <input type="range" id="gate-rel" min="0" max="100" value="50" oninput="sv(this,'grel-v')">
-          <span class="val-badge" id="grel-v">50</span>
-        </div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">Compresor</div>
-      <div class="toggle-row">
-        <span class="toggle-label">Activar</span>
-        <button class="toggle" id="comp-on" onclick="tog(this)"></button>
-      </div>
-      <div class="field">
-        <label class="fl">Sustain</label>
-        <div class="slider-row">
-          <input type="range" id="comp-sus" min="0" max="100" value="50" oninput="sv(this,'csus-v')">
-          <span class="val-badge" id="csus-v">50</span>
-        </div>
-      </div>
-      <div class="field">
-        <label class="fl">Attack</label>
-        <div class="slider-row">
-          <input type="range" id="comp-att" min="0" max="100" value="50" oninput="sv(this,'catt-v')">
-          <span class="val-badge" id="catt-v">50</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MOD + DELAY + REVERB -->
-  <div class="grid" style="margin-bottom:1rem;">
-    <div class="card">
-      <div class="card-title">Modulación</div>
-      <div class="toggle-row">
-        <span class="toggle-label">Activar</span>
-        <button class="toggle" id="mod-on" onclick="tog(this)"></button>
-      </div>
-      <div class="field">
-        <label class="fl">Tipo</label>
-        <select id="mod-type">
-          <option value="0">Chorus</option>
-          <option value="1">Flanger</option>
-          <option value="2">Phaser</option>
-          <option value="3">Tremolo</option>
-          <option value="4">Vibrato</option>
-        </select>
-      </div>
-      <div class="field">
-        <label class="fl">Rate</label>
-        <div class="slider-row">
-          <input type="range" id="mod-rate" min="0" max="100" value="50" oninput="sv(this,'mrate-v')">
-          <span class="val-badge" id="mrate-v">50</span>
-        </div>
-      </div>
-      <div class="field">
-        <label class="fl">Depth / Mix</label>
-        <div class="slider-row">
-          <input type="range" id="mod-depth" min="0" max="100" value="50" oninput="sv(this,'mdepth-v')">
-          <span class="val-badge" id="mdepth-v">50</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">Delay</div>
-      <div class="toggle-row">
-        <span class="toggle-label">Activar</span>
-        <button class="toggle" id="delay-on" onclick="tog(this)"></button>
-      </div>
-      <div class="field">
-        <label class="fl">Tipo</label>
-        <select id="delay-type">
-          <option value="0">Digital</option>
-          <option value="1">Analog</option>
-          <option value="2">Tape</option>
-          <option value="3">Ping Pong</option>
-        </select>
-      </div>
-      <div class="field">
-        <label class="fl">Time (ms)</label>
-        <div class="slider-row">
-          <input type="range" id="delay-time" min="10" max="2000" value="500" step="10" oninput="sv(this,'dtime-v')">
-          <span class="val-badge" id="dtime-v">500</span>
-        </div>
-      </div>
-      <div class="field">
-        <label class="fl">Feedback</label>
-        <div class="slider-row">
-          <input type="range" id="delay-fb" min="0" max="100" value="30" oninput="sv(this,'dfb-v')">
-          <span class="val-badge" id="dfb-v">30</span>
-        </div>
-      </div>
-      <div class="field">
-        <label class="fl">Mix</label>
-        <div class="slider-row">
-          <input type="range" id="delay-mix" min="0" max="100" value="30" oninput="sv(this,'dmix-v')">
-          <span class="val-badge" id="dmix-v">30</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card" style="margin-bottom:1rem;">
-    <div class="card-title">Reverb</div>
-    <div class="grid">
-      <div class="field">
-        <label class="fl">Tipo</label>
-        <select id="reverb-type">
-          <option value="0">Room</option>
-          <option value="1">Hall</option>
-          <option value="2">Plate</option>
-          <option value="3">Spring</option>
-          <option value="4">Studio</option>
-          <option value="5">Arena</option>
-        </select>
-      </div>
-      <div class="field">
-        <label class="fl">Activar</label>
-        <button class="toggle" id="reverb-on" onclick="tog(this)" style="margin-top:4px"></button>
-      </div>
-      <div class="field">
-        <label class="fl">Decay</label>
-        <div class="slider-row">
-          <input type="range" id="reverb-decay" min="0" max="100" value="40" oninput="sv(this,'rdecay-v')">
-          <span class="val-badge" id="rdecay-v">40</span>
-        </div>
-      </div>
-      <div class="field">
-        <label class="fl">Mix</label>
-        <div class="slider-row">
-          <input type="range" id="reverb-mix" min="0" max="100" value="30" oninput="sv(this,'rmix-v')">
-          <span class="val-badge" id="rmix-v">30</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- FX Chain order -->
-  <div class="card" style="margin-bottom:1.5rem;">
-    <div class="card-title">Orden de la cadena FX</div>
-    <p style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:0.8rem;">Haz click para activar/desactivar efectos en la cadena</p>
-    <div class="chain" id="fx-chain"></div>
-  </div>
-
-  <!-- Build -->
-  <div class="btn-row">
-    <button class="btn btn-primary" onclick="buildAndDownload()">Descargar .mg30patch →</button>
-    <button class="btn btn-secondary" onclick="loadPreset('clean')">Preset: Clean</button>
-    <button class="btn btn-secondary" onclick="loadPreset('crunch')">Preset: Crunch</button>
-  </div>
-  <div class="status" id="build-status"></div>
-
-  <footer style="margin-top:3rem;">optionalganesh.com / NUX MG-30 format v1 — basado en reverse engineering de patches reales</footer>
+  <footer>optionalganesh.com — MG-30 Pack Builder · signal chain based on NUX MG-30 firmware · <span id="fw-footer">—</span></footer>
 </div>
 
 <script>
-// ── State ──────────────────────────────────────────────
-const NUM_SCENES = 3;
+'use strict';
+// ═══════════════════════════════════════════════════════════
+// FIRMWARE DATA
+// Loaded from firmware.json, falls back to embedded baseline.
+// To add new amps/effects when NUX releases firmware:
+//   update tools/MG-30/firmware.json in the repo.
+// ═══════════════════════════════════════════════════════════
+
+const FW_URL = 'https://raw.githubusercontent.com/OptionalGanesh/optionalganesh-tools/main/tools/MG-30/firmware.json';
+
+let FW = null; // populated after load
+
+const FW_BASELINE = {
+  version:'5.0', date:'2025-01',
+  notes:'V5 — Pro Scene support.',
+  wah:[
+    {id:0,name:'Clyde',ref:'Fulltone Clyde Wah'},
+    {id:1,name:'Cry BB',ref:'Dunlop Cry Baby'},
+    {id:2,name:'V847',ref:'Vox V847'},
+    {id:3,name:'Horse',ref:'Morley Bad Horsie'},
+    {id:4,name:'Oct Shift',ref:'Digitech Whammy'}
+  ],
+  comp:[
+    {id:0,name:'Rose Comp',ref:'Ross Compressor'},
+    {id:1,name:'K Comp',ref:'Keeley C4 4-knob'},
+    {id:2,name:'Studio Comp',ref:'Studio Compressor'}
+  ],
+  efx:[
+    {id:0,name:'Dist+',ref:'MXR Distortion+'},
+    {id:1,name:'RC Boost',ref:'Xotic RC Booster'},
+    {id:2,name:'AC Boost',ref:'Xotic AC Booster'},
+    {id:3,name:'Dist One',ref:'ProCo RAT'},
+    {id:4,name:'T Scream',ref:'Ibanez TS808 Tubescreamer'},
+    {id:5,name:'Blues Drv',ref:'Boss BD-2 Blues Driver'},
+    {id:6,name:'Morning Drv',ref:'Walrus Morning Glory'},
+    {id:7,name:'EAT',ref:'EAT Knucklehead'},
+    {id:8,name:'Red Dirt',ref:'Bearfoot FX Red Dirt'},
+    {id:9,name:'Crunch',ref:'Marshall Crunch'},
+    {id:10,name:'Muff Fuzz',ref:'EHX Big Muff'},
+    {id:11,name:'Katana Bst',ref:'Boss Katana Boost'},
+    {id:12,name:'Red Fuzz',ref:'Red Fuzz'},
+    {id:13,name:'Touch Wah',ref:'Envelope Filter'}
+  ],
+  amps:[
+    {id:0,name:'JC Clean',ref:'Roland JC-120',type:'guitar'},
+    {id:1,name:'Twin Reverb',ref:'Fender Twin Reverb',type:'guitar'},
+    {id:2,name:'Deluxe Rvb',ref:'Fender Deluxe Reverb',type:'guitar'},
+    {id:3,name:'Princeton',ref:'Fender Princeton Reverb',type:'guitar'},
+    {id:4,name:'Tweed Dlx',ref:'Fender Tweed Deluxe 5E3',type:'guitar'},
+    {id:5,name:'Bassman',ref:'Fender 59 Bassman',type:'guitar'},
+    {id:6,name:'AC 15',ref:'Vox AC15',type:'guitar'},
+    {id:7,name:'AC 30',ref:'Vox AC30 Top Boost',type:'guitar'},
+    {id:8,name:'Plexi 50',ref:'Marshall 1959 Super Lead',type:'guitar'},
+    {id:9,name:'JCM 800',ref:'Marshall JCM800 2203',type:'guitar'},
+    {id:10,name:'JCM 2000',ref:'Marshall JCM2000 DSL',type:'guitar'},
+    {id:11,name:'JVM',ref:'Marshall JVM410',type:'guitar'},
+    {id:12,name:'ODS',ref:'Dumble Overdrive Special',type:'guitar'},
+    {id:13,name:'SLO 100',ref:'Soldano SLO-100',type:'guitar'},
+    {id:14,name:'Recto',ref:'Mesa Boogie Dual Rectifier',type:'guitar'},
+    {id:15,name:'Mark IV',ref:'Mesa Boogie Mark IV',type:'guitar'},
+    {id:16,name:'5150',ref:'Peavey 5150',type:'guitar'},
+    {id:17,name:'Ecstasy',ref:'Bogner Ecstasy',type:'guitar'},
+    {id:18,name:'Rockerverb',ref:'Orange Rockerverb 50',type:'guitar'},
+    {id:19,name:'Hiwatt',ref:'Hiwatt DR103',type:'guitar'},
+    {id:20,name:'Dr. Z',ref:'Dr. Z Carmen Ghia',type:'guitar'},
+    {id:21,name:'Cornford',ref:'Cornford MK50H',type:'guitar'},
+    {id:22,name:'Acoustic',ref:'Acoustic Simulator',type:'acoustic'},
+    {id:23,name:'Acoustic 2',ref:'Acoustic Simulator 2',type:'acoustic'},
+    {id:24,name:'SVT',ref:'Ampeg SVT',type:'bass'},
+    {id:25,name:'B-15',ref:'Ampeg B-15 Portaflex',type:'bass'},
+    {id:26,name:'Microtubes',ref:'Darkglass Microtubes B7K',type:'bass'}
+  ],
+  ir_guitar:[
+    {id:0,name:'A212',ref:'Allen 2×12'},
+    {id:1,name:'JZ120',ref:'JC-120 2×12'},
+    {id:2,name:'BS410',ref:'Blues 4×10'},
+    {id:3,name:'GB412',ref:'Greenback 4×12'},
+    {id:4,name:'TR212',ref:'Twin Reverb 2×12'},
+    {id:5,name:'DR112',ref:'Deluxe Reverb 1×12'},
+    {id:6,name:'V412',ref:'Vintage 4×12'},
+    {id:7,name:'1960',ref:'Marshall 1960 4×12'}
+  ],
+  ir_mics:[
+    {id:0,name:'S57',ref:'Shure SM57'},
+    {id:1,name:'R112',ref:'Royer R-112'},
+    {id:2,name:'R121',ref:'Royer R-121'},
+    {id:3,name:'U87',ref:'Neumann U87'},
+    {id:4,name:'C414',ref:'AKG C414'},
+    {id:5,name:'C3000',ref:'AKG C3000'},
+    {id:6,name:'B52',ref:'Shure Beta 52'},
+    {id:7,name:'MD421',ref:'Sennheiser MD421'}
+  ],
+  ir_bass:[
+    {id:0,name:'Bass 1×15',ref:'Bass 1×15'},
+    {id:1,name:'Bass 4×10',ref:'Bass 4×10'},
+    {id:2,name:'Bass 8×10',ref:'Ampeg 8×10'},
+    {id:3,name:'Bass 1×12',ref:'Bass 1×12'}
+  ],
+  mod:[
+    {id:0,name:'CE-1',ref:'Boss CE-1 Chorus Ensemble'},
+    {id:1,name:'CE-2',ref:'Boss CE-2 Chorus'},
+    {id:2,name:'ST Chorus',ref:'Stereo Chorus'},
+    {id:3,name:'Vibrator',ref:'Vibrato'},
+    {id:4,name:'Detune',ref:'Detune / Pitch Shift'},
+    {id:5,name:'Flanger',ref:'MXR Flanger'},
+    {id:6,name:'Phase 90',ref:'MXR Phase 90'},
+    {id:7,name:'Phase 100',ref:'MXR Phase 100'},
+    {id:8,name:'S.C.F.',ref:'Boss Slow Gear / CF-2'},
+    {id:9,name:'U-Vibe',ref:'Uni-Vibe'},
+    {id:10,name:'Tremolo',ref:'Tremolo'},
+    {id:11,name:'Rotary',ref:'Rotary Speaker'},
+    {id:12,name:'Harmonist',ref:'Pitch Harmony'}
+  ],
+  delay:[
+    {id:0,name:'Analog',ref:'Boss DM-2'},
+    {id:1,name:'Digital',ref:'Boss DD-7'},
+    {id:2,name:'Mod Dly',ref:'Ibanez DML 10'},
+    {id:3,name:'Tape',ref:'Roland RE-101 Space Echo'},
+    {id:4,name:'Reverse',ref:'TC Electronic Alter Ego'},
+    {id:5,name:'Pan',ref:'Ibanez DPL 10 Stereo Pan'},
+    {id:6,name:'Duotime',ref:'NUX DuoTime Dual Delay'},
+    {id:7,name:'Phi',ref:'Phi Golden Ratio Delay'}
+  ],
+  reverb:[
+    {id:0,name:'Room',ref:'MXR M300 Room'},
+    {id:1,name:'Hall',ref:'Lexicon 480L Hall'},
+    {id:2,name:'Plate',ref:'EMT 140 Plate'},
+    {id:3,name:'Spring',ref:'Boss FRV-1 Spring'},
+    {id:4,name:'Shimmer',ref:'Neunaber Seraphim Shimmer'}
+  ]
+};
+
+// ═══════════════════════════════════════════════════════════
+// CHAIN DEFINITION — Real MG30 order
+// Slot IDs match QuickTone internal ordering for binary export
+// ═══════════════════════════════════════════════════════════
+const CHAIN = [
+  { id:'wah',   label:'WAH',   slot:0,  toggleable:true  },
+  { id:'comp',  label:'COMP',  slot:1,  toggleable:true  },
+  { id:'gate',  label:'GATE',  slot:5,  toggleable:true  },
+  { id:'efx',   label:'EFX',   slot:2,  toggleable:true  },
+  { id:'amp',   label:'AMP',   slot:3,  toggleable:false },  // always on
+  { id:'ir',    label:'IR',    slot:9,  toggleable:false },  // always on
+  { id:'eq',    label:'EQ',    slot:4,  toggleable:true  },
+  { id:'sr',    label:'S/R',   slot:10, toggleable:true  },  // send/return loop
+  { id:'mod',   label:'MOD',   slot:6,  toggleable:true  },
+  { id:'delay', label:'DELAY', slot:7,  toggleable:true  },
+  { id:'reverb',label:'REVERB',slot:8,  toggleable:true  },
+  { id:'vol',   label:'VOL',   slot:11, toggleable:false },  // always on
+];
+
+// ═══════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════
+function defaultScene() {
+  return {
+    wah:   { on:false, type:0, pos:50 },
+    comp:  { on:true,  type:0, sustain:50, attack:50, level:70 },
+    gate:  { on:false, threshold:30, release:50 },
+    efx:   { on:false, type:4, gain:40, tone:55, level:75 },
+    amp:   { on:true,  model:1, gain:45, bass:55, mid:50, treble:55, presence:45, volume:85 },
+    ir:    { on:true,  cab:3, mic:0, mic_pos:50, custom:false },
+    eq:    { on:false, low:50, lowmid:50, highmid:50, high:50, level:50 },
+    sr:    { on:false, send:75, return:75 },
+    mod:   { on:false, type:0, rate:30, depth:25, mix:30 },
+    delay: { on:false, type:1, time:500, feedback:25, mix:20 },
+    reverb:{ on:true,  type:0, decay:40, mix:15 },
+    vol:   { on:true,  volume:85 }
+  };
+}
+
+let scenes       = [defaultScene(), defaultScene(), defaultScene()];
 let currentScene = 0;
-let importedWav = null; // Uint8Array of embedded WAV (9436 bytes)
+let selectedId   = 'amp';
+let pack         = [];
 
-// FX chain state (12 slots)
-const FX_NAMES = ['WAH','COMP','EFX','AMP','EQ','GATE','MOD','DELAY','REVERB','IR','LOOP','TUNER'];
-let fxActive = [false,true,false,true,false,true,true,true,true,false,false,true];
-
-// Default WAV data (empty placeholder 9436 bytes = RIFF header + silence)
-function makeEmptyWav() {
-  // Minimal WAV: 44-byte header + 9392 bytes silence
-  const size = 9436;
-  const buf = new Uint8Array(size);
-  const dv = new DataView(buf.buffer);
-  // RIFF header
-  buf.set([0x52,0x49,0x46,0x46],0); // "RIFF"
-  dv.setUint32(4, size - 8, true);  // chunk size
-  buf.set([0x57,0x41,0x56,0x45],8); // "WAVE"
-  buf.set([0x66,0x6d,0x74,0x20],12);// "fmt "
-  dv.setUint32(16, 16, true);       // PCM subchunk size
-  dv.setUint16(20, 1, true);        // PCM format
-  dv.setUint16(22, 1, true);        // mono
-  dv.setUint32(24, 48000, true);    // 48kHz
-  dv.setUint32(28, 96000, true);    // byte rate
-  dv.setUint16(32, 2, true);        // block align
-  dv.setUint16(34, 16, true);       // bits per sample
-  buf.set([0x64,0x61,0x74,0x61],36);// "data"
-  dv.setUint32(40, size - 44, true);// data size
-  return buf;
-}
-
-// ── UI helpers ──────────────────────────────────────────
-function sv(el, outId) {
-  document.getElementById(outId).textContent = el.value;
-}
-function tog(btn) {
-  btn.classList.toggle('on');
-}
-function isOn(id) {
-  return document.getElementById(id).classList.contains('on');
-}
-function ev(e, state) {
-  e.preventDefault();
-  document.getElementById('drop-zone').classList.toggle('over', state==='over');
+// ═══════════════════════════════════════════════════════════
+// FIRMWARE LOAD
+// ═══════════════════════════════════════════════════════════
+async function loadFirmware() {
+  const badge = document.getElementById('fw-badge');
+  const label = document.getElementById('fw-label');
+  badge.className = 'fw-badge checking';
+  badge.textContent = 'Loading…';
+  try {
+    const r = await fetch(FW_URL + '?t=' + Date.now(), { cache:'no-store' });
+    if (!r.ok) throw new Error('network');
+    const data = await r.json();
+    FW = data;
+    badge.className = 'fw-badge';
+    badge.textContent = 'FW ' + FW.version;
+    label.textContent = 'Firmware data loaded · ' + FW.date + ' · ' + (FW.notes || '');
+    document.getElementById('fw-footer').textContent = 'FW ' + FW.version + ' · ' + FW.date;
+  } catch(e) {
+    FW = FW_BASELINE;
+    badge.className = 'fw-badge';
+    badge.textContent = 'FW ' + FW.version;
+    label.textContent = 'Using embedded data (offline) — click "Check for updates" to refresh';
+    document.getElementById('fw-footer').textContent = 'FW ' + FW.version + ' (embedded)';
+  }
+  render();
 }
 
-function syncName() {
-  // noop — name read at build time
+async function checkFirmware() {
+  const badge = document.getElementById('fw-badge');
+  const label = document.getElementById('fw-label');
+  badge.className = 'fw-badge checking';
+  badge.textContent = 'Checking…';
+  label.textContent = 'Fetching latest firmware data from repository…';
+  try {
+    const r = await fetch(FW_URL + '?t=' + Date.now(), { cache:'no-store' });
+    if (!r.ok) throw new Error('network');
+    const data = await r.json();
+    const wasVersion = FW ? FW.version : '—';
+    FW = data;
+    if (FW.version !== wasVersion) {
+      badge.className = 'fw-badge update';
+      badge.textContent = 'FW ' + FW.version + ' ↑';
+      label.textContent = 'Updated! ' + FW.date + ' · ' + (FW.notes || '');
+      flash('Firmware data updated to v' + FW.version);
+    } else {
+      badge.className = 'fw-badge';
+      badge.textContent = 'FW ' + FW.version;
+      label.textContent = 'Up to date · ' + FW.date + ' · ' + (FW.notes || '');
+      flash('Already up to date — FW ' + FW.version);
+    }
+    document.getElementById('fw-footer').textContent = 'FW ' + FW.version + ' · ' + FW.date;
+    render();
+  } catch(e) {
+    badge.className = 'fw-badge checking';
+    badge.textContent = 'Offline';
+    label.textContent = 'Could not reach repository — check connection';
+  }
 }
 
-function switchScene(n) {
-  currentScene = n;
-  document.querySelectorAll('.scene-tab').forEach((t,i) => t.classList.toggle('active', i===n));
-}
+// ═══════════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════════
+function render() { renderChain(); renderParams(); }
 
-// Build FX chain UI
-function buildFxChain() {
-  const ch = document.getElementById('fx-chain');
-  ch.innerHTML = '';
-  FX_NAMES.forEach((name, i) => {
-    const btn = document.createElement('button');
-    btn.className = 'fx-slot' + (fxActive[i] ? ' active' : '');
-    btn.innerHTML = `<span class="dot"></span>${name}`;
-    btn.onclick = () => { fxActive[i] = !fxActive[i]; buildFxChain(); };
-    ch.appendChild(btn);
+function renderChain() {
+  const strip = document.getElementById('chain-strip');
+  strip.innerHTML = '';
+  CHAIN.forEach((b, i) => {
+    const sc = scenes[currentScene][b.id];
+    const isOn = !b.toggleable || sc.on;
+    const el = document.createElement('div');
+    el.className = 'chain-block' +
+      (isOn ? ' active' : '') +
+      (b.id === selectedId ? ' selected' : '');
+    el.title = b.toggleable
+      ? (isOn ? 'On — click to configure, dblclick to toggle off' : 'Off — click to configure, dblclick to enable')
+      : 'Click to configure';
+    el.innerHTML = `<div class="block-label">${b.label}</div><div class="block-dot"></div>`;
+    el.addEventListener('click', () => { selectedId = b.id; renderChain(); renderParams(); });
+    if (b.toggleable) {
+      el.addEventListener('dblclick', e => { e.preventDefault(); toggleBlock(b.id); });
+    }
+    strip.appendChild(el);
+    if (i < CHAIN.length - 1) {
+      const a = document.createElement('div');
+      a.className = 'chain-arrow'; a.textContent = '→';
+      strip.appendChild(a);
+    }
   });
 }
-buildFxChain();
 
-// ── File import ─────────────────────────────────────────
-function dropFile(e) {
-  e.preventDefault();
-  document.getElementById('drop-zone').classList.remove('over');
-  const f = e.dataTransfer.files[0];
-  if (f) readPatch(f);
-}
-function loadFile(input) {
-  if (input.files[0]) readPatch(input.files[0]);
-}
-function readPatch(file) {
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const buf = new Uint8Array(e.target.result);
-    if (buf.length < 470) {
-      setImportStatus('err', 'Archivo demasiado pequeño — ¿es un .mg30patch válido?');
-      return;
-    }
-    // Extract WAV (starts at 0x1d2)
-    importedWav = buf.slice(0x1d2);
-    // Parse first scene (offset 0)
-    parseScene(buf, 0);
-    setImportStatus('ok', `✓ "${file.name}" importado — ajusta y descarga`);
+function renderParams() {
+  if (!FW) return;
+  const panel  = document.getElementById('params-panel');
+  const sc     = scenes[currentScene];
+  const d      = sc[selectedId];
+  const chain  = CHAIN.find(b => b.id === selectedId);
+  const isOn   = !chain.toggleable || d.on;
+
+  const head = () => `
+    <div class="params-head">
+      <div style="display:flex;align-items:center;gap:.5rem">
+        <span class="params-block-name">${chain.label}</span>
+      </div>
+      ${chain.toggleable ? `<button class="toggle-btn ${isOn?'on':''}" onclick="toggleBlock('${selectedId}')">
+        ${isOn ? '● On' : '○ Off'}</button>` : ''}
+    </div>`;
+
+  const slider = (key, label, min, max, step=1, extraClass='') => {
+    const v = d[key];
+    return `<div class="pr${extraClass?' '+extraClass:''}">
+      <label class="pl">${label}<span id="pv-${key}">${v}</span></label>
+      <input type="range" min="${min}" max="${max}" step="${step}" value="${v}"
+        oninput="sp('${selectedId}','${key}',+this.value,'pv-${key}')">
+    </div>`;
   };
-  reader.readAsArrayBuffer(file);
-}
 
-function parseScene(buf, sceneOffset) {
-  // Byte 0: seems to encode amp type loosely — skip complex decode for now
-  // Offsets based on reverse engineering:
-  // 0x00: amp model hint
-  // Params at various offsets (0x14..0x1f area = gain/EQ)
-  // We do a best-effort decode of the readable params
-  const b = (off) => buf[sceneOffset + off] || 0;
+  const sel = (key, label, list, extraClass='') => {
+    const opts = list.map(x =>
+      `<option value="${x.id}" ${d[key]===x.id?'selected':''}>${x.name}${x.ref?' — '+x.ref:''}</option>`
+    ).join('');
+    return `<div class="pr${extraClass?' '+extraClass:''}">
+      <label class="pl">${label}</label>
+      <select class="ps" onchange="sp('${selectedId}','${key}',+this.value)">${opts}</select>
+    </div>`;
+  };
 
-  // gain: offset 0x1b (value 0-100, 0x64=100)
-  const gain = Math.min(100, b(0x1b));
-  document.getElementById('amp-gain').value = gain;
-  document.getElementById('gain-val').textContent = gain;
+  let body = '';
 
-  // EQ: offsets 0x20..0x27 area
-  const bass = Math.min(100, b(0x20));
-  const mid  = Math.min(100, b(0x21));
-  const treb = Math.min(100, b(0x22));
-  document.getElementById('amp-bass').value = bass; document.getElementById('bass-val').textContent = bass;
-  document.getElementById('amp-mid').value = mid;   document.getElementById('mid-val').textContent = mid;
-  document.getElementById('amp-treble').value = treb; document.getElementById('treble-val').textContent = treb;
+  switch (selectedId) {
+    case 'wah':
+      body = `<div class="pg">
+        ${sel('type','Model',FW.wah,'full')}
+        ${slider('pos','Expression / Sweep',0,100)}
+      </div>`;
+      break;
 
-  // reverb mix: offset 0x8a
-  const rvbMix = Math.min(100, b(0x8a));
-  document.getElementById('reverb-mix').value = rvbMix;
-  document.getElementById('rmix-v').textContent = rvbMix;
-  if (rvbMix > 0) document.getElementById('reverb-on').classList.add('on');
+    case 'comp':
+      body = `<div class="pg">
+        ${sel('type','Model',FW.comp,'full')}
+        ${slider('sustain','Sustain',0,100)}
+        ${slider('attack','Attack',0,100)}
+        ${slider('level','Level',0,100)}
+      </div>`;
+      break;
 
-  // patch name at 0x6e (14 bytes null-terminated)
-  let name = '';
-  for (let i = 0; i < 13; i++) {
-    const c = buf[sceneOffset + 0x6e + i];
-    if (c === 0) break;
-    name += String.fromCharCode(c);
+    case 'gate':
+      body = `<div class="pg">
+        ${slider('threshold','Threshold',0,100)}
+        ${slider('release','Release',0,100)}
+      </div>`;
+      break;
+
+    case 'efx':
+      body = `<div class="pg">
+        ${sel('type','Model',FW.efx,'full')}
+        ${slider('gain','Gain / Drive',0,100)}
+        ${slider('tone','Tone',0,100)}
+        ${slider('level','Level',0,100)}
+      </div>`;
+      break;
+
+    case 'amp': {
+      const typeGroups = [
+        { label: '── Guitar ──', disabled: true },
+        ...FW.amps.filter(a => a.type==='guitar').map(a => ({...a})),
+        { label: '── Bass ──', disabled: true },
+        ...FW.amps.filter(a => a.type==='bass').map(a => ({...a})),
+        { label: '── Acoustic ──', disabled: true },
+        ...FW.amps.filter(a => a.type==='acoustic').map(a => ({...a})),
+      ];
+      const opts = typeGroups.map(x =>
+        x.disabled
+          ? `<option disabled>${x.label}</option>`
+          : `<option value="${x.id}" ${d.model===x.id?'selected':''}>${x.name} — ${x.ref}</option>`
+      ).join('');
+      body = `<div class="pg">
+        <div class="pr full"><label class="pl">Model</label>
+          <select class="ps" onchange="sp('amp','model',+this.value)">${opts}</select>
+        </div>
+        ${slider('gain','Gain',0,100)}
+        ${slider('bass','Bass',0,100)}
+        ${slider('mid','Mid',0,100)}
+        ${slider('treble','Treble',0,100)}
+        ${slider('presence','Presence',0,100)}
+        ${slider('volume','Master Vol',0,100)}
+      </div>`;
+      break;
+    }
+
+    case 'ir': {
+      const cabList = [...FW.ir_guitar, ...(FW.ir_bass||[])];
+      body = `<div class="pg">
+        ${sel('cab','Cabinet',cabList,'full')}
+        ${sel('mic','Mic',FW.ir_mics)}
+        ${slider('mic_pos','Mic Position',0,100)}
+      </div>
+      <div style="margin-top:.7rem;font-family:var(--mono);font-size:10px;color:var(--dim)">
+        Custom IRs (slots 9–128) can be loaded in QuickTone directly.
+      </div>`;
+      break;
+    }
+
+    case 'eq':
+      body = `<div class="pg w3">
+        ${slider('low','Low',0,100)}
+        ${slider('lowmid','Low Mid',0,100)}
+        ${slider('highmid','High Mid',0,100)}
+        ${slider('high','High',0,100)}
+        ${slider('level','Level',0,100)}
+      </div>`;
+      break;
+
+    case 'sr':
+      body = `<div class="pg">
+        ${slider('send','Send Level',0,100)}
+        ${slider('return','Return Level',0,100)}
+      </div>
+      <div style="margin-top:.7rem;font-family:var(--mono);font-size:10px;color:var(--dim)">
+        Insert point for external gear. Enable to activate the effects loop.
+      </div>`;
+      break;
+
+    case 'mod':
+      body = `<div class="pg">
+        ${sel('type','Type',FW.mod,'full')}
+        ${slider('rate','Rate',0,100)}
+        ${slider('depth','Depth',0,100)}
+        ${slider('mix','Mix',0,100)}
+      </div>`;
+      break;
+
+    case 'delay':
+      body = `<div class="pg">
+        ${sel('type','Type',FW.delay,'full')}
+        ${slider('time','Time (ms)',10,2000,10)}
+        ${slider('feedback','Feedback',0,100)}
+        ${slider('mix','Mix',0,100)}
+      </div>`;
+      break;
+
+    case 'reverb':
+      body = `<div class="pg">
+        ${sel('type','Type',FW.reverb,'full')}
+        ${slider('decay','Decay',0,100)}
+        ${slider('mix','Mix',0,100)}
+      </div>`;
+      break;
+
+    case 'vol':
+      body = `<div class="pg w1">
+        ${slider('volume','Output Volume',0,100)}
+      </div>`;
+      break;
+
+    default:
+      body = `<div class="pempty">Select a block to configure.</div>`;
   }
-  document.getElementById('patch-name').value = name;
 
-  // FX chain order at 0x60-0x6d
-  const order = Array.from(buf.slice(sceneOffset + 0x60, sceneOffset + 0x6e));
-  fxActive = FX_NAMES.map((_, i) => order.some(v => v === i));
-  buildFxChain();
+  panel.innerHTML = head() + body;
 }
 
-function setImportStatus(cls, msg) {
-  const el = document.getElementById('import-status');
-  el.className = 'status ' + cls;
-  el.textContent = msg;
+// ═══════════════════════════════════════════════════════════
+// ACTIONS
+// ═══════════════════════════════════════════════════════════
+function switchScene(n, btn) {
+  currentScene = n;
+  document.querySelectorAll('.scene-btn').forEach((b,i) => b.classList.toggle('active', i===n));
+  render();
+}
+function toggleBlock(id) {
+  const b = CHAIN.find(x => x.id === id);
+  if (!b || !b.toggleable) return;
+  scenes[currentScene][id].on = !scenes[currentScene][id].on;
+  render();
+}
+function sp(block, key, val, displayId) {
+  scenes[currentScene][block][key] = val;
+  if (displayId) { const el = document.getElementById(displayId); if(el) el.textContent = val; }
+}
+function copyScenes() {
+  scenes[1] = JSON.parse(JSON.stringify(scenes[0]));
+  scenes[2] = JSON.parse(JSON.stringify(scenes[0]));
+  flash('Scene A copied to B and C');
 }
 
-// ── Patch build ─────────────────────────────────────────
-function g(id) { return parseInt(document.getElementById(id).value) || 0; }
-function clamp(v, lo=0, hi=100) { return Math.max(lo, Math.min(hi, v)); }
+// ═══════════════════════════════════════════════════════════
+// PACK
+// ═══════════════════════════════════════════════════════════
+function addToPack() {
+  const name = document.getElementById('pname').value.trim() || 'preset';
+  pack.push({ name, scenes: JSON.parse(JSON.stringify(scenes)) });
+  renderPack();
+  flash(`"${name}" added`);
+}
+function removeFromPack(i) { pack.splice(i,1); renderPack(); }
+function loadFromPack(i) {
+  scenes = JSON.parse(JSON.stringify(pack[i].scenes));
+  document.getElementById('pname').value = pack[i].name;
+  currentScene = 0;
+  document.querySelectorAll('.scene-btn').forEach((b,j) => b.classList.toggle('active', j===0));
+  render();
+  flash(`"${pack[i].name}" loaded`);
+}
+function dlSingle(i) {
+  const item = pack[i];
+  downloadBytes(buildPatchFile(item.scenes, item.name), san(item.name)+'.mg30patch');
+}
+function renderPack() {
+  const list = document.getElementById('pack-list');
+  const cnt  = document.getElementById('pack-count');
+  const btn  = document.getElementById('exp-btn');
+  cnt.textContent = `${pack.length} preset${pack.length!==1?'s':''}`;
+  btn.disabled = pack.length === 0;
+  if (!pack.length) { list.innerHTML='<div class="pack-empty">No presets yet.</div>'; return; }
+  list.innerHTML = pack.map((item,i) => `
+    <div class="pack-item">
+      <span class="pi-name">${esc(item.name)}</span>
+      <div class="pi-scenes" title="Scenes A B C">
+        <div class="pi-dot" style="opacity:.8"></div>
+        <div class="pi-dot" style="opacity:.5"></div>
+        <div class="pi-dot" style="opacity:.3"></div>
+      </div>
+      <button class="pi-btn" onclick="loadFromPack(${i})">Load</button>
+      <button class="pi-btn" onclick="dlSingle(${i})">↓</button>
+      <button class="pi-btn del" onclick="removeFromPack(${i})">✕</button>
+    </div>`).join('');
+}
+function exportPack() {
+  if (!pack.length) return;
+  if (pack.length === 1) { dlSingle(0); return; }
+  const files = pack.map(item => ({
+    name: san(item.name)+'.mg30patch',
+    data: buildPatchFile(item.scenes, item.name)
+  }));
+  downloadBytes(createZip(files), 'MG30_Pack.zip');
+  flash(`Exported ${pack.length} patches`);
+}
+function flash(msg) {
+  const el = document.getElementById('pack-status');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('show'), 2400);
+}
 
-function buildScene() {
-  const block = new Uint8Array(0x90); // 144 bytes
+// ═══════════════════════════════════════════════════════════
+// IMPORT
+// ═══════════════════════════════════════════════════════════
+function dropFile(e) { e.preventDefault(); const f=e.dataTransfer.files[0]; if(f) processFile(f); }
+function loadFile(input) { if(input.files[0]) processFile(input.files[0]); input.value=''; }
+function processFile(file) {
+  const r = new FileReader();
+  r.onload = e => {
+    const buf = new Uint8Array(e.target.result);
+    if (buf.length < 400) { flash('Not a valid .mg30patch'); return; }
+    [0, 0x90, 0x120].forEach((off, i) => parseSceneBytes(buf, off, i));
+    let name='';
+    for(let i=0;i<13;i++){ const c=buf[0x6e+i]; if(!c)break; name+=String.fromCharCode(c); }
+    if(name) document.getElementById('pname').value=name;
+    render();
+    flash(`"${file.name}" loaded`);
+  };
+  r.readAsArrayBuffer(file);
+}
+function parseSceneBytes(buf, off, idx) {
+  const b = i => buf[off+i]||0;
+  const sc = scenes[idx];
+  sc.amp.gain     = cl(b(0x14)); sc.amp.bass    = cl(b(0x15));
+  sc.amp.mid      = cl(b(0x16)); sc.amp.treble  = cl(b(0x1a));
+  sc.amp.volume   = cl(b(0x1b)); sc.amp.presence= cl(b(0x23));
+  sc.comp.on      = b(0x28)!==0; sc.comp.sustain= cl(b(0x29)); sc.comp.attack=cl(b(0x2b));
+  sc.gate.on      = b(0x36)!==0; sc.gate.threshold=cl(b(0x37)); sc.gate.release=cl(b(0x3b));
+  sc.efx.on       = b(0x3d)!==0; sc.efx.type=cl(b(0x3e),0,13); sc.efx.gain=cl(b(0x3f));
+  sc.efx.tone     = cl(b(0x40)); sc.efx.level=cl(b(0x41));
+  sc.mod.on       = b(0x42)!==0; sc.mod.type=cl(b(0x43),0,12); sc.mod.rate=cl(b(0x44)); sc.mod.depth=cl(b(0x45));
+  sc.delay.on     = b(0x4a)!==0; sc.delay.type=cl(b(0x4b),0,7);
+  sc.delay.time   = ((b(0x4c)<<8)|b(0x4d))||500;
+  sc.delay.feedback=cl(b(0x4e)); sc.delay.mix=cl(b(0x4f));
+  sc.reverb.on    = b(0x50)!==0; sc.reverb.type=cl(b(0x51),0,4);
+  sc.reverb.decay = cl(b(0x52)); sc.reverb.mix=cl(b(0x53));
+  sc.vol.volume   = cl(b(0x84));
+}
 
-  // Amp model byte (byte 0 — approximate)
-  const ampModel = g('amp-model');
-  block[0] = [0x48,0x2b,0x43,0x3a,0x55,0x60,0x70,0x7a][ampModel] || 0x48;
+// ═══════════════════════════════════════════════════════════
+// BINARY BUILD
+// ═══════════════════════════════════════════════════════════
+function cl(v,lo=0,hi=100){ return Math.max(lo,Math.min(hi,Math.round(v)||0)); }
 
-  // Amp params block (rough mapping based on analysis)
-  block[0x04] = 0x43; // marker
-  block[0x05] = clamp(g('amp-gain'));
-  block[0x06] = 0x05;
-  block[0x07] = clamp(g('amp-presence'));
-  block[0x08] = 0x04;
-  block[0x09] = 0x01;
-
-  // gain area 0x14..0x1f
-  block[0x14] = clamp(g('amp-gain'));
-  block[0x15] = clamp(g('amp-bass'));
-  block[0x16] = clamp(g('amp-mid'));
-  block[0x1a] = clamp(g('amp-treble'));
-  block[0x1b] = clamp(g('amp-vol'));
-
-  // EQ params 0x20..0x35
-  block[0x20] = clamp(g('amp-bass'));
-  block[0x21] = clamp(g('amp-mid'));
-  block[0x22] = clamp(g('amp-treble'));
-  block[0x23] = clamp(g('amp-presence'));
-  block[0x24] = clamp(g('amp-gain'));
-  block[0x25] = 0x3c;
-  block[0x26] = 0x32; block[0x27] = 0x32;
-  block[0x28] = isOn('comp-on') ? 0x02 : 0x00;
-  block[0x29] = clamp(g('comp-sus'));
-  block[0x2b] = clamp(g('comp-att'));
-  block[0x2c] = 0x32; block[0x2d] = 0x32; block[0x2e] = 0x32;
-  block[0x2f] = 0x32; block[0x30] = 0x32; block[0x31] = 0x00;
-  block[0x32] = 0x32; block[0x33] = 0x32; block[0x34] = 0x32;
-
-  // Gate 0x36..0x3f
-  block[0x36] = isOn('gate-on') ? 0x3b : 0x00;
-  block[0x37] = clamp(g('gate-thr'));
-  block[0x3b] = clamp(g('gate-rel'));
-
-  // More FX params 0x40..0x5f
-  block[0x42] = isOn('mod-on') ? 0x12 : 0x00;
-  block[0x43] = g('mod-type');
-  block[0x44] = clamp(g('mod-rate'));
-  block[0x45] = clamp(g('mod-depth'));
-
-  block[0x4a] = isOn('delay-on') ? 0x04 : 0x00;
-  block[0x4b] = g('delay-type');
-  const dtime = clamp(g('delay-time'), 10, 2000);
-  block[0x4c] = (dtime >> 8) & 0xff;
-  block[0x4d] = dtime & 0xff;
-  block[0x4e] = clamp(g('delay-fb'));
-  block[0x4f] = clamp(g('delay-mix'));
-
-  block[0x50] = isOn('reverb-on') ? 0x04 : 0x00;
-  block[0x51] = g('reverb-type');
-  block[0x52] = clamp(g('reverb-decay'));
-  block[0x53] = clamp(g('reverb-mix'));
-  block[0x54] = 0x57; block[0x55] = 0x00;
-
-  // Volume output 0x58..0x5f
-  block[0x58] = 0x32;
-  block[0x59] = 0x80;
-  block[0x5c] = clamp(g('amp-vol'));
-  block[0x5d] = 0x2d;
-
-  // FX chain order 0x60..0x6d (12 slots)
-  const active = FX_NAMES.map((_, i) => i).filter(i => fxActive[i]);
-  const inactive = FX_NAMES.map((_, i) => i).filter(i => !fxActive[i]);
-  const order = [...active, ...inactive];
-  for (let i = 0; i < 12; i++) block[0x60 + i] = order[i] !== undefined ? order[i] : i;
-
-  // Patch name 0x6e..0x7b (14 bytes, null-terminated, max 13 chars)
-  const rawName = (document.getElementById('patch-name').value || 'my patch').slice(0,13);
-  for (let i = 0; i < 14; i++) block[0x6e + i] = i < rawName.length ? rawName.charCodeAt(i) : 0;
-
-  // I/O block 0x7c..0x8f
-  block[0x7e] = 0x0a; // output mode
-  block[0x7f] = 0x07;
-  block[0x80] = 0x08;
-  block[0x82] = 0x02;
-  block[0x84] = clamp(g('amp-vol')); // output vol
-  block[0x86] = clamp(g('amp-vol'));
-  block[0x8a] = clamp(g('reverb-mix')); // reverb send
-  block[0x8c] = isOn('reverb-on') ? 0x3a : 0x00;
-  block[0x8d] = isOn('reverb-on') ? 0x0b : 0x00;
-  block[0x8e] = isOn('reverb-on') ? 0x3a : 0x00;
-  block[0x8f] = isOn('reverb-on') ? 0x0b : 0x00;
-
+function buildSceneBytes(sc) {
+  const g=sc.gate,c=sc.comp,e=sc.efx,a=sc.amp;
+  const q=sc.eq,m=sc.mod,d=sc.delay,r=sc.reverb,v=sc.vol,ir=sc.ir,sr=sc.sr;
+  const block = new Uint8Array(0x90);
+  const AMP_CODES=[0x48,0x2b,0x43,0x3a,0x55,0x60,0x70,0x7a,
+                   0x44,0x4e,0x52,0x56,0x5a,0x5e,0x62,0x66,
+                   0x6a,0x6e,0x72,0x76,0x7a,0x7e,0x82,0x86,
+                   0x8a,0x8e,0x92];
+  block[0x00]=AMP_CODES[cl(a.model,0,26)]||0x48;
+  block[0x04]=0x43; block[0x05]=cl(a.gain); block[0x07]=cl(a.presence); block[0x09]=0x01;
+  block[0x14]=cl(a.gain); block[0x15]=cl(a.bass); block[0x16]=cl(a.mid);
+  block[0x1a]=cl(a.treble); block[0x1b]=cl(a.volume);
+  block[0x20]=cl(a.bass); block[0x21]=cl(a.mid); block[0x22]=cl(a.treble);
+  block[0x23]=cl(a.presence); block[0x24]=cl(a.gain); block[0x25]=0x3c;
+  block[0x26]=cl(q.on?q.low:50); block[0x27]=cl(q.on?q.lowmid:50);
+  block[0x28]=c.on?0x02:0x00; block[0x29]=cl(c.sustain); block[0x2b]=cl(c.attack);
+  block[0x2c]=0x32; block[0x2d]=0x32; block[0x2e]=0x32;
+  block[0x2f]=cl(q.on?q.highmid:50); block[0x30]=cl(q.on?q.high:50);
+  block[0x31]=0x00; block[0x32]=0x32; block[0x33]=0x32; block[0x34]=0x32;
+  block[0x36]=g.on?0x3b:0x00; block[0x37]=cl(g.threshold); block[0x3b]=cl(g.release);
+  block[0x3d]=e.on?0x01:0x00; block[0x3e]=cl(e.type,0,13);
+  block[0x3f]=cl(e.gain); block[0x40]=cl(e.tone); block[0x41]=cl(e.level);
+  block[0x42]=m.on?0x12:0x00; block[0x43]=cl(m.type,0,12);
+  block[0x44]=cl(m.rate); block[0x45]=cl(m.depth);
+  block[0x4a]=d.on?0x04:0x00; block[0x4b]=cl(d.type,0,7);
+  const dt=Math.max(10,Math.min(2000,d.time));
+  block[0x4c]=(dt>>8)&0xff; block[0x4d]=dt&0xff;
+  block[0x4e]=cl(d.feedback); block[0x4f]=cl(d.mix);
+  block[0x50]=r.on?0x04:0x00; block[0x51]=cl(r.type,0,4);
+  block[0x52]=cl(r.decay); block[0x53]=cl(r.mix);
+  block[0x54]=0x57; block[0x55]=0x00;
+  block[0x58]=0x32; block[0x59]=0x80;
+  block[0x5c]=cl(v.volume); block[0x5d]=0x2d;
+  // IR cab / mic
+  block[0x62]=cl(ir.cab,0,11); block[0x63]=cl(ir.mic,0,7);
+  // FX chain order — slot IDs in signal path order
+  const ordered = CHAIN.map(b=>b.slot);
+  for(let i=0;i<12;i++) block[0x60+i]=ordered[i]!==undefined?ordered[i]:i;
+  // Patch name placeholder (filled in buildPatchFile)
+  for(let i=0;i<14;i++) block[0x6e+i]=0;
+  block[0x7e]=0x0a; block[0x7f]=0x07; block[0x80]=0x08; block[0x82]=0x02;
+  block[0x84]=cl(v.volume); block[0x86]=cl(v.volume);
+  block[0x8a]=cl(r.mix);
+  block[0x8c]=r.on?0x3a:0x00; block[0x8d]=r.on?0x0b:0x00;
+  block[0x8e]=r.on?0x3a:0x00; block[0x8f]=r.on?0x0b:0x00;
+  // S/R level
+  if(sr.on){ block[0x5e]=cl(sr.send); block[0x5f]=cl(sr.return); }
   return block;
 }
 
-function buildAndDownload() {
-  const scene = buildScene();
-  const wav = importedWav || makeEmptyWav();
-
-  // Total file: 3 scenes × 144 + padding to 0x1d2 + WAV
-  const totalHeaderSize = 0x1d2; // 466 bytes
-  const file = new Uint8Array(totalHeaderSize + wav.length);
-
-  // Write 3 scenes
-  file.set(scene, 0);
-  file.set(scene, 0x90);
-  file.set(scene, 0x120);
-  // Padding 0x1b0..0x1d1 = zeros (already zero)
-
-  // WAV
-  file.set(wav, 0x1d2);
-
-  const name = (document.getElementById('patch-name').value || 'patch').replace(/[^a-zA-Z0-9_-]/g,'_');
-  const blob = new Blob([file], { type: 'application/octet-stream' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = name + '.mg30patch';
-  a.click();
-
-  const st = document.getElementById('build-status');
-  st.className = 'status ok';
-  st.textContent = `✓ ${name}.mg30patch descargado — ${file.length} bytes`;
-  setTimeout(() => st.textContent = '', 4000);
+function makeEmptyWav() {
+  const sz=9436, buf=new Uint8Array(sz), dv=new DataView(buf.buffer);
+  buf.set([0x52,0x49,0x46,0x46],0); dv.setUint32(4,sz-8,true);
+  buf.set([0x57,0x41,0x56,0x45],8); buf.set([0x66,0x6d,0x74,0x20],12);
+  dv.setUint32(16,16,true); dv.setUint16(20,1,true); dv.setUint16(22,1,true);
+  dv.setUint32(24,48000,true); dv.setUint32(28,96000,true);
+  dv.setUint16(32,2,true); dv.setUint16(34,16,true);
+  buf.set([0x64,0x61,0x74,0x61],36); dv.setUint32(40,sz-44,true);
+  return buf;
 }
 
-// ── Presets ─────────────────────────────────────────────
-const PRESETS = {
-  clean: { 'amp-model':0,'amp-gain':25,'amp-bass':55,'amp-mid':50,'amp-treble':60,'amp-presence':45,'amp-vol':100,'gate-thr':20,'comp-sus':60,'reverb-mix':30,'reverb-decay':40, gateOn:false, compOn:true, modOn:false, delayOn:false, reverbOn:true },
-  crunch: { 'amp-model':1,'amp-gain':65,'amp-bass':60,'amp-mid':45,'amp-treble':65,'amp-presence':55,'amp-vol':100,'gate-thr':40,'comp-sus':40,'reverb-mix':20,'reverb-decay':30, gateOn:true, compOn:false, modOn:false, delayOn:true, reverbOn:true },
-};
-
-function loadPreset(name) {
-  const p = PRESETS[name]; if (!p) return;
-  Object.entries(p).forEach(([k,v]) => {
-    if (typeof v === 'number' && document.getElementById(k)) {
-      const el = document.getElementById(k);
-      el.value = v;
-      // update display
-      const valId = k.replace('amp-','').replace('-','') + '-val';
-    }
+function buildPatchFile(sceneList, patchName) {
+  const hdr=0x1d2, wav=makeEmptyWav(), file=new Uint8Array(hdr+wav.length);
+  const name=san(patchName||'patch').slice(0,13);
+  sceneList.forEach((sc,i)=>{
+    const bytes=buildSceneBytes(sc);
+    for(let j=0;j<14;j++) bytes[0x6e+j]=j<name.length?name.charCodeAt(j):0;
+    file.set(bytes,i*0x90);
   });
-  // re-render vals
-  [['amp-gain','gain-val'],['amp-bass','bass-val'],['amp-mid','mid-val'],['amp-treble','treble-val'],
-   ['amp-presence','pres-val'],['amp-vol','vol-val'],['gate-thr','gthr-v'],
-   ['reverb-mix','rmix-v'],['reverb-decay','rdecay-v']].forEach(([sid,vid]) => {
-    const el = document.getElementById(sid);
-    const vo = document.getElementById(vid);
-    if (el && vo) vo.textContent = el.value;
-  });
-  // toggles
-  const set = (id, on) => { const b=document.getElementById(id); if(on) b.classList.add('on'); else b.classList.remove('on'); };
-  set('gate-on', p.gateOn); set('comp-on', p.compOn);
-  set('mod-on', p.modOn); set('delay-on', p.delayOn); set('reverb-on', p.reverbOn);
+  file.set(wav,hdr);
+  return file;
 }
+
+// ═══════════════════════════════════════════════════════════
+// ZIP
+// ═══════════════════════════════════════════════════════════
+function crc32(data){
+  if(!crc32._t){crc32._t=new Uint32Array(256);for(let i=0;i<256;i++){let c=i;for(let j=0;j<8;j++)c=(c&1)?(c>>>1)^0xEDB88320:c>>>1;crc32._t[i]=c;}}
+  let crc=0xFFFFFFFF;for(let i=0;i<data.length;i++)crc=(crc>>>8)^crc32._t[(crc^data[i])&0xff];
+  return(crc^0xFFFFFFFF)>>>0;
+}
+function createZip(files){
+  const enc=new TextEncoder(),locals=[],cdirs=[];let offset=0;
+  for(const f of files){
+    const nb=enc.encode(f.name),data=f.data,crc=crc32(data),len=data.length;
+    const lh=new Uint8Array(30+nb.length),ldv=new DataView(lh.buffer);
+    ldv.setUint32(0,0x04034b50,true);ldv.setUint16(4,20,true);ldv.setUint16(6,0,true);
+    ldv.setUint16(8,0,true);ldv.setUint16(10,0,true);ldv.setUint16(12,0,true);
+    ldv.setUint32(14,crc,true);ldv.setUint32(18,len,true);ldv.setUint32(22,len,true);
+    ldv.setUint16(26,nb.length,true);ldv.setUint16(28,0,true);lh.set(nb,30);
+    const cd=new Uint8Array(46+nb.length),cdv=new DataView(cd.buffer);
+    cdv.setUint32(0,0x02014b50,true);cdv.setUint16(4,20,true);cdv.setUint16(6,20,true);
+    cdv.setUint16(8,0,true);cdv.setUint16(10,0,true);cdv.setUint16(12,0,true);
+    cdv.setUint16(14,0,true);cdv.setUint32(16,crc,true);cdv.setUint32(20,len,true);
+    cdv.setUint32(24,len,true);cdv.setUint16(28,nb.length,true);cdv.setUint16(30,0,true);
+    cdv.setUint16(32,0,true);cdv.setUint16(34,0,true);cdv.setUint16(36,0,true);
+    cdv.setUint32(38,0,true);cdv.setUint32(42,offset,true);cd.set(nb,46);
+    locals.push({lh,data});cdirs.push(cd);offset+=lh.length+data.length;
+  }
+  const cdSz=cdirs.reduce((s,c)=>s+c.length,0),locSz=locals.reduce((s,f)=>s+f.lh.length+f.data.length,0);
+  const eocd=new Uint8Array(22),edv=new DataView(eocd.buffer);
+  edv.setUint32(0,0x06054b50,true);edv.setUint16(4,0,true);edv.setUint16(6,0,true);
+  edv.setUint16(8,files.length,true);edv.setUint16(10,files.length,true);
+  edv.setUint32(12,cdSz,true);edv.setUint32(16,locSz,true);edv.setUint16(20,0,true);
+  const total=new Uint8Array(locSz+cdSz+22);let pos=0;
+  for(const f of locals){total.set(f.lh,pos);pos+=f.lh.length;total.set(f.data,pos);pos+=f.data.length;}
+  for(const c of cdirs){total.set(c,pos);pos+=c.length;}
+  total.set(eocd,pos);return total;
+}
+
+// ═══════════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════════
+function downloadBytes(data,filename){
+  const blob=new Blob([data],{type:'application/octet-stream'}),a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download=filename;a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),3000);
+}
+function san(s){return(s||'patch').replace(/[^a-zA-Z0-9._-]/g,'_').slice(0,40);}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+loadFirmware();
+renderPack();
 </script>
 </body>
 </html>
