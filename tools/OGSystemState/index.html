@@ -250,7 +250,7 @@
 
 <header>
   <div>
-    <div class="title">Optional Ganesh · System State</div>
+    <div class="title">Optional Ganesh · Full Operational State</div>
     <div class="name">OG<span>/</span>OS</div>
   </div>
   <div class="timestamp">
@@ -323,6 +323,55 @@
         <span class="badge badge-amber">MCPs por verificar</span>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- GITHUB / REPOS -->
+<div class="section">
+  <div class="section-label">GitHub · Repos</div>
+  <div class="card">
+    <ul class="row-list">
+      <li><span class="row-key">Cuenta</span><span class="row-val-r">github.com/OptionalGanesh</span></li>
+      <li><span class="row-key">claude-skills</span><span class="row-val-r">60 skills · público · fetched en runtime por /skills</span></li>
+      <li><span class="row-key">optionalganesh-tools</span><span class="row-val-r">tools.optionalganesh.com · Cloudflare Pages</span></li>
+      <li><span class="row-key">optional-ganesh-os</span><span class="row-val-r">OS personal · notas, decisiones, proyectos, templates</span></li>
+      <li><span class="row-key">VPS repo</span><span class="row-val-r">system.py + automatización · no clonado en M1</span></li>
+      <li><span class="row-key">SSH Auth</span><span class="row-val-r">gh CLI instalado · authenticated · Homebrew</span></li>
+    </ul>
+  </div>
+</div>
+
+<!-- DOMINIO / INFRA -->
+<div class="section">
+  <div class="section-label">Dominio · Infraestructura</div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-label">Dominio</div>
+      <div class="card-val" style="font-size:14px">optionalganesh.com</div>
+      <div class="card-sub">tools.optionalganesh.com → Cloudflare Pages</div>
+      <div style="margin-top:8px"><span class="badge badge-green">Cloudflare</span><span class="badge badge-green">HTTPS</span></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Deploy</div>
+      <div class="card-val" style="font-size:14px">Git push → auto-deploy</div>
+      <div class="card-sub">Cloudflare Pages · sin build step</div>
+      <div style="margin-top:8px"><span class="badge badge-green">estático</span><span class="badge badge-blue">HTML / CSS / JS</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTS / AGENTES / AUTOMATIZACIÓN -->
+<div class="section">
+  <div class="section-label">Bots · Agentes · Automatización</div>
+  <div class="card">
+    <ul class="row-list">
+      <li><span class="row-key"><span class="status-dot dot-green" style="animation:none;opacity:1"></span>Telegram Bot</span><span class="row-val-r">@optionalganesh_system_bot · /used /skip /status</span></li>
+      <li><span class="row-key"><span class="status-dot dot-green" style="animation:none;opacity:1"></span>system.py</span><span class="row-val-r">Hetzner VPS · Python · systemd og.service</span></li>
+      <li><span class="row-key"><span class="status-dot dot-amber" style="animation:none;opacity:1"></span>n8n</span><span class="row-val-r">VPS · workflows de automatización · JSON exports</span></li>
+      <li><span class="row-key"><span class="status-dot dot-green" style="animation:none;opacity:1"></span>Claude Code</span><span class="row-val-r">M1 principal · CLAUDE.md global · skills activos</span></li>
+      <li><span class="row-key"><span class="status-dot dot-green" style="animation:none;opacity:1"></span>Ollama</span><span class="row-val-r">M1: Mistral 7B · MBP: Phi-3 Mini</span></li>
+      <li><span class="row-key"><span class="status-dot dot-amber" style="animation:none;opacity:1"></span>GhostFrame</span><span class="row-val-r">face detection → glitch/distortion · en desarrollo</span></li>
+    </ul>
   </div>
 </div>
 
