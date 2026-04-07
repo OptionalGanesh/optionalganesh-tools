@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Optional Ganesh — Claude Router</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background:
+      radial-gradient(circle at 20% 20%, rgba(255,255,255,0.035), transparent 30%),
+      radial-gradient(circle at 80% 30%, rgba(255,255,255,0.025), transparent 28%),
+      linear-gradient(180deg, #070707 0%, #020202 100%);
+    color: #DEDEE8;
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 28px 20px 48px;
+  }
+
+  .back {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: rgba(255,255,255,0.32);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    text-decoration: none;
+    margin-bottom: 32px;
+    transition: color 180ms ease;
+  }
+  .back:hover { color: rgba(255,255,255,0.65); }
+
+  .wrap { width: 100%; max-width: 560px; }
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .logo-icon {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+    border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 19px; flex-shrink: 0;
+    box-shadow: 0 0 24px rgba(79,70,229,0.35);
+  }
+  .header h1 { font-size: 17px; font-weight: 700; color: #EDEDF5; letter-spacing: -0.01em; }
+  .header p  { font-size: 12px; color: rgba(255,255,255,0.28); margin-top: 2px; }
+
+  .input-box {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    overflow: hidden;
+    transition: border-color .2s;
+  }
+  .input-box:focus-within { border-color: rgba(79,70,229,0.5); }
+
+  textarea {
+    display: block; width: 100%;
+    background: transparent; border: none; outline: none;
+    color: #DEDEE8;
+    font-size: 14.5px; line-height: 1.65;
+    padding: 16px 18px 12px;
+    resize: none; min-height: 100px;
+    font-family: inherit;
+  }
+  textarea::placeholder { color: rgba(255,255,255,0.14); }
+
+  .input-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 9px 14px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  .hint { font-size: 11.5px; color: rgba(255,255,255,0.2); }
+
+  .btn {
+    background: #4F46E5; color: #fff;
+    border: none; border-radius: 8px;
+    padding: 7px 18px;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer; font-family: inherit;
+    transition: background .15s, box-shadow .15s, transform .1s;
+  }
+  .btn:hover:not(:disabled) {
+    background: #4338CA;
+    box-shadow: 0 0 14px rgba(79,70,229,.45);
+  }
+  .btn:active:not(:disabled) { transform: scale(0.97); }
+  .btn:disabled { opacity: .28; cursor: default; }
+
+  .result {
+    margin-top: 14px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 18px 20px;
+    display: none;
+  }
+  .result.show {
+    display: block;
+    animation: rise .22s ease;
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(7px); }
+    to   { opacity: 1; transform: translateY(0);   }
+  }
+
+  .result-top {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    margin-bottom: 11px;
+  }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 5px 13px 5px 10px;
+    border-radius: 999px;
+    font-size: 13px; font-weight: 700;
+    border: 1.5px solid;
+  }
+
+  .conf-label {
+    font-size: 11.5px; font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .reason {
+    font-size: 13.5px; color: rgba(255,255,255,0.45); line-height: 1.55;
+  }
+  .reason b { color: rgba(255,255,255,0.72); font-weight: 600; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 11px; }
+  .chip {
+    font-size: 11px; padding: 3px 9px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.07);
+    color: rgba(255,255,255,0.22);
+    background: rgba(255,255,255,0.02);
+  }
+  .chip.hit { border-color: rgba(79,70,229,0.35); color: rgba(139,132,255,0.8); background: rgba(79,70,229,0.08); }
+
+  .scores {
+    margin-top: 14px; padding-top: 14px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  .scores-title {
+    font-size: 10px; font-weight: 600; letter-spacing: .1em;
+    color: rgba(255,255,255,0.18); text-transform: uppercase; margin-bottom: 8px;
+  }
+  .score-row { display: flex; align-items: center; gap: 9px; margin-bottom: 5px; }
+  .score-name { font-size: 11.5px; color: rgba(255,255,255,0.25); width: 62px; flex-shrink: 0; }
+  .score-track {
+    flex: 1; height: 3px;
+    background: rgba(255,255,255,0.05); border-radius: 2px; overflow: hidden;
+  }
+  .score-fill { height: 100%; border-radius: 2px; transition: width .5s cubic-bezier(.16,1,.3,1); }
+  .score-pct { font-size: 11px; color: rgba(255,255,255,0.2); width: 30px; text-align: right; font-variant-numeric: tabular-nums; }
+
+  .m-code   { color: #4ADE80; background: rgba(74,222,128,0.06); border-color: rgba(74,222,128,0.2); }
+  .m-cowork { color: #22D3EE; background: rgba(34,211,238,0.06); border-color: rgba(34,211,238,0.2); }
+  .m-normal { color: #A78BFA; background: rgba(167,139,250,0.06); border-color: rgba(167,139,250,0.2); }
+  .m-ask    { color: #FCD34D; background: rgba(252,211,77,0.06); border-color: rgba(252,211,77,0.2); }
+
+  .c-code   { color: #4ADE80; }
+  .c-cowork { color: #22D3EE; }
+  .c-normal { color: #A78BFA; }
+  .c-ask    { color: #FCD34D; }
+
+  .f-code   { background: #4ADE80; }
+  .f-cowork { background: #22D3EE; }
+  .f-normal { background: #A78BFA; }
+
+  footer { text-align: center; font-size: 11px; color: rgba(255,255,255,0.14); margin-top: 28px; letter-spacing: 0.1em; text-transform: uppercase; }
+</style>
+</head>
+<body>
+
+<a href="/" class="back">← Tools</a>
+
+<div class="wrap">
+
+  <div class="header">
+    <div class="logo-icon">🔀</div>
+    <div>
+      <h1>Claude Router</h1>
+      <p>Normal · Cowork · Code · keyword classifier · no API · works offline</p>
+    </div>
+  </div>
+
+  <div class="input-box">
+    <textarea id="inp" placeholder="Describe your task… e.g. &quot;Build a Python script that monitors a folder and tags samples by BPM&quot;" rows="4"></textarea>
+    <div class="input-footer">
+      <span class="hint">↵ Enter to route &nbsp;·&nbsp; Shift+Enter for newline</span>
+      <button class="btn" id="btn">Route it →</button>
+    </div>
+  </div>
+
+  <div class="result" id="result">
+    <div class="result-top">
+      <span class="badge m-code" id="badge">⚡ Claude Code</span>
+      <span class="conf-label c-code" id="confLabel">70% confident</span>
+    </div>
+    <div class="reason" id="reason"></div>
+    <div class="chips" id="chips"></div>
+    <div class="scores">
+      <div class="scores-title">Signal scores</div>
+      <div id="scoreRows"></div>
+    </div>
+  </div>
+
+  <footer>Claude Router · v1.0 · keyword-based · works offline</footer>
+</div>
+
+<script>
+const SIG = [
+  // Signal 1: Output Type (w = 1.0)
+  { re: /\b(write|build|create|make|implement|code)\s+(up\s+)?(a\s+)?(script|function|tool|app|program|plugin|cli|api\s+endpoint|server|bot|module|class|component|snippet|algorithm|html\s+tool|web\s+tool|extension)\b/i, mode:"code", w:1.0, label:"Output = executable code" },
+  { re: /\b(debug|fix|refactor|optimize|test)\s+(this\s+|the\s+)?(code|script|function|bug|error|issue|test|program)\b/i, mode:"code", w:1.0, label:"Output = code fix" },
+  { re: /\b(create|write|make|build|draft|generate|produce)\s+(a\s+)?(document|doc\b|spreadsheet|deck\b|presentation|report|proposal|invoice|pdf\b|template\b|brief\b|slide)\b/i, mode:"cowork", w:1.0, label:"Output = file deliverable" },
+  { re: /\b(draft|send|write|compose)\s+(an?\s+)?(email|newsletter|message\s+to)\b/i, mode:"cowork", w:0.9, label:"Output = email/message" },
+  { re: /\b(explain|summarize|describe|define|what\s+is|what\s+are|how\s+does|why\s+does|tell\s+me\s+(about|what|how|why))\b/i, mode:"normal", w:1.0, label:"Output = text explanation" },
+  { re: /\b(give\s+me\s+ideas|help\s+me\s+(think|brainstorm)|brainstorm\s+(ideas\s+(for|about)|for)|ideas\s+for)\b/i, mode:"normal", w:0.9, label:"Output = ideas/brainstorm" },
+
+  // Signal 2: Domain Keywords (w = 0.8 – 0.6)
+  { re: /\bn8n\b/i, mode:"code", w:0.8, label:"Keyword: n8n" },
+  { re: /\b(deploy|deployment|ci\/cd|devops|pipeline)\b/i, mode:"code", w:0.7, label:"Keyword: deploy/DevOps" },
+  { re: /\b(docker|container\b|kubernetes|k8s)\b/i, mode:"code", w:0.8, label:"Keyword: containers" },
+  { re: /\b(git\b|github|gitlab|pull\s+request|merge\s+request)\b/i, mode:"code", w:0.7, label:"Keyword: git" },
+  { re: /\b(python|javascript|typescript|go\b|golang|rust\b|java\b|swift\b|kotlin|php\b|ruby\b|bash|shell\s+script)\b/i, mode:"code", w:0.8, label:"Keyword: programming language" },
+  { re: /\b(rest\s+api|graphql|webhook|http\s+request|api\s+call|curl\b|fetch\s+from)\b/i, mode:"code", w:0.8, label:"Keyword: API/HTTP" },
+  { re: /\b(database|sql\b|mongodb|postgres|mysql|redis\b|query\b|schema\b|migration)\b/i, mode:"code", w:0.7, label:"Keyword: database" },
+  { re: /\b(node\.?js|react\b|vue\.?js|svelte|angular|next\.?js)\b/i, mode:"code", w:0.7, label:"Keyword: web framework" },
+  { re: /\b(cli\b|command.line|terminal\b|subprocess|shell\b)\b/i, mode:"code", w:0.7, label:"Keyword: CLI/shell" },
+  { re: /\b(automate|automation|workflow\b|cron\b)\b/i, mode:"code", w:0.6, label:"Keyword: automation" },
+  { re: /\b(web\s+audio\s+api|canvas\s+api|webgl|service\s+worker|wasm|webassembly)\b/i, mode:"code", w:0.8, label:"Keyword: Web API" },
+  { re: /\b(spreadsheet|google\s+sheets|excel\b|\.xlsx)\b/i, mode:"cowork", w:0.8, label:"Keyword: spreadsheet" },
+  { re: /\b(presentation|powerpoint|keynote|google\s+slides|slide\s+deck|\.pptx)\b/i, mode:"cowork", w:0.8, label:"Keyword: presentation" },
+  { re: /\b(google\s+docs|word\s+doc|\.docx|notion\s+page|confluence)\b/i, mode:"cowork", w:0.8, label:"Keyword: doc platform" },
+  { re: /\b(calendar|schedule\s+a|meeting\s+(agenda|notes|invite))\b/i, mode:"cowork", w:0.6, label:"Keyword: calendar/scheduling" },
+  { re: /\b(\.pdf\b|export\s+to|save\s+as|download\s+as)\b/i, mode:"cowork", w:0.7, label:"Keyword: file export" },
+  { re: /\b(gmail\b|google\s+drive|dropbox\b|figma\b|airtable\b)\b/i, mode:"cowork", w:0.6, label:"Keyword: tool integration" },
+  { re: /\b(lyrics|story\b|poem\b|article\b|blog\s+post|caption\b|bio\b|tagline\b)\b/i, mode:"normal", w:0.7, label:"Keyword: creative writing" },
+  { re: /\b(pros\s+and\s+cons|difference\s+between|comparison\b|versus\b|\bvs\.?\b|better\s+than)\b/i, mode:"normal", w:0.7, label:"Keyword: comparison" },
+  { re: /\b(research\b|overview\b|introduction\s+to|breakdown\b|deep.?dive)\b/i, mode:"normal", w:0.6, label:"Keyword: research/overview" },
+  { re: /\b(mixing|mastering|sound\s+design|music\s+production|audio|bpm|sample|synth|midi)\b/i, mode:"normal", w:0.5, label:"Keyword: music domain" },
+
+  // Signal 3: Intent (w = 0.6 – 0.5)
+  { re: /\b(implement|set\s+up\s+(a|an)\s+(server|bot|pipeline|system|api|tool|script|database|workflow|endpoint))\b/i, mode:"code", w:0.6, label:"Intent: implement/setup" },
+  { re: /\b(configure\b|install\b)\s+\w/i, mode:"code", w:0.5, label:"Intent: configure" },
+  { re: /\b(publish\b|launch\b|release\b|send\s+out|go\s+live)\b/i, mode:"cowork", w:0.5, label:"Intent: publish/deliver" },
+  { re: /\b(share\s+with\s+team|collaborate\s+on|co.?edit)\b/i, mode:"cowork", w:0.6, label:"Intent: file collaboration" },
+  { re: /\b(explore\b|think\s+through|reflect\s+on|talk\s+(me\s+)?through|chat\s+about)\b/i, mode:"normal", w:0.6, label:"Intent: explore/reflect" },
+  { re: /\b(help\s+me\s+(understand|learn|figure\s+out))\b/i, mode:"normal", w:0.6, label:"Intent: learn/understand" },
+
+  // Signal 4: Complexity tiebreaker (w = 0.3)
+  { re: /\b(multi.?file|full\s+(project|app)\b|production.ready)\b/i, mode:"code", w:0.3, label:"Complexity: full project" },
+  { re: /\b(multi.?step\s+workflow|connect\s+\w+\s+to\s+\w+)\b/i, mode:"cowork", w:0.3, label:"Complexity: multi-step workflow" },
+  { re: /\b(quick\s+(question|answer)|just\s+(want|need|wondering)|one.?liner)\b/i, mode:"normal", w:0.3, label:"Complexity: quick/simple" },
+];
+
+const THRESHOLD = 0.62;
+const MIN_TOTAL = 0.5;
+
+const META = {
+  code:   { label:"Claude Code",   emoji:"⚡", badge:"m-code",   conf:"c-code",   fill:"f-code",   name:"Code"   },
+  cowork: { label:"Cowork",        emoji:"🗂️", badge:"m-cowork", conf:"c-cowork", fill:"f-cowork", name:"Cowork" },
+  normal: { label:"Normal Chat",   emoji:"💬", badge:"m-normal", conf:"c-normal", fill:"f-normal", name:"Normal" },
+  ask:    { label:"Clarify First", emoji:"❓", badge:"m-ask",    conf:"c-ask",    fill:"",         name:"Ask"    },
+};
+
+function classify(text) {
+  const raw = { code:0, cowork:0, normal:0 };
+  const hits = [];
+  for (const s of SIG) {
+    if (s.re.test(text)) {
+      raw[s.mode] += s.w;
+      hits.push({ label: s.label, mode: s.mode });
+    }
+  }
+  const total = raw.code + raw.cowork + raw.normal;
+  if (total < MIN_TOTAL) return { route:"ask", confidence:0, norm:{ code:0, cowork:0, normal:0 }, hits };
+  const norm = { code: raw.code/total, cowork: raw.cowork/total, normal: raw.normal/total };
+  let top = "normal", topV = 0;
+  for (const [k,v] of Object.entries(norm)) if (v > topV) { topV = v; top = k; }
+  if (topV < THRESHOLD) return { route:"ask", confidence: topV, norm, hits };
+  return { route: top, confidence: topV, norm, hits };
+}
+
+function getReasonLines(res) {
+  const { route, hits } = res;
+  const mHits = hits.filter(h => h.mode === route);
+  const topHit = mHits[0]?.label;
+  if (route === "ask") {
+    const modes = [...new Set(hits.map(h => h.mode))];
+    return modes.length > 1
+      ? ["Mixed signals across modes — can't route confidently.", "Ask: <b>\"Do you need a file output, or just text?\"</b>"]
+      : ["Not enough signal to route with confidence.", "Ask: <b>\"Build something, create a file, or understand something?\"</b>"];
+  }
+  const lines = {
+    code:   ["Technical implementation task → <b>Claude Code</b>.", topHit ? topHit + "." : "Code output or execution required."],
+    cowork: ["File or document deliverable → <b>Cowork</b>.",        topHit ? topHit + "." : "Productivity tool or file output detected."],
+    normal: ["Conversational, creative, or research task → <b>Normal Chat</b>.", topHit ? topHit + "." : "Text reply — no code or file output needed."],
+  };
+  return lines[route];
+}
+
+const inp      = document.getElementById("inp");
+const btn      = document.getElementById("btn");
+const resultEl = document.getElementById("result");
+const badgeEl  = document.getElementById("badge");
+const confEl   = document.getElementById("confLabel");
+const reasonEl = document.getElementById("reason");
+const chipsEl  = document.getElementById("chips");
+const scoresEl = document.getElementById("scoreRows");
+
+btn.disabled = true;
+inp.addEventListener("input", () => { btn.disabled = inp.value.trim().length < 3; });
+inp.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (!btn.disabled) route(); } });
+btn.addEventListener("click", route);
+
+function route() {
+  const text = inp.value.trim();
+  if (!text) return;
+  const res = classify(text);
+  const m   = META[res.route];
+  const [l1, l2] = getReasonLines(res);
+  const pct = Math.round(res.confidence * 100);
+
+  badgeEl.className = `badge ${m.badge}`;
+  badgeEl.textContent = `${m.emoji} ${m.label}`;
+  confEl.className = `conf-label ${m.conf}`;
+  confEl.textContent = res.route === "ask" ? "Low confidence" : `${pct}% confident`;
+  reasonEl.innerHTML = `${l1}<br>${l2}`;
+
+  chipsEl.innerHTML = "";
+  const topHits   = res.hits.filter(h => h.mode === res.route).slice(0, 4);
+  const otherHits = res.hits.filter(h => h.mode !== res.route).slice(0, 2);
+  [...topHits, ...otherHits].forEach(h => {
+    const el = document.createElement("span");
+    el.className = "chip" + (h.mode === res.route ? " hit" : "");
+    el.textContent = (h.mode === res.route ? "✓ " : "· ") + h.label;
+    chipsEl.appendChild(el);
+  });
+
+  scoresEl.innerHTML = "";
+  [["code","Code"],["cowork","Cowork"],["normal","Normal"]].forEach(([k, name]) => {
+    const p = Math.round((res.norm[k] || 0) * 100);
+    const row = document.createElement("div");
+    row.className = "score-row";
+    row.innerHTML = `<span class="score-name">${name}</span><div class="score-track"><div class="score-fill f-${k}" style="width:0%"></div></div><span class="score-pct">${p}%</span>`;
+    scoresEl.appendChild(row);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      row.querySelector(".score-fill").style.width = p + "%";
+    }));
+  });
+
+  resultEl.classList.remove("show");
+  void resultEl.offsetWidth;
+  resultEl.classList.add("show");
+}
+</script>
+</body>
+</html>
