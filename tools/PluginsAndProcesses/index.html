@@ -4,14 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Optional Ganesh — Plugins + Processes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
     --bg: #050505; --bg2: #0c0c0c; --bg3: #111111;
     --line: rgba(255,255,255,0.08); --line2: rgba(255,255,255,0.14);
     --text: rgba(255,255,255,0.92); --text2: rgba(255,255,255,0.45); --text3: rgba(255,255,255,0.22);
-    --mono: "SF Mono","Fira Mono","Consolas",monospace;
-    --sans: -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    --mono: "Space Mono","SF Mono","Fira Mono",monospace;
+    --sans: "Syne",-apple-system,BlinkMacSystemFont,sans-serif;
+    --accent: #f59e0b; --accent-dim: rgba(245,158,11,0.12);
     --r: 8px; --rl: 12px;
   }
   body {
@@ -28,6 +31,16 @@
     line-height: 1.6;
     min-height: 100vh;
   }
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 200px 200px;
+    opacity: 0.025;
+    pointer-events: none;
+    z-index: 9999;
+  }
 
   .masthead { margin-bottom: 1.5rem; }
   .masthead-label { font-size: 10px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text3); margin-bottom: 4px; }
@@ -38,7 +51,7 @@
   .main-tab { font-size: 12px; font-weight: 600; padding: 7px 20px; background: transparent; color: var(--text2); cursor: pointer; transition: all 0.15s; font-family: var(--sans); border: none; letter-spacing: 0.05em; text-transform: uppercase; }
   .main-tab:not(:last-child) { border-right: 1px solid var(--line2); }
   .main-tab:hover { background: rgba(255,255,255,0.05); color: var(--text); }
-  .main-tab.active { background: rgba(255,255,255,0.1); color: var(--text); }
+  .main-tab.active { background: var(--accent-dim); color: var(--accent); }
 
   .main-panel { display: none; }
   .main-panel.active { display: block; }
@@ -47,7 +60,7 @@
   .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1.75rem; }
   .tab { font-size: 12px; font-weight: 500; padding: 5px 13px; border-radius: 20px; border: 1px solid var(--line2); background: transparent; color: var(--text2); cursor: pointer; transition: all 0.15s; font-family: var(--sans); }
   .tab:hover { background: rgba(255,255,255,0.06); color: var(--text); }
-  .tab.active { background: rgba(255,255,255,0.1); color: var(--text); border-color: var(--line2); }
+  .tab.active { background: var(--accent-dim); color: var(--accent); border-color: rgba(245,158,11,0.3); }
 
   .section { display: none; }
   .section.on { display: block; }
@@ -224,6 +237,7 @@
 <div class="main-tabs">
   <button class="main-tab active" onclick="switchMain('arsenal', this)">Plugin Arsenal</button>
   <button class="main-tab" onclick="switchMain('processes', this)">Master System</button>
+  <button class="main-tab" onclick="switchMain('assist', this)">Mixing Assistant</button>
 </div>
 
 <!-- ========== PANEL: PLUGIN ARSENAL ========== -->
@@ -1045,6 +1059,257 @@
   </div>
 </div>
 
+<!-- ========== PANEL: MIXING ASSISTANT ========== -->
+<div id="panel-assist" class="main-panel">
+  <div class="tabs" id="assist-tabs">
+    <button class="tab active" onclick="go('problems','assist',this)">10 Problemas</button>
+    <button class="tab" onclick="go('fastmode','assist',this)">Fast Mode</button>
+    <button class="tab" onclick="go('mastering','assist',this)">Mastering</button>
+    <button class="tab" onclick="go('atmos','assist',this)">Atmos</button>
+  </div>
+
+  <div class="section on" id="mx-problems">
+    <div class="sec-head">10 Problemas — Cadenas de 3 herramientas</div>
+    <div class="sec-sub">Identifica el problema. Aplica la cadena.</div>
+
+    <div class="chain-card">
+      <div class="chain-hd" onclick="togc(this)">
+        <div class="chain-hd-left"><span class="chain-emoji">🎤</span><div><div class="chain-title">La voz se pierde / sin presencia</div><div class="chain-genre">Claridad · cut-through</div></div></div>
+        <span class="chev">▶</span>
+      </div>
+      <div class="chain-bd">
+        <table class="chain-table"><tr><th>#</th><th>Plugin</th><th>Ajuste</th></tr>
+          <tr><td><span class="step-num">1</span></td><td><span class="plugin-name">UAD Pultec HLF-3C</span><span class="plugin-note">Presence EQ</span></td><td class="target-val">+2-3dB @ 3-4kHz</td></tr>
+          <tr><td><span class="step-num">2</span></td><td><span class="plugin-name">Oeksound soothe2</span><span class="plugin-note">Resonance control</span></td><td class="target-val">-3dB max, 5-8kHz</td></tr>
+          <tr><td><span class="step-num">3</span></td><td><span class="plugin-name">UAD LA-2A</span><span class="plugin-note">Optical compression</span></td><td class="target-val">-3dB GR en picos</td></tr>
+        </table>
+        <div class="tip-box" style="margin:0;border-radius:0;border:none;border-top:0.5px solid var(--line)">Pre-delay 10-15ms antes del reverb. La voz llega antes = más "real" y presente.</div>
+      </div>
+    </div>
+
+    <div class="chain-card">
+      <div class="chain-hd" onclick="togc(this)">
+        <div class="chain-hd-left"><span class="chain-emoji">🥁</span><div><div class="chain-title">Kick sin punch ni cuerpo</div><div class="chain-genre">Transient · sub-bass</div></div></div>
+        <span class="chev">▶</span>
+      </div>
+      <div class="chain-bd">
+        <table class="chain-table"><tr><th>#</th><th>Plugin</th><th>Ajuste</th></tr>
+          <tr><td><span class="step-num">1</span></td><td><span class="plugin-name">SSL E Channel EQ</span><span class="plugin-note">Cuerpo + definición</span></td><td class="target-val">+3dB @ 60Hz, HP @ 30Hz</td></tr>
+          <tr><td><span class="step-num">2</span></td><td><span class="plugin-name">UADx 1176 Rev A</span><span class="plugin-note">Punch transient</span></td><td class="target-val">Attack 7 (lento), Release 1</td></tr>
+          <tr><td><span class="step-num">3</span></td><td><span class="plugin-name">Parallel comp (NY)</span><span class="plugin-note">Bus kick</span></td><td class="target-val">Heavy comp, blend 30-40%</td></tr>
+        </table>
+        <div class="tip-box" style="margin:0;border-radius:0;border:none;border-top:0.5px solid var(--line)">Attack lento en el 1176 = deja pasar el transient. Comprime el sustain, no el ataque.</div>
+      </div>
+    </div>
+
+    <div class="chain-card">
+      <div class="chain-hd" onclick="togc(this)">
+        <div class="chain-hd-left"><span class="chain-emoji">🌫️</span><div><div class="chain-title">Mezcla lodosa / fangosa</div><div class="chain-genre">Low-mid cleanup</div></div></div>
+        <span class="chev">▶</span>
+      </div>
+      <div class="chain-bd">
+        <table class="chain-table"><tr><th>#</th><th>Plugin</th><th>Ajuste</th></tr>
+          <tr><td><span class="step-num">1</span></td><td><span class="plugin-name">Channel EQ (Logic)</span><span class="plugin-note">Por pista</span></td><td class="target-val">HP según instrumento: voz @80Hz, git @100Hz</td></tr>
+          <tr><td><span class="step-num">2</span></td><td><span class="plugin-name">UAD SSL 4000 E</span><span class="plugin-note">Bus/sub-mix</span></td><td class="target-val">-2dB paramétrico @ 200-400Hz</td></tr>
+          <tr><td><span class="step-num">3</span></td><td><span class="plugin-name">soothe2</span><span class="plugin-note">En bus master</span></td><td class="target-val">Resonance control 250-500Hz, gentle</td></tr>
+        </table>
+        <div class="tip-box" style="margin:0;border-radius:0;border:none;border-top:0.5px solid var(--line)">Primero corta en cada pista. soothe2 solo maneja lo que queda. No al revés.</div>
+      </div>
+    </div>
+
+    <div class="chain-card">
+      <div class="chain-hd" onclick="togc(this)">
+        <div class="chain-hd-left"><span class="chain-emoji">🔥</span><div><div class="chain-title">Demasiado harsh / agresivo</div><div class="chain-genre">De-harshness · high-freq</div></div></div>
+        <span class="chev">▶</span>
+      </div>
+      <div class="chain-bd">
+        <table class="chain-table"><tr><th>#</th><th>Plugin</th><th>Ajuste</th></tr>
+          <tr><td><span class="step-num">1</span></td><td><span class="plugin-name">Oeksound soothe2</span><span class="plugin-note">Primary fix</span></td><td class="target-val">2-8kHz, sensitivity high, -4dB</td></tr>
+          <tr><td><span class="step-num">2</span></td><td><span class="plugin-name">De-esser (Logic)</span><span class="plugin-note">Vocal focus</span></td><td class="target-val">Threshold -20dB, 5-8kHz</td></tr>
+          <tr><td><span class="step-num">3</span></td><td><span class="plugin-name">EQ shelf suave</span><span class="plugin-note">Finisher</span></td><td class="target-val">-1dB shelf desde 8kHz</td></tr>
+        </table>
+        <div class="tip-box" style="margin:0;border-radius:0;border:none;border-top:0.5px solid var(--line)">soothe2 primero. Si aún hay problema: de-esser. Si aún: shelf. No los tres a full al mismo tiempo.</div>
+      </div>
+    </div>
+
+    <div class="chain-card">
+      <div class="chain-hd" onclick="togc(this)">
+        <div class="chain-hd-left"><span class="chain-emoji">🌊</span><div><div class="chain-title">Sin profundidad ni espacio</div><div class="chain-genre">Reverb · delay · depth</div></div></div>
+        <span class="chev">▶</span>
+      </div>
+      <div class="chain-bd">
+        <table class="chain-table"><tr><th>#</th><th>Plugin</th><th>Ajuste</th></tr>
+          <tr><td><span class="step-num">1</span></td><td><span class="plugin-name">Lexicon 224</span><span class="plugin-note">Main reverb send</span></td><td class="target-val">Pre-delay 20-30ms, decay 1.5-2.5s</td></tr>
+          <tr><td><span class="step-num">2</span></td><td><span class="plugin-name">Galaxy Tape Echo</span><span class="plugin-note">Pre-reverb delay</span></td><td class="target-val">Sutil, low feedback, antes del reverb</td></tr>
+          <tr><td><span class="step-num">3</span></td><td><span class="plugin-name">Send automation</span><span class="plugin-note">Movimiento dinámico</span></td><td class="target-val">Dry @ verses, wet @ choruses</td></tr>
+        </table>
+        <div class="tip-box" style="margin:0;border-radius:0;border:none;border-top:0.5px solid var(--line)">Delay → Reverb = profundidad sin alejar el elemento. Más espacio, menos distancia percibida.</div>
+      </div>
+    </div>
+
+    <div class="chain-card">
+      <div class="chain-hd" onclick="togc(this)">
+        <div class="chain-hd-left"><span class="chain-emoji">🔆</span><div><div class="chain-title">Falta de calidez / demasiado digital</div><div class="chain-genre">Tape · harmonic · warmth</div></div></div>
+        <span class="chev">▶</span>
+      </div>
+      <div class="chain-bd">
+        <table class="chain-table"><tr><th>#</th><th>Plugin</th><th>Ajuste</th></tr>
+          <tr><td><span class="step-num">1</span></td><td><span class="plugin-name">ATR-102</span><span class="plugin-note">Tape color — primero</span></td><td class="target-val">15ips, Input +2, neutral bias</td></tr>
+          <tr><td><span class="step-num">2</span></td><td><span class="plugin-name">Studer A800</span><span class="plugin-note">Tape saturation</span></td><td class="target-val">Gentle, no clip, warmth mode</td></tr>
+          <tr><td><span class="step-num">3</span></td><td><span class="plugin-name">UAD Neve 1073</span><span class="plugin-note">Low shelf + air</span></td><td class="target-val">+2dB @ 60Hz, +1dB @ 12kHz</td></tr>
+        </table>
+        <div class="tip-box" style="margin:0;border-radius:0;border:none;border-top:0.5px solid var(--line)">ATR-102 define el color. Studer es más saturación. Usa uno a full, el otro al 30%.</div>
+      </div>
+    </div>
+
+    <div class="chain-card">
+      <div class="chain-hd" onclick="togc(this)">
+        <div class="chain-hd-left"><span class="chain-emoji">⚡</span><div><div class="chain-title">Batería plana / sin energía</div><div class="chain-genre">Bus comp · parallel · transient</div></div></div>
+        <span class="chev">▶</span>
+      </div>
+      <div class="chain-bd">
+        <table class="chain-table"><tr><th>#</th><th>Plugin</th><th>Ajuste</th></tr>
+          <tr><td><span class="step-num">1</span></td><td><span class="plugin-name">UAD SSL G Bus Comp</span><span class="plugin-note">Glue + punch</span></td><td class="target-val">Ratio 4:1, attack 30ms, release auto, -3dB GR</td></tr>
+          <tr><td><span class="step-num">2</span></td><td><span class="plugin-name">Parallel comp (NY)</span><span class="plugin-note">Bus batería</span></td><td class="target-val">Heavy comp, blend 25-35%</td></tr>
+          <tr><td><span class="step-num">3</span></td><td><span class="plugin-name">Oeksound spiff</span><span class="plugin-note">Transient control</span></td><td class="target-val">Attack boost, gentle release</td></tr>
+        </table>
+        <div class="tip-box" style="margin:0;border-radius:0;border:none;border-top:0.5px solid var(--line)">SSL G para glue. NY para punch. spiff para presencia. Los tres trabajan en capas distintas.</div>
+      </div>
+    </div>
+
+    <div class="chain-card">
+      <div class="chain-hd" onclick="togc(this)">
+        <div class="chain-hd-left"><span class="chain-emoji">↔️</span><div><div class="chain-title">Mezcla estrecha / sin anchura</div><div class="chain-genre">Stereo · width · M-S</div></div></div>
+        <span class="chev">▶</span>
+      </div>
+      <div class="chain-bd">
+        <table class="chain-table"><tr><th>#</th><th>Plugin</th><th>Ajuste</th></tr>
+          <tr><td><span class="step-num">1</span></td><td><span class="plugin-name">Mid-Side EQ</span><span class="plugin-note">Side channel</span></td><td class="target-val">+2dB sides @ 8kHz, -1dB sides @ 200Hz</td></tr>
+          <tr><td><span class="step-num">2</span></td><td><span class="plugin-name">Eventide H9000</span><span class="plugin-note">Chorus ligero</span></td><td class="target-val">Solo en sides, wet 20-30%</td></tr>
+          <tr><td><span class="step-num">3</span></td><td><span class="plugin-name">Waves S1 Stereo Imager</span><span class="plugin-note">Final width</span></td><td class="target-val">Width 1.2-1.4, rotation 0</td></tr>
+        </table>
+        <div class="tip-box" style="margin:0;border-radius:0;border:none;border-top:0.5px solid var(--line)">Centro siempre mono y sólido. La anchura viene de los sides, no de achicar el centro.</div>
+      </div>
+    </div>
+
+    <div class="chain-card">
+      <div class="chain-hd" onclick="togc(this)">
+        <div class="chain-hd-left"><span class="chain-emoji">📊</span><div><div class="chain-title">No alcanza el volumen objetivo</div><div class="chain-genre">Loudness · LUFS · limiting</div></div></div>
+        <span class="chev">▶</span>
+      </div>
+      <div class="chain-bd">
+        <table class="chain-table"><tr><th>#</th><th>Plugin</th><th>Ajuste</th></tr>
+          <tr><td><span class="step-num">1</span></td><td><span class="plugin-name">UAD Neve 33609</span><span class="plugin-note">Bus glue</span></td><td class="target-val">Ratio 2:1, gentle, -1-2dB GR</td></tr>
+          <tr><td><span class="step-num">2</span></td><td><span class="plugin-name">Sonnox Inflator</span><span class="plugin-note">Perceived loudness</span></td><td class="target-val">Process 50%, Effect 25-35%</td></tr>
+          <tr><td><span class="step-num">3</span></td><td><span class="plugin-name">God Particle</span><span class="plugin-note">Final limiting</span></td><td class="target-val">-0.3dBTP ceiling</td></tr>
+        </table>
+        <div class="tip-box" style="margin:0;border-radius:0;border:none;border-top:0.5px solid var(--line)">Target en mezcla: -18 LUFS. Target final streaming: -14 LUFS. No comprimas para ganar volumen — usa el mastering chain.</div>
+      </div>
+    </div>
+
+    <div class="chain-card">
+      <div class="chain-hd" onclick="togc(this)">
+        <div class="chain-hd-left"><span class="chain-emoji">💀</span><div><div class="chain-title">Suena muerto / sin vida / aburrido</div><div class="chain-genre">Harmonic · air · excite</div></div></div>
+        <span class="chev">▶</span>
+      </div>
+      <div class="chain-bd">
+        <table class="chain-table"><tr><th>#</th><th>Plugin</th><th>Ajuste</th></tr>
+          <tr><td><span class="step-num">1</span></td><td><span class="plugin-name">Soundtoys Decapitator</span><span class="plugin-note">Harmonic excitement</span></td><td class="target-val">Style A, Drive 3-5, mix 50-70%</td></tr>
+          <tr><td><span class="step-num">2</span></td><td><span class="plugin-name">UAD Pultec EQP-1A</span><span class="plugin-note">Air</span></td><td class="target-val">+2dB @ 16kHz (boost sin atenuar)</td></tr>
+          <tr><td><span class="step-num">3</span></td><td><span class="plugin-name">ATR-102</span><span class="plugin-note">Tape breath</span></td><td class="target-val">30ips, gentle input, no clip</td></tr>
+        </table>
+        <div class="tip-box" style="margin:0;border-radius:0;border:none;border-top:0.5px solid var(--line)">Una mezcla muerta no necesita más plugins — necesita que la performance tenga vida. Los plugins solo amplifican lo que ya hay.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" id="mx-fastmode">
+    <div class="sec-head">Fast Mode</div>
+    <div class="sec-sub">Un problema, una solución. Sin explicaciones.</div>
+    <table class="rule-table" style="margin-top:1rem">
+      <tr><td style="width:38%">Voz sin presencia</td><td>soothe2 → Pultec HLF-3C</td></tr>
+      <tr><td>Kick sin punch</td><td>1176 (attack lento) → SSL EQ 60Hz</td></tr>
+      <tr><td>Mezcla lodosa</td><td>HP filter en capas → soothe2 bus</td></tr>
+      <tr><td>Harsh / agresivo</td><td>soothe2 → De-esser</td></tr>
+      <tr><td>Sin profundidad</td><td>Lexicon 224 send → pre-delay 20ms</td></tr>
+      <tr><td>Sin calidez</td><td>ATR-102 (15ips) → Neve 1073</td></tr>
+      <tr><td>Batería plana</td><td>SSL G Bus Comp → NY parallel</td></tr>
+      <tr><td>Mezcla estrecha</td><td>M-S EQ sides → S1 width 1.3</td></tr>
+      <tr><td>Sin volumen</td><td>Sonnox Inflator → God Particle</td></tr>
+      <tr><td>Sin vida</td><td>Decapitator Style A → Pultec EQP-1A air</td></tr>
+    </table>
+  </div>
+
+  <div class="section" id="mx-mastering">
+    <div class="sec-head">Mastering — OG Chain</div>
+    <div class="sec-sub">Target: −18 LUFS mix → −14 LUFS final (streaming).</div>
+
+    <div class="chain-card" style="margin-top:1rem">
+      <div class="chain-hd open" style="cursor:default">
+        <div class="chain-hd-left"><span class="chain-emoji">🎛️</span><div><div class="chain-title">Mac Mini — Mastering Chain</div><div class="chain-genre">ATR-102 · SSL · Sonnox · God Particle</div></div></div>
+      </div>
+      <div class="chain-bd open">
+        <table class="chain-table"><tr><th>#</th><th>Plugin</th><th>Ajuste</th></tr>
+          <tr><td><span class="step-num">1</span></td><td><span class="plugin-name">ATR-102</span><span class="plugin-note">Tape color — first in chain</span></td><td class="target-val">15ips, Input +2, neutral bias</td></tr>
+          <tr><td><span class="step-num">2</span></td><td><span class="plugin-name">UAD SSL G Bus Comp</span><span class="plugin-note">Glue compression</span></td><td class="target-val">Ratio 2:1, attack 30ms, release auto, -2dB GR</td></tr>
+          <tr><td><span class="step-num">3</span></td><td><span class="plugin-name">UAD Neve 1073</span><span class="plugin-note">Tonal correction</span></td><td class="target-val">+0.5dB @ 16kHz, -0.5dB @ 250Hz si lodoso</td></tr>
+          <tr><td><span class="step-num">4</span></td><td><span class="plugin-name">Sonnox Inflator</span><span class="plugin-note">Perceived loudness</span></td><td class="target-val">Process 50%, Effect 25-35%</td></tr>
+          <tr><td><span class="step-num">5</span></td><td><span class="plugin-name">God Particle</span><span class="plugin-note">Final limiting</span></td><td class="target-val">Ceiling -0.3dBTP</td></tr>
+          <tr><td><span class="step-num">✓</span></td><td><span class="plugin-name">LUFS check</span><span class="plugin-note">iZotope Insight / Multimeter</span></td><td class="target-val">−14 LUFS int · −1dBTP · LRA &lt;9</td></tr>
+        </table>
+        <div class="tip-box" style="margin:0;border-radius:0;border:none;border-top:0.5px solid var(--line)"><strong>Monitor calibrado con SoundID</strong> durante toda la sesión. Comparar con referencia en −14 LUFS antes del chain final.</div>
+      </div>
+    </div>
+
+    <div class="targets-grid" style="margin-top:1rem">
+      <div class="target-card"><div class="target-lbl">Mix target</div><div class="target-num">−18 LUFS</div></div>
+      <div class="target-card"><div class="target-lbl">Streaming final</div><div class="target-num">−14 LUFS</div></div>
+      <div class="target-card"><div class="target-lbl">True Peak</div><div class="target-num">−1 dBTP</div></div>
+      <div class="target-card"><div class="target-lbl">LRA</div><div class="target-num">&lt;9 LU</div></div>
+    </div>
+
+    <div class="tip-box" style="margin-top:1rem">Si en la mezcla ya está a −18 LUFS, el chain añade ~4dB de loudness percibido. No comprimas la mezcla para ganar volumen — deja que el mastering haga su trabajo.</div>
+  </div>
+
+  <div class="section" id="mx-atmos">
+    <div class="sec-head">Atmos — Mixing Assistant</div>
+    <div class="sec-sub">Decisiones rápidas para inmersivo. Profundidad sobre movimiento.</div>
+
+    <div class="divider"></div>
+    <div class="group-label">Posicionamiento</div>
+    <table class="rule-table">
+      <tr><td style="width:40%">Voz, lead, kick</td><td>Objeto → posición fija, al frente</td></tr>
+      <tr><td>Pads, strings, atmósferas</td><td>Bed → envuelve, Layer 3-5</td></tr>
+      <tr><td>Hi-hats, percusión menor</td><td>Objeto → puede moverse levemente</td></tr>
+      <tr><td>Reverb return</td><td>Bed → muy difuso, Layer 4-5</td></tr>
+      <tr><td>Sub-bass / LFE</td><td>Centro / Bed — nunca en altura</td></tr>
+    </table>
+
+    <div class="divider"></div>
+    <div class="group-label">EQ en Atmos</div>
+    <table class="rule-table">
+      <tr><td style="width:40%">Objeto borroso en campo</td><td>Cortar 200-400Hz</td></tr>
+      <tr><td>Objeto demasiado frontal</td><td>Reducir 4-6kHz</td></tr>
+      <tr><td>Objeto lejano / sin definición</td><td>Boost 3-5kHz</td></tr>
+      <tr><td>Demasiado brillante en altura</td><td>-2dB shelf desde 10kHz en Top channels</td></tr>
+    </table>
+
+    <div class="divider"></div>
+    <div class="group-label">Plugins por tarea</div>
+    <table class="rule-table">
+      <tr><td style="width:40%">EQ por objeto</td><td>Channel EQ · Pultec HLF-3C · Pulsar W495</td></tr>
+      <tr><td>Compresión</td><td>LA-2A (voces) · 1176 (percusión) · Fairchild (buses)</td></tr>
+      <tr><td>Saturación</td><td>ATR-102 · Studer A800 — siempre antes del espacio</td></tr>
+      <tr><td>Reverb</td><td>Capitol Chambers · Lexicon 224 · TSAR-1R</td></tr>
+      <tr><td>Delay</td><td>Galaxy Tape Echo · Echorec · Replika</td></tr>
+      <tr><td>Control / metering</td><td>Multimeter (Reso) · Relay</td></tr>
+    </table>
+
+    <div class="tip-box" style="margin-top:1rem"><strong>OG Atmos aesthetic:</strong> centro sólido · instrumentos flotando · reverbs profundas · movimiento lento. Profundidad sobre movimiento. Layers 3-5.</div>
+    <div class="tip-box"><strong>Targets Atmos:</strong> −20 LUFS integrado · −1dBTP · Dialog norm −27 LKFS.</div>
+  </div>
+</div>
+
 <script>
 function switchMain(panel, btn) {
   document.querySelectorAll('.main-panel').forEach(p => p.classList.remove('active'));
@@ -1054,7 +1319,8 @@ function switchMain(panel, btn) {
 }
 
 function go(id, panel, btn) {
-  const prefix = panel === 'arsenal' ? 'a' : 'p';
+  const prefixMap = { arsenal: 'a', processes: 'p', assist: 'mx' };
+  const prefix = prefixMap[panel] || 'p';
   document.querySelectorAll('#panel-' + panel + ' .section').forEach(s => s.classList.remove('on'));
   const tabContainer = document.getElementById(panel + '-tabs');
   tabContainer.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
@@ -1086,5 +1352,6 @@ function togf(inner) {
   openFlow = detail.classList.contains('open') ? detail : null;
 }
 </script>
+<script src="plugin-loader.js"></script>
 </body>
 </html>
