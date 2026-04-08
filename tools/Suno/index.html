@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Suno Prompt Converter — Optional Ganesh</title>
+<title>Suno Prompt Tool — Optional Ganesh</title>
 <style>
   :root {
     --bg: #050505;
@@ -28,7 +28,7 @@
       radial-gradient(circle at 80% 30%, rgba(255,255,255,0.025), transparent 28%),
       linear-gradient(180deg, #070707 0%, #020202 100%);
     color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: var(--sans);
     letter-spacing: 0.01em;
   }
   html { font-size: 16px; }
@@ -43,22 +43,23 @@
 
   .page { position: relative; z-index: 1; max-width: 740px; margin: 0 auto; padding: 4.5rem 2rem 5rem; }
 
-  header { margin-bottom: 3rem; }
+  header { margin-bottom: 2.5rem; }
   .logo { font-size: 11px; font-family: var(--mono); letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase; margin-bottom: 1.2rem; }
   .logo a { color: var(--muted); text-decoration: none; transition: color 180ms ease; }
   .logo a:hover { color: var(--text); }
   h1 { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 700; letter-spacing: -0.03em; line-height: 1.05; color: var(--text); }
   h1 span { color: var(--accent); }
-  .subtitle { margin-top: 0.75rem; font-family: var(--mono); font-size: 13px; color: var(--muted); }
+  .subtitle { margin-top: 0.75rem; font-family: var(--mono); font-size: 12px; color: var(--muted); }
 
+  /* Tabs */
   .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--line); margin-bottom: 2rem; }
   .tab {
-    padding: 0.6rem 1.4rem; font-size: 13px; font-family: var(--mono); letter-spacing: 0.05em;
+    padding: 0.6rem 1.4rem; font-size: 12px; font-family: var(--mono); letter-spacing: 0.06em;
     color: var(--muted); cursor: pointer; background: none; border: none; border-bottom: 2px solid transparent;
-    margin-bottom: -1px; transition: color 0.2s, border-color 0.2s;
+    margin-bottom: -1px; transition: color 0.2s, border-color 0.2s; text-transform: uppercase;
   }
   .tab:hover { color: var(--text); }
-  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab.active { color: var(--accent); border-bottom-color: rgba(255,255,255,0.7); }
 
   .panel { display: none; }
   .panel.active { display: block; }
@@ -68,6 +69,7 @@
     display: block; font-family: var(--mono); font-size: 11px; letter-spacing: 0.15em;
     text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem;
   }
+  .field-hint { font-family: var(--mono); font-size: 11px; color: var(--hint); margin-top: 5px; }
   textarea, input[type="text"] {
     width: 100%; background: var(--surface); border: 1px solid var(--line);
     color: var(--text); font-family: var(--mono); font-size: 13px; line-height: 1.6;
@@ -79,7 +81,9 @@
   input[type="text"] { height: 38px; }
 
   .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
 
+  /* Tags cloud */
   .tags-cloud { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 0.5rem; }
   .tag {
     font-family: var(--mono); font-size: 11px; padding: 3px 10px;
@@ -87,21 +91,31 @@
     cursor: pointer; background: none; transition: all 0.15s;
   }
   .tag:hover { border-color: var(--line2); color: var(--text); }
+  .tag-group-label { width: 100%; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.2); margin-top: 0.5rem; margin-bottom: 2px; }
 
-  .api-section { margin-bottom: 2rem; }
-  .api-hint { font-family: var(--mono); font-size: 11px; color: var(--hint); margin-top: 6px; }
+  /* Exclusion field */
+  .exclusion-section { margin-bottom: 1.5rem; border-top: 1px solid var(--line); padding-top: 1.25rem; }
+  .exclusion-section label { color: rgba(210,90,80,0.75); }
+  .exclusion-section input { border-color: rgba(210,90,80,0.2); }
+  .exclusion-section input:focus { border-color: rgba(210,90,80,0.45); }
 
+  /* Director brief specific */
+  .brief-section { margin-bottom: 1.75rem; padding: 1.25rem; border: 1px solid var(--line); border-radius: 6px; background: rgba(255,255,255,0.012); }
+  .brief-section-title { font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--hint); margin-bottom: 1rem; }
+
+  /* Run button */
   .run-btn {
     width: 100%; padding: 0.85rem; font-family: var(--sans); font-size: 15px; font-weight: 600;
-    letter-spacing: 0.05em; background: rgba(255,255,255,0.12); color: var(--text);
+    letter-spacing: 0.05em; background: rgba(255,255,255,0.1); color: var(--text);
     border: 1px solid var(--line2); border-radius: 4px; cursor: pointer;
     transition: background 0.2s, transform 0.1s;
     margin-bottom: 2rem;
   }
-  .run-btn:hover { background: rgba(255,255,255,0.18); }
+  .run-btn:hover { background: rgba(255,255,255,0.16); }
   .run-btn:active { transform: scale(0.99); }
   .run-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
 
+  /* Output */
   .output { animation: fadeIn 0.3s ease; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
@@ -126,6 +140,7 @@
   }
   .copy-btn:hover { color: var(--text); border-color: var(--line2); }
   .out-body { padding: 0.9rem 1rem; font-family: var(--mono); font-size: 13px; line-height: 1.65; color: var(--text); word-break: break-word; }
+  .out-body.exclusion { color: rgba(210,90,80,0.8); }
 
   .regen-row { display: flex; gap: 10px; }
   .regen-btn {
@@ -150,7 +165,7 @@
 
   @media (max-width: 520px) {
     .page { padding: 2rem 1.2rem 4rem; }
-    .row2 { grid-template-columns: 1fr; }
+    .row2, .row3 { grid-template-columns: 1fr; }
     h1 { font-size: 2rem; }
   }
 </style>
@@ -160,28 +175,21 @@
 <div class="page">
   <header>
     <div class="logo"><a href="/">Optional Ganesh / Tools</a></div>
-    <h1>Suno <span>Prompt</span><br>Converter</h1>
-    <p class="subtitle">// Comprime cualquier idea a &lt;200 chars para Suno AI</p>
+    <h1>Suno <span>Prompt</span><br>Tool</h1>
+    <p class="subtitle">// Comprime, genera y dirige prompts — Suno · Udio · Stable Audio</p>
   </header>
 
-  <div class="api-section">
-    <div class="field">
-      <label>Modo</label>
-      <div class="api-hint">
-        Offline / sin API — sintetiza prompts desde la estructura que pegues, sin salir del navegador.
-      </div>
-    </div>
-  </div>
-
   <div class="tabs">
-    <button class="tab active" onclick="switchTab('compress')">Comprimir prompt</button>
-    <button class="tab" onclick="switchTab('generate')">Generar desde cero</button>
+    <button class="tab active" onclick="switchTab('compress')">Comprimir</button>
+    <button class="tab" onclick="switchTab('generate')">Generar</button>
+    <button class="tab" onclick="switchTab('brief')">Brief de director</button>
   </div>
 
+  <!-- TAB 1: COMPRESS -->
   <div class="panel active" id="panel-compress">
     <div class="field">
       <label>Texto de entrada</label>
-      <textarea id="input-compress" placeholder="Pega el prompt largo del bot de Telegram, o cualquier descripción libre del sonido que quieres..."></textarea>
+      <textarea id="input-compress" placeholder="Pega el prompt largo, output del bot de Telegram, o cualquier descripción libre del sonido que buscas..."></textarea>
     </div>
     <div class="row2">
       <div class="field">
@@ -193,30 +201,128 @@
         <input type="text" id="mood-extra" placeholder="melancholic, hypnotic, raw…" />
       </div>
     </div>
+    <div class="exclusion-section">
+      <div class="field">
+        <label>Excluir (opcional)</label>
+        <input type="text" id="exclude-compress" placeholder="happy, upbeat, generic, EDM drop…" />
+        <div class="field-hint">→ genera string de exclusión para el campo Style de Suno</div>
+      </div>
+    </div>
   </div>
 
+  <!-- TAB 2: GENERATE FROM SCRATCH -->
   <div class="panel" id="panel-generate">
     <div class="field">
       <label>Concepto sonoro</label>
       <textarea id="input-generate" placeholder="ej. Burial meets Floating Points, percusión industrial oxidada, voz fantasma con reverb de catedral, medianoche en el metro de Tokyo…"></textarea>
+      <div class="field-hint">Describe texturas, referencias sonoras, atmósferas — no nombres de artistas</div>
     </div>
     <div class="field">
       <label>Tags rápidos</label>
       <div class="tags-cloud">
+        <div class="tag-group-label">Electronic / Club</div>
         <button class="tag" onclick="appendTag('dark ambient')">dark ambient</button>
-        <button class="tag" onclick="appendTag('lo-fi hip hop')">lo-fi hip hop</button>
-        <button class="tag" onclick="appendTag('cinematic')">cinematic</button>
-        <button class="tag" onclick="appendTag('experimental')">experimental</button>
-        <button class="tag" onclick="appendTag('trip-hop')">trip-hop</button>
-        <button class="tag" onclick="appendTag('jazz fusion')">jazz fusion</button>
-        <button class="tag" onclick="appendTag('post-rock')">post-rock</button>
-        <button class="tag" onclick="appendTag('glitch')">glitch</button>
-        <button class="tag" onclick="appendTag('neo-soul')">neo-soul</button>
-        <button class="tag" onclick="appendTag('drone')">drone</button>
-        <button class="tag" onclick="appendTag('flamenco fusion')">flamenco fusion</button>
-        <button class="tag" onclick="appendTag('balearic')">balearic</button>
-        <button class="tag" onclick="appendTag('afrobeat')">afrobeat</button>
         <button class="tag" onclick="appendTag('dub techno')">dub techno</button>
+        <button class="tag" onclick="appendTag('ambient techno')">ambient techno</button>
+        <button class="tag" onclick="appendTag('glitch')">glitch</button>
+        <button class="tag" onclick="appendTag('industrial')">industrial</button>
+        <button class="tag" onclick="appendTag('balearic')">balearic</button>
+        <button class="tag" onclick="appendTag('electroacoustic')">electroacoustic</button>
+
+        <div class="tag-group-label">Hip-hop / Soul / R&amp;B</div>
+        <button class="tag" onclick="appendTag('lo-fi hip hop')">lo-fi hip hop</button>
+        <button class="tag" onclick="appendTag('trip-hop')">trip-hop</button>
+        <button class="tag" onclick="appendTag('neo-soul')">neo-soul</button>
+        <button class="tag" onclick="appendTag('boom bap')">boom bap</button>
+        <button class="tag" onclick="appendTag('soul jazz')">soul jazz</button>
+
+        <div class="tag-group-label">Jazz / Acoustic</div>
+        <button class="tag" onclick="appendTag('jazz fusion')">jazz fusion</button>
+        <button class="tag" onclick="appendTag('jazz noir')">jazz noir</button>
+        <button class="tag" onclick="appendTag('bossa nova')">bossa nova</button>
+        <button class="tag" onclick="appendTag('contemporary classical')">contemporary classical</button>
+        <button class="tag" onclick="appendTag('chamber music')">chamber music</button>
+
+        <div class="tag-group-label">Rock / Alt</div>
+        <button class="tag" onclick="appendTag('post-rock')">post-rock</button>
+        <button class="tag" onclick="appendTag('shoegaze')">shoegaze</button>
+        <button class="tag" onclick="appendTag('psychedelic rock')">psychedelic rock</button>
+        <button class="tag" onclick="appendTag('alt pop')">alt pop</button>
+        <button class="tag" onclick="appendTag('experimental')">experimental</button>
+
+        <div class="tag-group-label">World / Fusion</div>
+        <button class="tag" onclick="appendTag('flamenco fusion')">flamenco fusion</button>
+        <button class="tag" onclick="appendTag('afrobeat')">afrobeat</button>
+        <button class="tag" onclick="appendTag('cumbia')">cumbia</button>
+        <button class="tag" onclick="appendTag('afro-house')">afro-house</button>
+        <button class="tag" onclick="appendTag('latin jazz')">latin jazz</button>
+
+        <div class="tag-group-label">Cinematic / Sync</div>
+        <button class="tag" onclick="appendTag('cinematic')">cinematic</button>
+        <button class="tag" onclick="appendTag('drone')">drone</button>
+        <button class="tag" onclick="appendTag('suspense')">suspense</button>
+        <button class="tag" onclick="appendTag('score')">score</button>
+      </div>
+    </div>
+    <div class="exclusion-section">
+      <div class="field">
+        <label>Excluir</label>
+        <input type="text" id="exclude-generate" placeholder="happy pop, anthemic, stadium…" />
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: DIRECTOR'S BRIEF -->
+  <div class="panel" id="panel-brief">
+    <div class="brief-section">
+      <div class="brief-section-title">El sonido</div>
+      <div class="row2">
+        <div class="field">
+          <label>¿Qué sentimiento?</label>
+          <input type="text" id="brief-emotion" placeholder="melancolía contenida, tensión sin resolución…" />
+        </div>
+        <div class="field">
+          <label>Contexto / escena</label>
+          <input type="text" id="brief-scene" placeholder="3am en una ciudad vacía, ritual íntimo…" />
+        </div>
+      </div>
+      <div class="field">
+        <label>Textura sonora</label>
+        <input type="text" id="brief-texture" placeholder="capas de sintetizador granular, percusión oxidada, graves cálidos…" />
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Instrumentación clave</label>
+          <input type="text" id="brief-instruments" placeholder="piano preparado, bajo fretless, caja rota…" />
+        </div>
+        <div class="field">
+          <label>Referencia sonora (no artistas)</label>
+          <input type="text" id="brief-reference" placeholder="como música de sala de espera de otra dimensión…" />
+        </div>
+      </div>
+    </div>
+    <div class="brief-section">
+      <div class="brief-section-title">Producción</div>
+      <div class="row3">
+        <div class="field">
+          <label>Género base</label>
+          <input type="text" id="brief-genre" placeholder="trip-hop, ambient…" />
+        </div>
+        <div class="field">
+          <label>BPM aproximado</label>
+          <input type="text" id="brief-bpm" placeholder="82, lento, irregular…" />
+        </div>
+        <div class="field">
+          <label>Mood</label>
+          <input type="text" id="brief-mood" placeholder="hypnotic, raw, sparse…" />
+        </div>
+      </div>
+    </div>
+    <div class="exclusion-section">
+      <div class="field">
+        <label>Que NO suene a</label>
+        <input type="text" id="brief-exclude" placeholder="comercial, alegre, percusión genérica, drop de festival…" />
+        <div class="field-hint">→ genera exclusión explícita en el output</div>
       </div>
     </div>
   </div>
@@ -230,7 +336,7 @@
 
   <div id="output-area"></div>
 
-  <footer>optionalganesh.com / herramientas internas — modo local sin API</footer>
+  <footer>optionalganesh.com / tools — offline, sin API · Suno · Udio · Stable Audio</footer>
 </div>
 
 <script>
@@ -239,10 +345,15 @@ let currentMode = 'compress';
 function switchTab(mode) {
   currentMode = mode;
   document.querySelectorAll('.tab').forEach((t, i) => {
-    t.classList.toggle('active', (i === 0 && mode === 'compress') || (i === 1 && mode === 'generate'));
+    t.classList.toggle('active',
+      (i === 0 && mode === 'compress') ||
+      (i === 1 && mode === 'generate') ||
+      (i === 2 && mode === 'brief')
+    );
   });
-  document.getElementById('panel-compress').classList.toggle('active', mode === 'compress');
-  document.getElementById('panel-generate').classList.toggle('active', mode === 'generate');
+  ['compress','generate','brief'].forEach(m => {
+    document.getElementById('panel-' + m).classList.toggle('active', m === mode);
+  });
 }
 
 function appendTag(t) {
@@ -255,10 +366,7 @@ function setStatus(state, msg) {
   const bar = document.getElementById('status-bar');
   const dot = document.getElementById('status-dot');
   const txt = document.getElementById('status-text');
-  if (!state) {
-    bar.style.display = 'none';
-    return;
-  }
+  if (!state) { bar.style.display = 'none'; return; }
   bar.style.display = 'flex';
   dot.className = 'dot ' + state;
   txt.textContent = msg;
@@ -271,10 +379,12 @@ function charPillClass(n) {
 }
 
 function esc(s) {
-  return String(s || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function formatExclusion(raw) {
+  if (!raw || !raw.trim()) return '';
+  return raw.trim();
 }
 
 async function copyText(id, btnEl) {
@@ -291,13 +401,14 @@ function renderOutput(data) {
   const prompt = data.prompt || '';
   const title = data.title || '';
   const style_tags = data.style_tags || '';
+  const exclusion = data.exclusion || '';
   const len = prompt.length;
 
   document.getElementById('output-area').innerHTML = `
     <div class="output">
       <div class="out-block">
         <div class="out-header">
-          <span class="out-label">Prompt Suno</span>
+          <span class="out-label">Prompt</span>
           <div class="out-actions">
             <span class="${charPillClass(len)}">${len}/200</span>
             <button class="copy-btn" onclick="copyText('out-prompt', this)">copiar</button>
@@ -305,6 +416,14 @@ function renderOutput(data) {
         </div>
         <div class="out-body" id="out-prompt">${esc(prompt)}</div>
       </div>
+      ${style_tags ? `
+      <div class="out-block">
+        <div class="out-header">
+          <span class="out-label">Style tags</span>
+          <button class="copy-btn" onclick="copyText('out-tags', this)">copiar</button>
+        </div>
+        <div class="out-body" id="out-tags">${esc(style_tags)}</div>
+      </div>` : ''}
       ${title ? `
       <div class="out-block">
         <div class="out-header">
@@ -313,13 +432,13 @@ function renderOutput(data) {
         </div>
         <div class="out-body" id="out-title">${esc(title)}</div>
       </div>` : ''}
-      ${style_tags ? `
+      ${exclusion ? `
       <div class="out-block">
         <div class="out-header">
-          <span class="out-label">Style tags (campo Style en Suno)</span>
-          <button class="copy-btn" onclick="copyText('out-tags', this)">copiar</button>
+          <span class="out-label">Exclusión (campo Style Exclusion)</span>
+          <button class="copy-btn" onclick="copyText('out-excl', this)">copiar</button>
         </div>
-        <div class="out-body" id="out-tags">${esc(style_tags)}</div>
+        <div class="out-body exclusion" id="out-excl">${esc(exclusion)}</div>
       </div>` : ''}
       <div class="regen-row">
         <button class="regen-btn" onclick="runGeneration()">↺ Otra versión</button>
@@ -346,6 +465,7 @@ function extractLine(label, text) {
   return m ? m[1].trim() : '';
 }
 
+/* ── COMPRESS ─────────────────────────────────────── */
 function parseStructuredInput(raw) {
   const text = raw.replace(/\r/g, '');
   const lower = text.toLowerCase();
@@ -369,17 +489,9 @@ function parseStructuredInput(raw) {
     tags: []
   };
 
-  [
-    data.style,
-    data.mood,
-    data.bpm ? data.bpm + ' bpm' : '',
-    data.key,
-    data.groove,
-    data.focus,
-    data.coreTexture,
-    data.secondaryTexture,
-    data.tracesOf
-  ].forEach(v => { if (v) data.tags.push(v); });
+  [data.style, data.mood, data.bpm ? data.bpm + ' bpm' : '', data.key, data.groove,
+   data.focus, data.coreTexture, data.secondaryTexture, data.tracesOf]
+    .forEach(v => { if (v) data.tags.push(v); });
 
   if (/lo-fi/.test(lower)) data.tags.push('lo-fi textures');
   if (/trip-hop/.test(lower)) data.tags.push('trip-hop');
@@ -392,6 +504,11 @@ function parseStructuredInput(raw) {
   if (/distorted synth/.test(lower)) data.tags.push('distorted synths');
   if (/glitch|imperfection/.test(lower)) data.tags.push('subtle glitch');
   if (/mournful|longing/.test(lower)) data.tags.push('yearning tone');
+  if (/industrial/.test(lower)) data.tags.push('industrial texture');
+  if (/ambient/.test(lower)) data.tags.push('ambient');
+  if (/jazz/.test(lower)) data.tags.push('jazz-inflected');
+  if (/soul/.test(lower)) data.tags.push('soul');
+  if (/drone/.test(lower)) data.tags.push('drone');
 
   data.tags = unique(data.tags);
   return data;
@@ -400,78 +517,43 @@ function parseStructuredInput(raw) {
 function makeTitle(data, moreExp) {
   if (data.title) {
     if (!moreExp) return data.title;
-    const suffix = pick(['(Alt Cut)', '(Dust Version)', '(Frayed Mix)', '(Night Edit)']);
+    const suffix = pick(['(Alt Cut)', '(Dust Version)', '(Frayed Mix)', '(Night Edit)', '(Static Version)']);
     const out = data.title + ' ' + suffix;
     return out.length <= 44 ? out : data.title;
   }
   const base = data.seed || data.style || 'Untitled';
-  return moreExp ? (base + ' Frayed') : (base + ' Sketch');
+  return moreExp ? base + ' Frayed' : base + ' Sketch';
 }
 
-function makeStyleTags(data, styleExtra, moodExtra, moreExp) {
-  let tags = unique([
-    data.style,
-    moodExtra || data.mood,
-    styleExtra,
-    /broken|stuttering/i.test(data.groove || '') ? 'broken beats' : '',
-    /lo-fi|grainy/i.test(data.coreTexture || '') ? 'lo-fi' : '',
-    /vocal|whisper/i.test(data.secondaryTexture || '') ? 'ethereal vocals' : '',
-    /vinyl|hiss/i.test(data.tracesOf || '') ? 'vinyl' : '',
-    moreExp ? 'experimental' : ''
-  ]);
-
+function makeStyleTags(tags, limit) {
+  const max = limit || 60;
   let out = '';
   for (const tag of tags) {
     const next = out ? out + ', ' + tag : tag;
-    if (next.length <= 60) out = next;
+    if (next.length <= max) out = next;
   }
   return out;
 }
 
 function compressPrompt(data, styleExtra, moodExtra, moreExp) {
   let tags = [];
-
-  if (data.sunoPrompt) {
-    tags.push(...data.sunoPrompt.split(',').map(s => s.trim()));
-  }
-
+  if (data.sunoPrompt) tags.push(...data.sunoPrompt.split(',').map(s => s.trim()));
   tags.push(...data.tags);
-
   if (styleExtra) tags.push(styleExtra);
   if (moodExtra) tags.push(moodExtra);
-
-  const extras = moreExp
-    ? ['fractured rhythm', 'blurred transients', 'ghost reverb']
-    : [];
-
-  tags.push(...extras);
-
+  if (moreExp) tags.push('fractured rhythm', 'blurred transients', 'ghost reverb');
   tags = unique(tags);
 
-  const priority = [
-    data.style,
-    data.mood,
-    data.bpm ? data.bpm + ' bpm' : '',
-    data.key,
-    'broken beats',
-    'haunting piano',
-    'lo-fi textures',
-    'grainy samples',
-    'ethereal vocals',
-    'vinyl crackle',
-    'distorted synths',
-    'yearning tone',
-    'subtle glitch'
-  ];
+  const priority = [data.style, data.mood, data.bpm ? data.bpm + ' bpm' : '', data.key,
+    'broken beats','haunting piano','lo-fi textures','grainy samples','ethereal vocals',
+    'vinyl crackle','distorted synths','yearning tone','subtle glitch'];
 
   const ordered = [];
   priority.forEach(p => {
     const found = tags.find(t => t.toLowerCase() === String(p).toLowerCase());
     if (found && !ordered.includes(found)) ordered.push(found);
   });
-  tags.forEach(t => {
-    if (!ordered.includes(t)) ordered.push(t);
-  });
+  tags.forEach(t => { if (!ordered.includes(t)) ordered.push(t); });
 
   let prompt = '';
   for (const tag of ordered) {
@@ -482,13 +564,22 @@ function compressPrompt(data, styleExtra, moodExtra, moreExp) {
   return {
     prompt: normalizeSpaces(prompt),
     title: makeTitle(data, moreExp),
-    style_tags: makeStyleTags(data, styleExtra, moodExtra, moreExp)
+    style_tags: makeStyleTags(unique([data.style, moodExtra || data.mood, styleExtra, moreExp ? 'experimental' : '']))
   };
 }
 
+/* ── GENERATE FROM SCRATCH ────────────────────────── */
 function generateFromScratch(raw, moreExp) {
   const bits = raw.split(',').map(s => s.trim()).filter(Boolean);
   let tags = unique(bits);
+
+  // add texture descriptors based on keywords
+  const joined = raw.toLowerCase();
+  if (/piano/.test(joined)) tags.push('haunting piano');
+  if (/bass/.test(joined)) tags.push('warm bass');
+  if (/vocal|voz|voice/.test(joined)) tags.push('ethereal vocals');
+  if (/grainy|grain/.test(joined)) tags.push('grainy samples');
+  if (/broken|rota/.test(joined)) tags.push('broken rhythm');
 
   if (moreExp) {
     tags.push('fractured textures', 'ghost reverb', 'blurred low end');
@@ -504,51 +595,110 @@ function generateFromScratch(raw, moreExp) {
     if (next.length <= 200) prompt = next;
   }
 
-  let style_tags = '';
-  for (const tag of tags) {
-    const next = style_tags ? style_tags + ', ' + tag : tag;
-    if (next.length <= 60) style_tags = next;
-  }
-
   const titleBase = bits[0] || 'Untitled';
   return {
     prompt: normalizeSpaces(prompt),
-    title: moreExp ? titleBase + ' Alt' : titleBase,
-    style_tags
+    title: moreExp ? titleBase + ' Alt' : titleBase + ' Draft',
+    style_tags: makeStyleTags(tags.slice(0, 5))
   };
 }
 
-function runGeneration(moreExp) {
-  const btn = document.getElementById('run-btn');
-  let inputText = '';
+/* ── DIRECTOR'S BRIEF ─────────────────────────────── */
+function generateFromBrief(moreExp) {
+  const emotion   = document.getElementById('brief-emotion').value.trim();
+  const scene     = document.getElementById('brief-scene').value.trim();
+  const texture   = document.getElementById('brief-texture').value.trim();
+  const instr     = document.getElementById('brief-instruments').value.trim();
+  const reference = document.getElementById('brief-reference').value.trim();
+  const genre     = document.getElementById('brief-genre').value.trim();
+  const bpm       = document.getElementById('brief-bpm').value.trim();
+  const mood      = document.getElementById('brief-mood').value.trim();
+  const exclude   = document.getElementById('brief-exclude').value.trim();
 
-  if (currentMode === 'compress') {
-    inputText = document.getElementById('input-compress').value.trim();
-    if (!inputText) {
-      setStatus('err', 'Escribe o pega algo primero.');
-      return;
-    }
-  } else {
-    inputText = document.getElementById('input-generate').value.trim();
-    if (!inputText) {
-      setStatus('err', 'Describe el sonido primero.');
-      return;
-    }
+  if (!emotion && !texture && !genre && !scene) {
+    setStatus('err', 'Rellena al menos un campo del brief.');
+    return null;
   }
 
-  const styleExtra = document.getElementById('style-extra') ? document.getElementById('style-extra').value.trim() : '';
-  const moodExtra = document.getElementById('mood-extra') ? document.getElementById('mood-extra').value.trim() : '';
+  // Build ordered tags from structured input
+  let tags = unique([
+    genre,
+    mood || (emotion ? emotion.split(/[,.]/, 1)[0].trim() : ''),
+    bpm ? bpm + ' bpm' : '',
+    texture ? texture.split(/[,.]/, 1)[0].trim() : '',
+    instr ? instr.split(/[,.]/, 1)[0].trim() : '',
+    scene ? scene.split(/[,.]/, 1)[0].trim() : '',
+    reference ? reference.split(/[,.]/, 1)[0].trim() : '',
+  ]);
 
+  // Keyword-driven texture enrichment
+  const allText = [emotion, scene, texture, instr, reference].join(' ').toLowerCase();
+  if (/melanchol|tristeza|sad/.test(allText)) tags.push('melancholic');
+  if (/tension|tenso|unresolved/.test(allText)) tags.push('unresolved tension');
+  if (/vacío|empty|sparse/.test(allText)) tags.push('sparse arrangement');
+  if (/ritual|íntimo|intimate/.test(allText)) tags.push('intimate production');
+  if (/granular|grain/.test(allText)) tags.push('granular texture');
+  if (/noise|ruido/.test(allText)) tags.push('textured noise');
+  if (/reverb|catedral|cathedral/.test(allText)) tags.push('cavernous reverb');
+  if (/glitch|roto|broken/.test(allText)) tags.push('subtle glitch');
+  if (/vinyl|cinta|tape/.test(allText)) tags.push('tape warmth');
+  if (/piano/.test(allText)) tags.push('prepared piano');
+  if (/bass|bajo/.test(allText)) tags.push('warm low end');
+  if (/vocal|voz/.test(allText)) tags.push('ghostly vocals');
+  if (/dark|oscuro/.test(allText)) tags.push('dark atmosphere');
+
+  if (moreExp) tags.push('experimental', 'blurred transients', 'ghost reverb');
+
+  tags = unique(tags);
+
+  let prompt = '';
+  for (const tag of tags) {
+    const next = prompt ? prompt + ', ' + tag : tag;
+    if (next.length <= 200) prompt = next;
+  }
+
+  // Build a title from emotion + genre
+  const titleParts = [genre, emotion ? emotion.split(/[,.]/, 1)[0].trim() : ''].filter(Boolean);
+  const title = titleParts.join(' — ') || 'Brief';
+  const finalTitle = moreExp ? title + ' (Alt)' : title;
+
+  return {
+    prompt: normalizeSpaces(prompt),
+    title: finalTitle.length <= 44 ? finalTitle : (genre || emotion || 'Brief'),
+    style_tags: makeStyleTags(unique([genre, mood, texture ? texture.split(',')[0].trim() : '', moreExp ? 'experimental' : ''])),
+    exclusion: formatExclusion(exclude)
+  };
+}
+
+/* ── MAIN ─────────────────────────────────────────── */
+function runGeneration(moreExp) {
+  const btn = document.getElementById('run-btn');
   btn.disabled = true;
-  setStatus('loading', 'Sintetizando prompt...');
+  setStatus('loading', 'Sintetizando...');
 
   try {
     let result;
+
     if (currentMode === 'compress') {
+      const inputText = document.getElementById('input-compress').value.trim();
+      if (!inputText) { setStatus('err', 'Pega algo primero.'); btn.disabled = false; return; }
+      const styleExtra = document.getElementById('style-extra').value.trim();
+      const moodExtra  = document.getElementById('mood-extra').value.trim();
+      const exclude    = document.getElementById('exclude-compress').value.trim();
       const parsed = parseStructuredInput(inputText);
       result = compressPrompt(parsed, styleExtra, moodExtra, !!moreExp);
-    } else {
+      result.exclusion = formatExclusion(exclude);
+
+    } else if (currentMode === 'generate') {
+      const inputText = document.getElementById('input-generate').value.trim();
+      if (!inputText) { setStatus('err', 'Describe el sonido primero.'); btn.disabled = false; return; }
+      const exclude = document.getElementById('exclude-generate').value.trim();
       result = generateFromScratch(inputText, !!moreExp);
+      result.exclusion = formatExclusion(exclude);
+
+    } else if (currentMode === 'brief') {
+      result = generateFromBrief(!!moreExp);
+      if (!result) { btn.disabled = false; return; }
     }
 
     renderOutput(result);
