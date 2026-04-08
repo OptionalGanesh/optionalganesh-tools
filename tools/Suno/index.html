@@ -723,7 +723,7 @@ async function refreshCatalog() {
   existing.forEach(t => { usageMap[t.link || t.guid || t.title] = { usage_count: t.usage_count || 0, last_used: t.last_used || null }; });
 
   // Primary: rss2json.com (handles CORS, free, no key needed)
-  const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}&count=50`;
+  const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
   let items = null;
   try {
     const res = await fetch(apiUrl);
