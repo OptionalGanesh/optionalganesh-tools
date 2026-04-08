@@ -1,7 +1,8 @@
 // plugin-loader.js — annotates tool cards with machine badges from GitHub Gist
-// Set GIST_RAW_URL to the raw URL of your plugin list gist after creating it
+// Gist: https://gist.github.com/OptionalGanesh/c863932d9b7363daa32634cb64cf2661
+// Update with: bash ~/scripts/push-gist.sh <token> c863932d9b7363daa32634cb64cf2661
 
-const GIST_RAW_URL = 'PLACEHOLDER_GIST_RAW_URL';
+const GIST_RAW_URL = 'https://gist.githubusercontent.com/OptionalGanesh/c863932d9b7363daa32634cb64cf2661/raw/.og-plugins.json';
 
 async function loadPluginBadges() {
   if (GIST_RAW_URL === 'PLACEHOLDER_GIST_RAW_URL') return;
