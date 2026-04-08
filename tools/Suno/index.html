@@ -458,13 +458,19 @@
         <input type="text" id="setting-sc-rss" placeholder="https://feeds.soundcloud.com/users/soundcloud:users:XXXXXXX/sounds.rss" />
       </div>
       <div class="settings-hint" style="margin-top:0.75rem">
-        <strong>Webhook de Telegram (n8n)</strong><br>
-        Crea un webhook en n8n que reciba un POST con <code>{ "text": "..." }</code>
-        y lo envíe a tu chat de Telegram. El mensaje ya viene formateado.
+        <strong>Telegram (n8n webhook)</strong><br>
+        Importa <code>telegram-workflow.json</code> en n8n → actívalo → copia la URL del Webhook node.<br>
+        El workflow espera <code>{ "text": "...", "chat_id": "..." }</code> — el chat_id lo configuras abajo.
       </div>
-      <div class="field">
-        <label>n8n Webhook URL</label>
-        <input type="text" id="setting-webhook" placeholder="https://n8n.optionalganesh.com/webhook/XXXXXXXX" />
+      <div class="row2">
+        <div class="field">
+          <label>n8n Webhook URL</label>
+          <input type="text" id="setting-webhook" placeholder="https://n8n.optionalganesh.com/webhook/suno-prompt" />
+        </div>
+        <div class="field">
+          <label>Telegram Chat ID</label>
+          <input type="text" id="setting-chat-id" placeholder="Tu chat_id numérico" />
+        </div>
       </div>
       <button class="save-btn" onclick="saveSettingsFromUI()">Guardar</button>
     </div>
@@ -630,18 +636,22 @@ function toggleSettings() {
 
 function loadSettingsIntoUI() {
   const s = getSettings();
-  const rssEl = document.getElementById('setting-sc-rss');
-  const whEl  = document.getElementById('setting-webhook');
-  if (rssEl) rssEl.value = s.sc_rss_url || '';
-  if (whEl)  whEl.value  = s.n8n_webhook_url || '';
+  const rssEl  = document.getElementById('setting-sc-rss');
+  const whEl   = document.getElementById('setting-webhook');
+  const cidEl  = document.getElementById('setting-chat-id');
+  if (rssEl)  rssEl.value  = s.sc_rss_url        || '';
+  if (whEl)   whEl.value   = s.n8n_webhook_url    || '';
+  if (cidEl)  cidEl.value  = s.telegram_chat_id   || '';
 }
 
 function saveSettingsFromUI() {
   const s = getSettings();
-  const rssEl = document.getElementById('setting-sc-rss');
-  const whEl  = document.getElementById('setting-webhook');
-  if (rssEl) s.sc_rss_url        = rssEl.value.trim();
-  if (whEl)  s.n8n_webhook_url   = whEl.value.trim();
+  const rssEl  = document.getElementById('setting-sc-rss');
+  const whEl   = document.getElementById('setting-webhook');
+  const cidEl  = document.getElementById('setting-chat-id');
+  if (rssEl)  s.sc_rss_url        = rssEl.value.trim();
+  if (whEl)   s.n8n_webhook_url   = whEl.value.trim();
+  if (cidEl)  s.telegram_chat_id  = cidEl.value.trim();
   saveSettings(s);
   setStatus('ok', 'Configuración guardada');
   setTimeout(() => setStatus(null), 2500);
@@ -1019,10 +1029,11 @@ function formatTelegramMessage(result) {
 async function sendToTelegram(message) {
   const settings = getSettings();
   if (!settings.n8n_webhook_url) throw new Error('Webhook no configurado. Abre ⚙ Configuración.');
+  if (!settings.telegram_chat_id) throw new Error('Chat ID no configurado. Abre ⚙ Configuración.');
   const res = await fetch(settings.n8n_webhook_url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text: message }),
+    body: JSON.stringify({ text: message, chat_id: settings.telegram_chat_id }),
   });
   if (!res.ok) throw new Error(`Webhook error: ${res.status}`);
 }
