@@ -608,8 +608,15 @@ function extractLine(label, text) {
 /* ═══════════════════════════════════════════════════════
    SETTINGS
 ═══════════════════════════════════════════════════════ */
+const DEFAULTS = {
+  sc_rss_url: 'https://feeds.soundcloud.com/users/soundcloud:users:643084422/sounds.rss',
+};
+
 function getSettings() {
-  try { return JSON.parse(localStorage.getItem(SK.settings) || '{}'); } catch { return {}; }
+  try {
+    const stored = JSON.parse(localStorage.getItem(SK.settings) || '{}');
+    return { ...DEFAULTS, ...stored };
+  } catch { return { ...DEFAULTS }; }
 }
 function saveSettings(s) { localStorage.setItem(SK.settings, JSON.stringify(s)); }
 
