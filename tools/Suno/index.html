@@ -18,6 +18,7 @@
     --green: rgba(120,210,140,0.9);
     --warn: rgba(220,170,80,0.9);
     --red: rgba(210,90,80,0.9);
+    --blue: rgba(100,160,230,0.9);
     --mono: "SF Mono", "Fira Code", "Fira Mono", Consolas, monospace;
     --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
@@ -44,12 +45,20 @@
   .page { position: relative; z-index: 1; max-width: 740px; margin: 0 auto; padding: 4.5rem 2rem 5rem; }
 
   header { margin-bottom: 2.5rem; }
-  .logo { font-size: 11px; font-family: var(--mono); letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase; margin-bottom: 1.2rem; }
+  .logo { font-size: 11px; font-family: var(--mono); letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase; margin-bottom: 1.2rem; display: flex; justify-content: space-between; align-items: center; }
   .logo a { color: var(--muted); text-decoration: none; transition: color 180ms ease; }
   .logo a:hover { color: var(--text); }
   h1 { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 700; letter-spacing: -0.03em; line-height: 1.05; color: var(--text); }
   h1 span { color: var(--accent); }
   .subtitle { margin-top: 0.75rem; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+
+  /* Settings gear */
+  .settings-toggle {
+    background: none; border: 1px solid var(--line); border-radius: 3px;
+    color: var(--hint); font-size: 14px; padding: 3px 8px; cursor: pointer;
+    transition: all 0.15s; letter-spacing: 0;
+  }
+  .settings-toggle:hover { color: var(--muted); border-color: var(--line2); }
 
   /* Tabs */
   .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--line); margin-bottom: 2rem; }
@@ -103,6 +112,65 @@
   .brief-section { margin-bottom: 1.75rem; padding: 1.25rem; border: 1px solid var(--line); border-radius: 6px; background: rgba(255,255,255,0.012); }
   .brief-section-title { font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--hint); margin-bottom: 1rem; }
 
+  /* ── CATALOG TAB ────────────────────────────────── */
+  .mode-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1.5rem; }
+  .mode-btn {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 5px 12px; border: 1px solid var(--line); border-radius: 2px;
+    background: none; color: var(--muted); cursor: pointer; transition: all 0.15s;
+  }
+  .mode-btn:hover { color: var(--text); border-color: var(--line2); }
+  .mode-btn.active { color: var(--accent); border-color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.05); }
+
+  .mode-desc { font-family: var(--mono); font-size: 11px; color: var(--hint); margin-bottom: 1.5rem; min-height: 1.2em; transition: all 0.2s; }
+
+  .catalog-bar {
+    display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;
+    padding: 0.65rem 0.9rem; border: 1px solid var(--line); border-radius: 4px;
+    background: var(--surface);
+  }
+  .catalog-status { font-family: var(--mono); font-size: 11px; color: var(--muted); flex: 1; }
+  .catalog-status.empty { color: var(--hint); font-style: italic; }
+
+  .option-check {
+    display: flex; align-items: center; gap: 5px;
+    font-family: var(--mono); font-size: 11px; color: var(--hint);
+    cursor: pointer; white-space: nowrap;
+  }
+  .option-check input { cursor: pointer; accent-color: rgba(255,255,255,0.6); }
+
+  .ghost-btn {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 4px 10px; border: 1px solid var(--line); border-radius: 2px;
+    background: none; color: var(--hint); cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  }
+  .ghost-btn:hover { color: var(--muted); border-color: var(--line2); }
+  .ghost-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* ── SETTINGS PANEL ─────────────────────────────── */
+  .settings-panel {
+    margin-top: 3rem; border: 1px solid var(--line); border-radius: 6px;
+    background: var(--surface); overflow: hidden;
+  }
+  .settings-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.75rem 1rem; background: var(--surface2); border-bottom: 1px solid var(--line);
+  }
+  .settings-title { font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+  .settings-body { padding: 1.25rem; }
+  .settings-hint {
+    font-family: var(--mono); font-size: 11px; color: var(--hint); line-height: 1.6;
+    margin-bottom: 1.25rem; padding: 0.75rem; border: 1px solid var(--line); border-radius: 3px;
+    background: rgba(255,255,255,0.02);
+  }
+  .settings-hint code { color: var(--muted); }
+  .save-btn {
+    font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 0.55rem 1.2rem; border: 1px solid var(--line2); border-radius: 3px;
+    background: rgba(255,255,255,0.06); color: var(--text); cursor: pointer; transition: all 0.15s;
+  }
+  .save-btn:hover { background: rgba(255,255,255,0.1); }
+
   /* Run button */
   .run-btn {
     width: 100%; padding: 0.85rem; font-family: var(--sans); font-size: 15px; font-weight: 600;
@@ -141,6 +209,8 @@
   .copy-btn:hover { color: var(--text); border-color: var(--line2); }
   .out-body { padding: 0.9rem 1rem; font-family: var(--mono); font-size: 13px; line-height: 1.65; color: var(--text); word-break: break-word; }
   .out-body.exclusion { color: rgba(210,90,80,0.8); }
+  .out-body.muted { color: var(--muted); font-size: 12px; line-height: 1.7; }
+  .out-body.pre { white-space: pre-wrap; font-size: 12px; color: var(--muted); }
 
   .regen-row { display: flex; gap: 10px; }
   .regen-btn {
@@ -149,6 +219,9 @@
     border-radius: 4px; cursor: pointer; transition: all 0.2s;
   }
   .regen-btn:hover { color: var(--text); border-color: var(--line2); }
+  .regen-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .send-tg-btn { color: var(--blue); border-color: rgba(100,160,230,0.25); }
+  .send-tg-btn:hover { color: var(--blue); border-color: rgba(100,160,230,0.5); background: rgba(100,160,230,0.05); }
 
   .status-bar {
     display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem;
@@ -161,12 +234,19 @@
   .dot.err { background: var(--red); }
   @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-  footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--line); font-family: var(--mono); font-size: 11px; color: var(--hint); letter-spacing: 0.05em; }
+  footer {
+    margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--line);
+    font-family: var(--mono); font-size: 11px; color: var(--hint); letter-spacing: 0.05em;
+    display: flex; justify-content: space-between; align-items: center;
+  }
 
   @media (max-width: 520px) {
     .page { padding: 2rem 1.2rem 4rem; }
     .row2, .row3 { grid-template-columns: 1fr; }
     h1 { font-size: 2rem; }
+    .mode-row { gap: 4px; }
+    .mode-btn { font-size: 10px; padding: 4px 8px; }
+    footer { flex-direction: column; gap: 0.75rem; align-items: flex-start; }
   }
 </style>
 </head>
@@ -174,7 +254,10 @@
 <a href="/" style="position:fixed;top:18px;left:24px;z-index:50;display:inline-flex;align-items:center;gap:6px;color:rgba(255,255,255,0.32);font-size:11px;letter-spacing:0.2em;text-transform:uppercase;text-decoration:none;transition:color 180ms ease;" onmouseover="this.style.color='rgba(255,255,255,0.65)'" onmouseout="this.style.color='rgba(255,255,255,0.32)'">← Tools</a>
 <div class="page">
   <header>
-    <div class="logo"><a href="/">Optional Ganesh / Tools</a></div>
+    <div class="logo">
+      <a href="/">Optional Ganesh / Tools</a>
+      <button class="settings-toggle" onclick="toggleSettings()" title="Configuración">⚙</button>
+    </div>
     <h1>Suno <span>Prompt</span><br>Tool</h1>
     <p class="subtitle">// Comprime, genera y dirige prompts — Suno · Udio · Stable Audio</p>
   </header>
@@ -182,7 +265,8 @@
   <div class="tabs">
     <button class="tab active" onclick="switchTab('compress')">Comprimir</button>
     <button class="tab" onclick="switchTab('generate')">Generar</button>
-    <button class="tab" onclick="switchTab('brief')">Brief de director</button>
+    <button class="tab" onclick="switchTab('brief')">Brief</button>
+    <button class="tab" onclick="switchTab('catalog')">Catálogo</button>
   </div>
 
   <!-- TAB 1: COMPRESS -->
@@ -327,7 +411,26 @@
     </div>
   </div>
 
-  <button class="run-btn" id="run-btn" onclick="runGeneration()">Generar →</button>
+  <!-- TAB 4: CATALOG -->
+  <div class="panel" id="panel-catalog">
+    <div class="mode-row" id="mode-row">
+      <button class="mode-btn active" data-mode="IDENTITY" onclick="selectMode(this)">Identity</button>
+      <button class="mode-btn" data-mode="HYBRID" onclick="selectMode(this)">Hybrid</button>
+      <button class="mode-btn" data-mode="DEEP_CATALOG" onclick="selectMode(this)">Deep Catalog</button>
+      <button class="mode-btn" data-mode="CHAOS" onclick="selectMode(this)">Chaos</button>
+      <button class="mode-btn" data-mode="MINIMAL" onclick="selectMode(this)">Minimal</button>
+    </div>
+    <div class="mode-desc" id="mode-desc">Tu ADN sonoro. El through-line de todo el catálogo.</div>
+    <div class="catalog-bar">
+      <div class="catalog-status empty" id="catalog-status">Sin catálogo — configura tu RSS y pulsa Actualizar</div>
+      <label class="option-check">
+        <input type="checkbox" id="avoid-recent" checked> evitar recientes
+      </label>
+      <button class="ghost-btn" id="refresh-btn" onclick="doRefreshCatalog()">Actualizar</button>
+    </div>
+  </div>
+
+  <button class="run-btn" id="run-btn" onclick="dispatch()">Generar →</button>
 
   <div class="status-bar" id="status-bar" style="display:none">
     <div class="dot loading" id="status-dot"></div>
@@ -336,24 +439,768 @@
 
   <div id="output-area"></div>
 
-  <footer>optionalganesh.com / tools — offline, sin API · Suno · Udio · Stable Audio</footer>
+  <!-- SETTINGS PANEL -->
+  <div class="settings-panel" id="settings-panel" style="display:none">
+    <div class="settings-header">
+      <span class="settings-title">Configuración</span>
+      <button class="ghost-btn" onclick="toggleSettings()">Cerrar</button>
+    </div>
+    <div class="settings-body">
+      <div class="settings-hint">
+        <strong>SoundCloud RSS URL</strong><br>
+        Encuentra tu URL en SoundCloud → Settings → Content → RSS.<br>
+        Formato: <code>https://feeds.soundcloud.com/users/soundcloud:users:{TU_ID}/sounds.rss</code><br>
+        Para encontrar tu ID numérico: abre <code>soundcloud.com/tu-usuario</code> en el navegador,
+        click derecho → Ver código fuente → busca <code>soundcloud:users:</code>.
+      </div>
+      <div class="field">
+        <label>SoundCloud RSS URL</label>
+        <input type="text" id="setting-sc-rss" placeholder="https://feeds.soundcloud.com/users/soundcloud:users:XXXXXXX/sounds.rss" />
+      </div>
+      <div class="settings-hint" style="margin-top:0.75rem">
+        <strong>Webhook de Telegram (n8n)</strong><br>
+        Crea un webhook en n8n que reciba un POST con <code>{ "text": "..." }</code>
+        y lo envíe a tu chat de Telegram. El mensaje ya viene formateado.
+      </div>
+      <div class="field">
+        <label>n8n Webhook URL</label>
+        <input type="text" id="setting-webhook" placeholder="https://n8n.optionalganesh.com/webhook/XXXXXXXX" />
+      </div>
+      <button class="save-btn" onclick="saveSettingsFromUI()">Guardar</button>
+    </div>
+  </div>
+
+  <footer>
+    <span>optionalganesh.com / tools — offline · Suno · Udio · Stable Audio</span>
+  </footer>
 </div>
 
 <script>
-let currentMode = 'compress';
+/* ═══════════════════════════════════════════════════════
+   CONSTANTS
+═══════════════════════════════════════════════════════ */
+const SK = {
+  catalog:    'og_suno_catalog',
+  catalogTs:  'og_suno_catalog_ts',
+  settings:   'og_suno_settings',
+  recentAttrs:'og_suno_recent_attrs',
+};
 
+const MODE_DESCS = {
+  IDENTITY:    'Tu ADN sonoro. El through-line de todo el catálogo.',
+  HYBRID:      'Dos épocas del catálogo mezcladas con tensión intencional.',
+  DEEP_CATALOG:'Tracks olvidados, subutilizados. Lo que eras antes de saber qué eras.',
+  CHAOS:       'Combinaciones que no deberían funcionar. Inténtalo igual.',
+  MINIMAL:     'Una sola referencia. Una sola frase. Nada más.',
+};
+
+const CHAOS_POOL = [
+  "gamelan reinterpreted as electronic texture",
+  "early R&B structure with no warmth",
+  "a folk song that doesn't know it's a folk song",
+  "industrial patience — slow, heavy, deliberate",
+  "something recorded in a room not meant for music",
+  "deconstructed flamenco without the guitar",
+  "the rhythm of a conversation falling apart",
+  "a hymn stripped of its faith",
+  "jazz harmony with no swing",
+  "a glitch that became the melody",
+  "musique concrète that remembers being pop",
+  "bass-heavy music that refuses to move",
+  "a drone that keeps almost changing",
+  "percussion built from the silence between beats",
+  "something that sounds better at the wrong speed",
+  "field recording mistaken for composition",
+  "a lullaby with no resolution",
+  "ambient music that forgot to be ambient",
+];
+
+const CONSTRAINTS = [
+  "no percussion",
+  "built around a single repeated element",
+  "something that starts before it's ready",
+  "never more than three sounds at once",
+  "silence is part of the arrangement",
+  "sounds like it was made in one sitting",
+  "a loop that shouldn't loop but does",
+  "takes 90 seconds to arrive anywhere",
+  "built from what would normally be the background",
+  "ends mid-thought, no resolution",
+  "one instrument only, heavily processed",
+  "the space between notes is the composition",
+];
+
+const IDENTITY_ANCHORS = {
+  always:  ["space as a compositional element", "something unresolved"],
+  usually: ["minimal arrangement", "texture over rhythm"],
+  never:   ["high-energy", "commercial polish", "upbeat pop", "anthemic"],
+};
+
+const ATTR_SYNONYMS = {
+  melanchol: ["resigned", "quietly heavy", "nostalgic without sentimentality", "still but not peaceful", "the feeling after something ends"],
+  unresolved:["never arriving", "suspended mid-phrase", "tension held without release", "searching without finding"],
+  sparse:    ["deliberately bare", "economical", "what's left out matters", "space between sounds"],
+  raw:       ["unfinished by design", "first-take quality", "rough edges kept", "imprecision as texture"],
+  intimate:  ["close-mic distance", "breath in the sound", "private rather than performed", "made for headphones"],
+  distant:   ["instruments placed far back", "reverb as geography", "something at the edge of hearing"],
+  slow:      ["unhurried", "patience as aesthetic choice", "no urgency", "tempo below expectation"],
+  dark:      ["low in the frequency spectrum", "shadows in the arrangement", "weight without aggression"],
+};
+
+const KEYWORD_MAP = {
+  emotional: [
+    { k: /melanchol|tristeza|sad|wistful|resignad/i,       v: "melancholic" },
+    { k: /tension|unresolved|anxiety|ansied|suspend/i,     v: "unresolved tension" },
+    { k: /peaceful|calm|tranquil|serene|quietud/i,         v: "a kind of stillness" },
+    { k: /nostalgi|longing|añoranza|yearning/i,            v: "nostalgic without sentimentality" },
+    { k: /raw|ragged|vulnerable|exposed/i,                 v: "raw, exposed" },
+    { k: /dark|oscuro|shadow|sombra|heavy/i,               v: "something heavy in the low frequencies" },
+    { k: /dream|sueño|haze|drift|float/i,                  v: "half-awake, between states" },
+    { k: /ritual|sacred|ceremony|ceremonial/i,             v: "ritualistic, slow-burning intention" },
+    { k: /isolation|lonely|alone|solo|solitude/i,          v: "the feeling of being the only one in the room" },
+    { k: /searching|seeking|buscando|searching/i,          v: "searching without a destination" },
+    { k: /restless|inquiet|uneasy/i,                       v: "restless without resolution" },
+    { k: /intimate|íntimo|close|cerca/i,                   v: "intimate, private rather than performed" },
+  ],
+  sonic: [
+    { k: /reverb|echo|espacio|hall|cathedral/i,            v: "wide reverb, instruments placed far back" },
+    { k: /granular|grain|texture|textura/i,                v: "granular texture, crumbling at the edges" },
+    { k: /vinyl|crackle|tape|cinta|cassette/i,             v: "tape warmth, analog imperfection" },
+    { k: /glitch|fractured|broken|roto/i,                  v: "fractured digital texture, intentional errors" },
+    { k: /bass|bajo|low end|sub/i,                         v: "warm low end, bass as foundation" },
+    { k: /piano/i,                                         v: "piano, slightly out of context" },
+    { k: /guitar|guitarra/i,                               v: "guitar, processed beyond recognition" },
+    { k: /drone|sustain|held note|pedal/i,                 v: "drone-based, sustained tones as structure" },
+    { k: /minimal|spare|mínimo|stripped/i,                 v: "minimal palette, each sound chosen deliberately" },
+    { k: /noise|ruido|static|hiss/i,                       v: "noise as texture, not distraction" },
+    { k: /vocal|voice|voz|singing/i,                       v: "voice treated as instrument" },
+    { k: /brass|trompeta|trumpet|horn/i,                   v: "brass at a distance, blurred by reverb" },
+    { k: /string|cuerdas|violin|cello/i,                   v: "strings, processed or detuned" },
+  ],
+  structural: [
+    { k: /loop|ciclo|repeat|ostinato/i,                    v: "loop-based, hypnotic repetition" },
+    { k: /build|crescendo|rise|crescer/i,                  v: "slow build, tension accumulated without release" },
+    { k: /static|estático|unchanging|plateau/i,            v: "static structure, movement within stillness" },
+    { k: /fragmented|fractu|broken|fragment/i,             v: "fragmented, non-linear movement" },
+    { k: /ambient|atmospheric|atmosphere/i,                v: "ambient structure, no traditional arc" },
+    { k: /improvised|improv|spontaneous/i,                 v: "improvised feel, moment-to-moment decisions" },
+    { k: /minimalist|minimal.*structure/i,                 v: "minimal arc, avoids conventional development" },
+  ],
+};
+
+/* ═══════════════════════════════════════════════════════
+   UTILITIES
+═══════════════════════════════════════════════════════ */
+let currentMode = 'compress';
+let currentCatalogMode = 'IDENTITY';
+let lastCatalogResult = null;
+
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function unique(arr) { return [...new Set(arr.filter(Boolean).map(s => String(s).trim()).filter(Boolean))]; }
+function normalizeSpaces(s) { return String(s || '').replace(/\s+/g, ' ').replace(/\s+,/g, ',').trim(); }
+function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function extractLine(label, text) {
+  const re = new RegExp(label + '\\s*:\\s*(.+)', 'i');
+  const m = text.match(re);
+  return m ? m[1].trim() : '';
+}
+
+/* ═══════════════════════════════════════════════════════
+   SETTINGS
+═══════════════════════════════════════════════════════ */
+function getSettings() {
+  try { return JSON.parse(localStorage.getItem(SK.settings) || '{}'); } catch { return {}; }
+}
+function saveSettings(s) { localStorage.setItem(SK.settings, JSON.stringify(s)); }
+
+function toggleSettings() {
+  const p = document.getElementById('settings-panel');
+  if (!p) return;
+  const showing = p.style.display !== 'none';
+  p.style.display = showing ? 'none' : 'block';
+  if (!showing) loadSettingsIntoUI();
+}
+
+function loadSettingsIntoUI() {
+  const s = getSettings();
+  const rssEl = document.getElementById('setting-sc-rss');
+  const whEl  = document.getElementById('setting-webhook');
+  if (rssEl) rssEl.value = s.sc_rss_url || '';
+  if (whEl)  whEl.value  = s.n8n_webhook_url || '';
+}
+
+function saveSettingsFromUI() {
+  const s = getSettings();
+  const rssEl = document.getElementById('setting-sc-rss');
+  const whEl  = document.getElementById('setting-webhook');
+  if (rssEl) s.sc_rss_url        = rssEl.value.trim();
+  if (whEl)  s.n8n_webhook_url   = whEl.value.trim();
+  saveSettings(s);
+  setStatus('ok', 'Configuración guardada');
+  setTimeout(() => setStatus(null), 2500);
+  document.getElementById('settings-panel').style.display = 'none';
+}
+
+/* ═══════════════════════════════════════════════════════
+   CATALOG PERSISTENCE
+═══════════════════════════════════════════════════════ */
+function getCatalog() {
+  try { return JSON.parse(localStorage.getItem(SK.catalog) || '[]'); } catch { return []; }
+}
+function saveCatalog(catalog) {
+  localStorage.setItem(SK.catalog, JSON.stringify(catalog));
+  localStorage.setItem(SK.catalogTs, Date.now().toString());
+}
+function getCatalogAge() {
+  const ts = localStorage.getItem(SK.catalogTs);
+  return ts ? Date.now() - parseInt(ts) : null;
+}
+
+/* ═══════════════════════════════════════════════════════
+   ATTRIBUTE EXTRACTION
+═══════════════════════════════════════════════════════ */
+function findAttr(text, map) {
+  for (const {k, v} of map) { if (k.test(text)) return v; }
+  return null;
+}
+
+function extractAttributes(raw) {
+  const text = [raw.title || '', raw.description || ''].join(' ');
+  const emotional  = findAttr(text, KEYWORD_MAP.emotional)  || pick(IDENTITY_ANCHORS.always);
+  const sonic      = findAttr(text, KEYWORD_MAP.sonic)      || "textured, distance as aesthetic choice";
+  const structural = findAttr(text, KEYWORD_MAP.structural) || "avoids resolution, sits in tension";
+
+  const ageMs  = raw.pubDate ? Date.now() - new Date(raw.pubDate).getTime() : 0;
+  const ageDays = Math.max(0, Math.floor(ageMs / 86400000));
+  const recencyPenalty = Math.min(1, ageDays / 365);
+
+  const rawKeywords = /demo|sketch|raw|rough|session|live|improv/i.test(text);
+  const rawness = rawKeywords ? 0.8 : (ageDays > 365 ? 0.65 : 0.35);
+
+  return {
+    ...raw,
+    emotional_quality: emotional,
+    sonic_texture:     sonic,
+    structural_arc:    structural,
+    rawness_score:     rawness,
+    recency_penalty:   recencyPenalty,
+    age_days:          ageDays,
+    usage_count:       raw.usage_count || 0,
+    last_used:         raw.last_used   || null,
+  };
+}
+
+/* ═══════════════════════════════════════════════════════
+   CATALOG LOADING (SoundCloud RSS via rss2json)
+═══════════════════════════════════════════════════════ */
+async function refreshCatalog() {
+  const settings = getSettings();
+  const rssUrl = settings.sc_rss_url;
+  if (!rssUrl) throw new Error('RSS URL no configurada. Abre ⚙ Configuración.');
+
+  // Preserve existing usage data
+  const existing = getCatalog();
+  const usageMap = {};
+  existing.forEach(t => { usageMap[t.link || t.guid || t.title] = { usage_count: t.usage_count || 0, last_used: t.last_used || null }; });
+
+  // Primary: rss2json.com (handles CORS, free, no key needed)
+  const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}&count=50`;
+  let items = null;
+  try {
+    const res = await fetch(apiUrl);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.status === 'ok' && data.items) {
+        items = data.items.map(item => ({
+          title:       item.title       || 'Untitled',
+          link:        item.link        || '',
+          guid:        item.guid        || item.link || '',
+          pubDate:     item.pubDate     || '',
+          description: (item.description || '').replace(/<[^>]+>/g, '').slice(0, 300),
+        }));
+      }
+    }
+  } catch (_) {}
+
+  // Fallback: allorigins proxy
+  if (!items) {
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}`;
+    const res = await fetch(proxyUrl);
+    if (!res.ok) throw new Error(`No se pudo cargar el RSS (${res.status})`);
+    const data = await res.json();
+    items = parseRSSXML(data.contents);
+  }
+
+  if (!items || items.length === 0) throw new Error('RSS vacío o sin tracks');
+
+  const catalog = items.map(item => {
+    const key = item.link || item.guid || item.title;
+    const prev = usageMap[key] || {};
+    return extractAttributes({ ...item, usage_count: prev.usage_count || 0, last_used: prev.last_used || null });
+  });
+
+  saveCatalog(catalog);
+  return catalog;
+}
+
+function parseRSSXML(xml) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(xml, 'text/xml');
+  return Array.from(doc.querySelectorAll('item')).map(item => ({
+    title:       item.querySelector('title')?.textContent?.trim() || 'Untitled',
+    link:        item.querySelector('link')?.textContent?.trim() || '',
+    guid:        item.querySelector('guid')?.textContent?.trim() || '',
+    pubDate:     item.querySelector('pubDate')?.textContent?.trim() || '',
+    description: (item.querySelector('description')?.textContent || '').replace(/<[^>]+>/g, '').slice(0, 300),
+  }));
+}
+
+/* ═══════════════════════════════════════════════════════
+   ANTI-REPETITION
+═══════════════════════════════════════════════════════ */
+function getRecentAttrs() {
+  try { return JSON.parse(localStorage.getItem(SK.recentAttrs) || '[]'); } catch { return []; }
+}
+function addRecentAttrs(attrs) {
+  const recent = getRecentAttrs();
+  const updated = unique([...recent, ...attrs]).slice(-25);
+  localStorage.setItem(SK.recentAttrs, JSON.stringify(updated));
+}
+function isRecentlyUsed(attr) {
+  return getRecentAttrs().includes(attr);
+}
+function rotateAttr(attr) {
+  for (const [key, variants] of Object.entries(ATTR_SYNONYMS)) {
+    if (attr.toLowerCase().includes(key)) return pick(variants);
+  }
+  return attr;
+}
+function resolveAttr(attr) {
+  return isRecentlyUsed(attr) ? rotateAttr(attr) : attr;
+}
+
+function markTrackUsed(track, catalog) {
+  const idx = catalog.findIndex(t => (t.link || t.guid || t.title) === (track.link || track.guid || track.title));
+  if (idx >= 0) {
+    catalog[idx].usage_count = (catalog[idx].usage_count || 0) + 1;
+    catalog[idx].last_used = Date.now();
+    saveCatalog(catalog);
+  }
+}
+
+function applyEntryPoint(track) {
+  const entry = pick(['emotional', 'sonic', 'structural']);
+  const e = track.emotional_quality, s = track.sonic_texture, st = track.structural_arc;
+  if (entry === 'emotional')   return [e, s, st];
+  if (entry === 'sonic')       return [s, e, st];
+  return [st, e, s];
+}
+
+/* ═══════════════════════════════════════════════════════
+   PROMPT ASSEMBLY
+═══════════════════════════════════════════════════════ */
+function buildPrompt(parts) {
+  // Occasional constraint injection (1 in 4)
+  const addConstraint = Math.random() < 0.25;
+  const allParts = [...parts.filter(Boolean)];
+  if (addConstraint) allParts.push(pick(CONSTRAINTS));
+
+  // Ensure at least one identity anchor
+  const hasAnchor = allParts.some(p =>
+    IDENTITY_ANCHORS.always.some(a => p.toLowerCase().includes(a.split(' ')[0]))
+  );
+  if (!hasAnchor) allParts.push(pick(IDENTITY_ANCHORS.always));
+
+  // Strip anything matching the "never" list
+  const clean = allParts.filter(p =>
+    !IDENTITY_ANCHORS.never.some(n => p.toLowerCase().includes(n.toLowerCase()))
+  );
+
+  // Pack within 200 chars
+  let prompt = '';
+  for (const part of clean) {
+    const next = prompt ? prompt + ', ' + part : part;
+    if (next.length <= 200) prompt = next;
+  }
+  return normalizeSpaces(prompt);
+}
+
+/* ═══════════════════════════════════════════════════════
+   GENERATION MODES
+═══════════════════════════════════════════════════════ */
+function modeIdentity(catalog) {
+  if (!catalog.length) throw new Error('Catálogo vacío.');
+
+  // Frequency map across all attributes
+  const freq = {};
+  catalog.forEach(t => {
+    [t.emotional_quality, t.sonic_texture, t.structural_arc].forEach(a => {
+      if (a) freq[a] = (freq[a] || 0) + 1;
+    });
+  });
+  const byFreq = Object.entries(freq).sort((a,b) => b[1]-a[1]).map(([a]) => a);
+
+  // Take top recurring, rotate if stale
+  const topEmo  = byFreq.filter(a => catalog.some(t => t.emotional_quality === a)).slice(0, 3).map(resolveAttr);
+  const topSonic = byFreq.filter(a => catalog.some(t => t.sonic_texture    === a)).slice(0, 2).map(resolveAttr);
+
+  const sunoPrompt = buildPrompt([
+    topEmo[0] || 'something unresolved',
+    topEmo[1] || null,
+    topSonic[0] || null,
+    pick(IDENTITY_ANCHORS.usually),
+  ]);
+
+  const refs = catalog.slice(0, 3);
+  addRecentAttrs([topEmo[0], topSonic[0]].filter(Boolean));
+
+  return {
+    mode: 'IDENTITY',
+    brief: `This is what the catalog says you sound like consistently.\n${topEmo[0] || 'Unresolved tension'} — the through-line across most of the work.`,
+    from: 'catalog synthesis',
+    from_note: `${catalog.length} tracks analyzed. Most recurring: ${topEmo[0] || '—'}.`,
+    sunoPrompt,
+    refs,
+    creativeNote: pick([
+      "This is what the catalog says you sound like. Trust it.",
+      "Generate twice. Keep the one that sounds most like you.",
+      "The through-line is clearer than you think.",
+    ]),
+  };
+}
+
+function modeHybrid(catalog) {
+  if (catalog.length < 2) throw new Error('Se necesitan al menos 2 tracks para Hybrid.');
+
+  const sorted = [...catalog].sort((a,b) => a.age_days - b.age_days);
+  const third  = Math.ceil(catalog.length / 3);
+  const recent = sorted.slice(0, third);
+  const old    = sorted.slice(-third);
+  const mid    = sorted.slice(third, -third);
+
+  const dominant  = pick(recent.length ? recent : catalog);
+  const secondary = pick(old.length ? old : catalog.filter(t => t !== dominant));
+  const tertiary  = mid.length > 0 ? pick(mid) : null;
+
+  const domTrait = resolveAttr(dominant.emotional_quality  || 'something unresolved');
+  const secTrait = resolveAttr(secondary.sonic_texture     || 'textured, distant');
+  const terTrait = tertiary ? resolveAttr(tertiary.structural_arc || null) : null;
+
+  const sunoPrompt = buildPrompt([domTrait, secTrait, terTrait, IDENTITY_ANCHORS.always[0]]);
+  const refs = [dominant, secondary, tertiary].filter(Boolean);
+  addRecentAttrs([domTrait, secTrait].filter(Boolean));
+
+  return {
+    mode: 'HYBRID',
+    brief: `${domTrait} — but given the physical weight of a different era.\nThe structure breaks unexpectedly.`,
+    from: refs.map(r => r.title).slice(0,2).join(' + '),
+    from_note: `Dominant: ${dominant.title}. Texture from: ${secondary.title}.`,
+    sunoPrompt,
+    refs,
+    creativeNote: "Something between two things. Let the tension stay.",
+  };
+}
+
+function modeDeepCatalog(catalog) {
+  if (!catalog.length) throw new Error('Catálogo vacío.');
+
+  // Old or unused tracks first
+  const pool = [...catalog]
+    .sort((a, b) => b.age_days - a.age_days || a.usage_count - b.usage_count);
+  const track = pool[0];
+
+  const [first, second, third] = applyEntryPoint(track);
+  const sunoPrompt = buildPrompt([
+    resolveAttr(first  || 'something unresolved'),
+    resolveAttr(second || 'textured, distant'),
+    "rawer than recent work",
+    "quality of searching rather than arriving",
+    IDENTITY_ANCHORS.always[1],
+  ]);
+
+  const year = track.pubDate ? new Date(track.pubDate).getFullYear() : 'earlier';
+  addRecentAttrs([first, second].filter(Boolean));
+
+  return {
+    mode: 'DEEP CATALOG',
+    brief: `Something you were making before you knew what you were making.\nRawer. Less certain. Closer to the attempt.`,
+    from: `${track.title} (${year})`,
+    from_note: `Quieter than most recent work. ${track.age_days} days in the catalog, used ${track.usage_count} times.`,
+    sunoPrompt,
+    refs: [track],
+    creativeNote: "Try generating twice and keeping the one that sounds more like a mistake.",
+  };
+}
+
+function modeChaos(catalog) {
+  if (catalog.length < 2) throw new Error('Se necesitan al menos 2 tracks para Chaos.');
+
+  // Least common attributes
+  const allEmo = catalog.map(t => t.emotional_quality).filter(Boolean);
+  const freqEmo = {};
+  allEmo.forEach(a => { freqEmo[a] = (freqEmo[a] || 0) + 1; });
+  const leastCommon = Object.entries(freqEmo).sort((a,b) => a[1]-b[1]).map(([a]) => a);
+
+  const attr1 = resolveAttr(leastCommon[0] || pick(allEmo) || 'something searching');
+  const attr2 = resolveAttr(pick(catalog.map(t => t.sonic_texture).filter(Boolean)) || 'textured');
+  const external = pick(CHAOS_POOL);
+
+  const sunoPrompt = buildPrompt([
+    attr1,
+    `treated with the logic of: ${external}`,
+    attr2,
+    "the result should feel unstable but purposefully so",
+  ]);
+  addRecentAttrs([attr1, attr2].filter(Boolean));
+
+  return {
+    mode: 'CHAOS',
+    brief: `${attr1}, interrupted by something that doesn't belong.\nThis probably won't work. Try it anyway.`,
+    from: 'catalog contradiction',
+    from_note: `External interrupt: "${external}"`,
+    sunoPrompt,
+    refs: [],
+    creativeNote: "If it sounds wrong, that's the point.",
+  };
+}
+
+function modeMinimal(catalog) {
+  if (!catalog.length) throw new Error('Catálogo vacío.');
+
+  const track = pick(catalog);
+  const quality = track.emotional_quality || "something incomplete";
+  const sonic   = track.sonic_texture     || "quiet and distant";
+
+  const sunoPrompt = normalizeSpaces([resolveAttr(quality), resolveAttr(sonic)].join(', '));
+  addRecentAttrs([quality, sonic].filter(Boolean));
+
+  return {
+    mode: 'MINIMAL',
+    brief: quality + '.',
+    from: track.title,
+    from_note: null,
+    sunoPrompt,
+    refs: [track],
+    creativeNote: null,
+  };
+}
+
+/* ═══════════════════════════════════════════════════════
+   TELEGRAM FORMAT
+═══════════════════════════════════════════════════════ */
+function formatTelegramMessage(result) {
+  const EMOJI = { IDENTITY: '🔮', HYBRID: '⚡', 'DEEP CATALOG': '🌑', CHAOS: '🌀', MINIMAL: '·' };
+  const SEP = '───';
+  const emoji = EMOJI[result.mode] || '🎛';
+  const lines = [
+    `${emoji} ${result.mode}`,
+    '',
+    result.brief,
+    '',
+    SEP,
+    '',
+    `From: ${result.from}`,
+  ];
+  if (result.from_note) lines.push(result.from_note);
+  lines.push('', SEP, '', result.sunoPrompt);
+  if (result.creativeNote) {
+    lines.push('', SEP, '', `💡 ${result.creativeNote}`);
+  }
+  return lines.join('\n');
+}
+
+async function sendToTelegram(message) {
+  const settings = getSettings();
+  if (!settings.n8n_webhook_url) throw new Error('Webhook no configurado. Abre ⚙ Configuración.');
+  const res = await fetch(settings.n8n_webhook_url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: message }),
+  });
+  if (!res.ok) throw new Error(`Webhook error: ${res.status}`);
+}
+
+/* ═══════════════════════════════════════════════════════
+   CATALOG UI
+═══════════════════════════════════════════════════════ */
+function selectMode(btn) {
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentCatalogMode = btn.dataset.mode;
+  const desc = document.getElementById('mode-desc');
+  if (desc) desc.textContent = MODE_DESCS[currentCatalogMode] || '';
+}
+
+function updateCatalogStatus() {
+  const catalog = getCatalog();
+  const age     = getCatalogAge();
+  const el      = document.getElementById('catalog-status');
+  if (!el) return;
+
+  if (!catalog.length) {
+    el.textContent = 'Sin catálogo — configura tu RSS y pulsa Actualizar';
+    el.className = 'catalog-status empty';
+    return;
+  }
+
+  let ageStr = '';
+  if (age !== null) {
+    const mins  = Math.floor(age / 60000);
+    const hours = Math.floor(mins / 60);
+    const days  = Math.floor(hours / 24);
+    ageStr = days > 0 ? `hace ${days}d` : hours > 0 ? `hace ${hours}h` : `hace ${mins}m`;
+  }
+  el.textContent = `${catalog.length} tracks · actualizado ${ageStr}`;
+  el.className = 'catalog-status';
+}
+
+async function doRefreshCatalog() {
+  const btn = document.getElementById('refresh-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Cargando…'; }
+  setStatus('loading', 'Conectando con SoundCloud…');
+  try {
+    const catalog = await refreshCatalog();
+    updateCatalogStatus();
+    setStatus('ok', `${catalog.length} tracks cargados`);
+    setTimeout(() => setStatus(null), 3000);
+  } catch (e) {
+    setStatus('err', e.message);
+  }
+  if (btn) { btn.disabled = false; btn.textContent = 'Actualizar'; }
+}
+
+async function runCatalogGeneration() {
+  const avoidRecent = document.getElementById('avoid-recent')?.checked ?? true;
+  let catalog = getCatalog();
+
+  if (!catalog.length) {
+    setStatus('err', 'Catálogo vacío — pulsa Actualizar primero.');
+    return;
+  }
+
+  // Filter out recently-used tracks when requested
+  if (avoidRecent) {
+    const recent = getRecentAttrs().slice(-10);
+    const filtered = catalog.filter(t =>
+      !recent.includes(t.emotional_quality) && !recent.includes(t.sonic_texture)
+    );
+    if (filtered.length >= 2) catalog = filtered;
+  }
+
+  const btn = document.getElementById('run-btn');
+  btn.disabled = true;
+  setStatus('loading', 'Generando…');
+
+  try {
+    let result;
+    switch (currentCatalogMode) {
+      case 'IDENTITY':    result = modeIdentity(catalog);    break;
+      case 'HYBRID':      result = modeHybrid(catalog);      break;
+      case 'DEEP_CATALOG':result = modeDeepCatalog(catalog); break;
+      case 'CHAOS':       result = modeChaos(catalog);       break;
+      case 'MINIMAL':     result = modeMinimal(catalog);     break;
+      default:            result = modeIdentity(catalog);
+    }
+
+    // Mark used tracks
+    const fullCatalog = getCatalog();
+    result.refs.forEach(r => markTrackUsed(r, fullCatalog));
+
+    lastCatalogResult = result;
+    renderCatalogOutput(result);
+    setStatus('ok', `${result.sunoPrompt.length} chars · ${result.mode}`);
+    setTimeout(() => setStatus(null), 3000);
+  } catch (e) {
+    setStatus('err', e.message);
+  }
+  btn.disabled = false;
+}
+
+function renderCatalogOutput(result) {
+  const message    = formatTelegramMessage(result);
+  const settings   = getSettings();
+  const hasWebhook = !!settings.n8n_webhook_url;
+  const len        = result.sunoPrompt.length;
+  const pillClass  = len > 200 ? 'char-pill over' : len > 180 ? 'char-pill close' : 'char-pill';
+
+  document.getElementById('output-area').innerHTML = `
+    <div class="output">
+      <div class="out-block">
+        <div class="out-header">
+          <span class="out-label">${esc(result.mode)} — Prompt</span>
+          <div class="out-actions">
+            <span class="${pillClass}">${len}/200</span>
+            <button class="copy-btn" onclick="copyText('out-suno', this)">copiar</button>
+          </div>
+        </div>
+        <div class="out-body" id="out-suno">${esc(result.sunoPrompt)}</div>
+      </div>
+
+      <div class="out-block">
+        <div class="out-header"><span class="out-label">Brief</span></div>
+        <div class="out-body muted" style="white-space:pre-line">${esc(result.brief)}</div>
+      </div>
+
+      <div class="out-block">
+        <div class="out-header"><span class="out-label">Referencia</span></div>
+        <div class="out-body" style="font-size:12px;line-height:1.7">
+          <span style="color:var(--text)">${esc(result.from)}</span>
+          ${result.from_note ? `<br><span style="color:var(--muted)">${esc(result.from_note)}</span>` : ''}
+          ${result.creativeNote ? `<br><br><span style="color:var(--hint)">💡 ${esc(result.creativeNote)}</span>` : ''}
+        </div>
+      </div>
+
+      <div class="out-block">
+        <div class="out-header">
+          <span class="out-label">Telegram</span>
+          <button class="copy-btn" onclick="copyText('out-tg', this)">copiar</button>
+        </div>
+        <div class="out-body pre" id="out-tg">${esc(message)}</div>
+      </div>
+
+      <div class="regen-row">
+        <button class="regen-btn" onclick="runCatalogGeneration()">↺ Nueva versión</button>
+        ${hasWebhook
+          ? `<button class="regen-btn send-tg-btn" id="tg-send-btn" onclick="doSendTelegram()">→ Enviar a Telegram</button>`
+          : `<button class="regen-btn" onclick="toggleSettings()" style="opacity:0.5">⚙ Config webhook</button>`}
+      </div>
+    </div>`;
+}
+
+async function doSendTelegram() {
+  if (!lastCatalogResult) return;
+  const btn = document.getElementById('tg-send-btn');
+  const orig = btn?.textContent;
+  if (btn) { btn.textContent = 'Enviando…'; btn.disabled = true; }
+  try {
+    await sendToTelegram(formatTelegramMessage(lastCatalogResult));
+    if (btn) btn.textContent = '✓ Enviado';
+    setTimeout(() => { if (btn) { btn.textContent = orig; btn.disabled = false; } }, 3000);
+  } catch (e) {
+    setStatus('err', e.message);
+    if (btn) { btn.textContent = '✗ Error'; setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 3000); }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   SHARED UI HELPERS
+═══════════════════════════════════════════════════════ */
 function switchTab(mode) {
   currentMode = mode;
   document.querySelectorAll('.tab').forEach((t, i) => {
     t.classList.toggle('active',
       (i === 0 && mode === 'compress') ||
       (i === 1 && mode === 'generate') ||
-      (i === 2 && mode === 'brief')
+      (i === 2 && mode === 'brief')    ||
+      (i === 3 && mode === 'catalog')
     );
   });
-  ['compress','generate','brief'].forEach(m => {
+  ['compress','generate','brief','catalog'].forEach(m => {
     document.getElementById('panel-' + m).classList.toggle('active', m === mode);
   });
+  // Clear output when switching tabs
+  document.getElementById('output-area').innerHTML = '';
+  setStatus(null);
 }
 
 function appendTag(t) {
@@ -378,15 +1225,6 @@ function charPillClass(n) {
   return 'char-pill';
 }
 
-function esc(s) {
-  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-function formatExclusion(raw) {
-  if (!raw || !raw.trim()) return '';
-  return raw.trim();
-}
-
 async function copyText(id, btnEl) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -397,11 +1235,22 @@ async function copyText(id, btnEl) {
   setTimeout(() => btnEl.textContent = orig, 1500);
 }
 
+/* ═══════════════════════════════════════════════════════
+   DISPATCH — routes run button to correct handler
+═══════════════════════════════════════════════════════ */
+function dispatch(moreExp) {
+  if (currentMode === 'catalog') { runCatalogGeneration(); return; }
+  runGeneration(moreExp);
+}
+
+/* ═══════════════════════════════════════════════════════
+   ORIGINAL HANDLERS (preserved exactly)
+═══════════════════════════════════════════════════════ */
 function renderOutput(data) {
-  const prompt = data.prompt || '';
-  const title = data.title || '';
+  const prompt     = data.prompt     || '';
+  const title      = data.title      || '';
   const style_tags = data.style_tags || '';
-  const exclusion = data.exclusion || '';
+  const exclusion  = data.exclusion  || '';
   const len = prompt.length;
 
   document.getElementById('output-area').innerHTML = `
@@ -441,77 +1290,19 @@ function renderOutput(data) {
         <div class="out-body exclusion" id="out-excl">${esc(exclusion)}</div>
       </div>` : ''}
       <div class="regen-row">
-        <button class="regen-btn" onclick="runGeneration()">↺ Otra versión</button>
-        <button class="regen-btn" onclick="runGeneration(true)">↺ Más experimental</button>
+        <button class="regen-btn" onclick="dispatch()">↺ Otra versión</button>
+        <button class="regen-btn" onclick="dispatch(true)">↺ Más experimental</button>
       </div>
     </div>`;
 }
 
-function unique(arr) {
+function unique_local(arr) {
   return [...new Set(arr.filter(Boolean).map(x => String(x).trim()).filter(Boolean))];
 }
 
-function pick(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-
-function normalizeSpaces(s) {
-  return String(s || '').replace(/\s+/g, ' ').replace(/\s+,/g, ',').trim();
-}
-
-function extractLine(label, text) {
-  const re = new RegExp(label + '\\s*:\\s*(.+)', 'i');
-  const m = text.match(re);
-  return m ? m[1].trim() : '';
-}
-
-/* ── COMPRESS ─────────────────────────────────────── */
-function parseStructuredInput(raw) {
-  const text = raw.replace(/\r/g, '');
-  const lower = text.toLowerCase();
-
-  const data = {
-    title: extractLine('Title', text),
-    seed: extractLine('Seed', text),
-    concept: extractLine('Concept', text),
-    style: extractLine('Style', text),
-    mood: extractLine('Mood', text),
-    bpm: extractLine('BPM', text),
-    key: extractLine('Key', text),
-    groove: extractLine('Groove', text),
-    focus: extractLine('Focus', text),
-    voiceDirection: extractLine('Voice Direction', text),
-    sunoPrompt: extractLine('Suno Prompt', text),
-    directive: extractLine('Directive', text),
-    coreTexture: extractLine('Core texture', text),
-    secondaryTexture: extractLine('Secondary texture', text),
-    tracesOf: extractLine('Traces of', text),
-    tags: []
-  };
-
-  [data.style, data.mood, data.bpm ? data.bpm + ' bpm' : '', data.key, data.groove,
-   data.focus, data.coreTexture, data.secondaryTexture, data.tracesOf]
-    .forEach(v => { if (v) data.tags.push(v); });
-
-  if (/lo-fi/.test(lower)) data.tags.push('lo-fi textures');
-  if (/trip-hop/.test(lower)) data.tags.push('trip-hop');
-  if (/melancholic/.test(lower)) data.tags.push('melancholic');
-  if (/piano/.test(lower)) data.tags.push('haunting piano');
-  if (/broken|stuttering/.test(lower)) data.tags.push('broken beats');
-  if (/ethereal|whisper/.test(lower)) data.tags.push('ethereal vocals');
-  if (/vinyl|hiss/.test(lower)) data.tags.push('vinyl crackle');
-  if (/grainy/.test(lower)) data.tags.push('grainy samples');
-  if (/distorted synth/.test(lower)) data.tags.push('distorted synths');
-  if (/glitch|imperfection/.test(lower)) data.tags.push('subtle glitch');
-  if (/mournful|longing/.test(lower)) data.tags.push('yearning tone');
-  if (/industrial/.test(lower)) data.tags.push('industrial texture');
-  if (/ambient/.test(lower)) data.tags.push('ambient');
-  if (/jazz/.test(lower)) data.tags.push('jazz-inflected');
-  if (/soul/.test(lower)) data.tags.push('soul');
-  if (/drone/.test(lower)) data.tags.push('drone');
-
-  data.tags = unique(data.tags);
-  return data;
+function formatExclusion(raw) {
+  if (!raw || !raw.trim()) return '';
+  return raw.trim();
 }
 
 function makeTitle(data, moreExp) {
@@ -535,14 +1326,51 @@ function makeStyleTags(tags, limit) {
   return out;
 }
 
+function parseStructuredInput(raw) {
+  const text  = raw.replace(/\r/g, '');
+  const lower = text.toLowerCase();
+  const data = {
+    title: extractLine('Title', text), seed: extractLine('Seed', text),
+    concept: extractLine('Concept', text), style: extractLine('Style', text),
+    mood: extractLine('Mood', text), bpm: extractLine('BPM', text),
+    key: extractLine('Key', text), groove: extractLine('Groove', text),
+    focus: extractLine('Focus', text), voiceDirection: extractLine('Voice Direction', text),
+    sunoPrompt: extractLine('Suno Prompt', text), directive: extractLine('Directive', text),
+    coreTexture: extractLine('Core texture', text),
+    secondaryTexture: extractLine('Secondary texture', text),
+    tracesOf: extractLine('Traces of', text), tags: []
+  };
+  [data.style, data.mood, data.bpm ? data.bpm + ' bpm' : '', data.key, data.groove,
+   data.focus, data.coreTexture, data.secondaryTexture, data.tracesOf]
+    .forEach(v => { if (v) data.tags.push(v); });
+  if (/lo-fi/.test(lower)) data.tags.push('lo-fi textures');
+  if (/trip-hop/.test(lower)) data.tags.push('trip-hop');
+  if (/melancholic/.test(lower)) data.tags.push('melancholic');
+  if (/piano/.test(lower)) data.tags.push('haunting piano');
+  if (/broken|stuttering/.test(lower)) data.tags.push('broken beats');
+  if (/ethereal|whisper/.test(lower)) data.tags.push('ethereal vocals');
+  if (/vinyl|hiss/.test(lower)) data.tags.push('vinyl crackle');
+  if (/grainy/.test(lower)) data.tags.push('grainy samples');
+  if (/distorted synth/.test(lower)) data.tags.push('distorted synths');
+  if (/glitch|imperfection/.test(lower)) data.tags.push('subtle glitch');
+  if (/mournful|longing/.test(lower)) data.tags.push('yearning tone');
+  if (/industrial/.test(lower)) data.tags.push('industrial texture');
+  if (/ambient/.test(lower)) data.tags.push('ambient');
+  if (/jazz/.test(lower)) data.tags.push('jazz-inflected');
+  if (/soul/.test(lower)) data.tags.push('soul');
+  if (/drone/.test(lower)) data.tags.push('drone');
+  data.tags = unique_local(data.tags);
+  return data;
+}
+
 function compressPrompt(data, styleExtra, moodExtra, moreExp) {
   let tags = [];
   if (data.sunoPrompt) tags.push(...data.sunoPrompt.split(',').map(s => s.trim()));
   tags.push(...data.tags);
   if (styleExtra) tags.push(styleExtra);
-  if (moodExtra) tags.push(moodExtra);
-  if (moreExp) tags.push('fractured rhythm', 'blurred transients', 'ghost reverb');
-  tags = unique(tags);
+  if (moodExtra)  tags.push(moodExtra);
+  if (moreExp)    tags.push('fractured rhythm', 'blurred transients', 'ghost reverb');
+  tags = unique_local(tags);
 
   const priority = [data.style, data.mood, data.bpm ? data.bpm + ' bpm' : '', data.key,
     'broken beats','haunting piano','lo-fi textures','grainy samples','ethereal vocals',
@@ -560,41 +1388,30 @@ function compressPrompt(data, styleExtra, moodExtra, moreExp) {
     const next = prompt ? prompt + ', ' + tag : tag;
     if (next.length <= 200) prompt = next;
   }
-
   return {
     prompt: normalizeSpaces(prompt),
     title: makeTitle(data, moreExp),
-    style_tags: makeStyleTags(unique([data.style, moodExtra || data.mood, styleExtra, moreExp ? 'experimental' : '']))
+    style_tags: makeStyleTags(unique_local([data.style, moodExtra || data.mood, styleExtra, moreExp ? 'experimental' : '']))
   };
 }
 
-/* ── GENERATE FROM SCRATCH ────────────────────────── */
 function generateFromScratch(raw, moreExp) {
   const bits = raw.split(',').map(s => s.trim()).filter(Boolean);
-  let tags = unique(bits);
-
-  // add texture descriptors based on keywords
+  let tags = unique_local(bits);
   const joined = raw.toLowerCase();
-  if (/piano/.test(joined)) tags.push('haunting piano');
-  if (/bass/.test(joined)) tags.push('warm bass');
+  if (/piano/.test(joined))           tags.push('haunting piano');
+  if (/bass/.test(joined))            tags.push('warm bass');
   if (/vocal|voz|voice/.test(joined)) tags.push('ethereal vocals');
-  if (/grainy|grain/.test(joined)) tags.push('grainy samples');
-  if (/broken|rota/.test(joined)) tags.push('broken rhythm');
-
-  if (moreExp) {
-    tags.push('fractured textures', 'ghost reverb', 'blurred low end');
-  } else {
-    tags.push('textured production', 'moody atmosphere');
-  }
-
-  tags = unique(tags);
-
+  if (/grainy|grain/.test(joined))    tags.push('grainy samples');
+  if (/broken|rota/.test(joined))     tags.push('broken rhythm');
+  if (moreExp) tags.push('fractured textures', 'ghost reverb', 'blurred low end');
+  else         tags.push('textured production', 'moody atmosphere');
+  tags = unique_local(tags);
   let prompt = '';
   for (const tag of tags) {
     const next = prompt ? prompt + ', ' + tag : tag;
     if (next.length <= 200) prompt = next;
   }
-
   const titleBase = bits[0] || 'Untitled';
   return {
     prompt: normalizeSpaces(prompt),
@@ -603,7 +1420,6 @@ function generateFromScratch(raw, moreExp) {
   };
 }
 
-/* ── DIRECTOR'S BRIEF ─────────────────────────────── */
 function generateFromBrief(moreExp) {
   const emotion   = document.getElementById('brief-emotion').value.trim();
   const scene     = document.getElementById('brief-scene').value.trim();
@@ -620,36 +1436,33 @@ function generateFromBrief(moreExp) {
     return null;
   }
 
-  // Build ordered tags from structured input
-  let tags = unique([
+  let tags = unique_local([
     genre,
     mood || (emotion ? emotion.split(/[,.]/, 1)[0].trim() : ''),
     bpm ? bpm + ' bpm' : '',
-    texture ? texture.split(/[,.]/, 1)[0].trim() : '',
-    instr ? instr.split(/[,.]/, 1)[0].trim() : '',
-    scene ? scene.split(/[,.]/, 1)[0].trim() : '',
+    texture   ? texture.split(/[,.]/, 1)[0].trim()   : '',
+    instr     ? instr.split(/[,.]/, 1)[0].trim()     : '',
+    scene     ? scene.split(/[,.]/, 1)[0].trim()     : '',
     reference ? reference.split(/[,.]/, 1)[0].trim() : '',
   ]);
 
-  // Keyword-driven texture enrichment
   const allText = [emotion, scene, texture, instr, reference].join(' ').toLowerCase();
-  if (/melanchol|tristeza|sad/.test(allText)) tags.push('melancholic');
-  if (/tension|tenso|unresolved/.test(allText)) tags.push('unresolved tension');
-  if (/vacío|empty|sparse/.test(allText)) tags.push('sparse arrangement');
-  if (/ritual|íntimo|intimate/.test(allText)) tags.push('intimate production');
-  if (/granular|grain/.test(allText)) tags.push('granular texture');
-  if (/noise|ruido/.test(allText)) tags.push('textured noise');
+  if (/melanchol|tristeza|sad/.test(allText))    tags.push('melancholic');
+  if (/tension|tenso|unresolved/.test(allText))  tags.push('unresolved tension');
+  if (/vacío|empty|sparse/.test(allText))        tags.push('sparse arrangement');
+  if (/ritual|íntimo|intimate/.test(allText))    tags.push('intimate production');
+  if (/granular|grain/.test(allText))            tags.push('granular texture');
+  if (/noise|ruido/.test(allText))               tags.push('textured noise');
   if (/reverb|catedral|cathedral/.test(allText)) tags.push('cavernous reverb');
-  if (/glitch|roto|broken/.test(allText)) tags.push('subtle glitch');
-  if (/vinyl|cinta|tape/.test(allText)) tags.push('tape warmth');
-  if (/piano/.test(allText)) tags.push('prepared piano');
-  if (/bass|bajo/.test(allText)) tags.push('warm low end');
-  if (/vocal|voz/.test(allText)) tags.push('ghostly vocals');
-  if (/dark|oscuro/.test(allText)) tags.push('dark atmosphere');
+  if (/glitch|roto|broken/.test(allText))        tags.push('subtle glitch');
+  if (/vinyl|cinta|tape/.test(allText))          tags.push('tape warmth');
+  if (/piano/.test(allText))                     tags.push('prepared piano');
+  if (/bass|bajo/.test(allText))                 tags.push('warm low end');
+  if (/vocal|voz/.test(allText))                 tags.push('ghostly vocals');
+  if (/dark|oscuro/.test(allText))               tags.push('dark atmosphere');
 
   if (moreExp) tags.push('experimental', 'blurred transients', 'ghost reverb');
-
-  tags = unique(tags);
+  tags = unique_local(tags);
 
   let prompt = '';
   for (const tag of tags) {
@@ -657,7 +1470,6 @@ function generateFromBrief(moreExp) {
     if (next.length <= 200) prompt = next;
   }
 
-  // Build a title from emotion + genre
   const titleParts = [genre, emotion ? emotion.split(/[,.]/, 1)[0].trim() : ''].filter(Boolean);
   const title = titleParts.join(' — ') || 'Brief';
   const finalTitle = moreExp ? title + ' (Alt)' : title;
@@ -665,22 +1477,20 @@ function generateFromBrief(moreExp) {
   return {
     prompt: normalizeSpaces(prompt),
     title: finalTitle.length <= 44 ? finalTitle : (genre || emotion || 'Brief'),
-    style_tags: makeStyleTags(unique([genre, mood, texture ? texture.split(',')[0].trim() : '', moreExp ? 'experimental' : ''])),
+    style_tags: makeStyleTags(unique_local([genre, mood, texture ? texture.split(',')[0].trim() : '', moreExp ? 'experimental' : ''])),
     exclusion: formatExclusion(exclude)
   };
 }
 
-/* ── MAIN ─────────────────────────────────────────── */
 function runGeneration(moreExp) {
   const btn = document.getElementById('run-btn');
   btn.disabled = true;
-  setStatus('loading', 'Sintetizando...');
+  setStatus('loading', 'Sintetizando…');
 
   try {
     let result;
-
     if (currentMode === 'compress') {
-      const inputText = document.getElementById('input-compress').value.trim();
+      const inputText  = document.getElementById('input-compress').value.trim();
       if (!inputText) { setStatus('err', 'Pega algo primero.'); btn.disabled = false; return; }
       const styleExtra = document.getElementById('style-extra').value.trim();
       const moodExtra  = document.getElementById('mood-extra').value.trim();
@@ -688,19 +1498,16 @@ function runGeneration(moreExp) {
       const parsed = parseStructuredInput(inputText);
       result = compressPrompt(parsed, styleExtra, moodExtra, !!moreExp);
       result.exclusion = formatExclusion(exclude);
-
     } else if (currentMode === 'generate') {
       const inputText = document.getElementById('input-generate').value.trim();
       if (!inputText) { setStatus('err', 'Describe el sonido primero.'); btn.disabled = false; return; }
       const exclude = document.getElementById('exclude-generate').value.trim();
       result = generateFromScratch(inputText, !!moreExp);
       result.exclusion = formatExclusion(exclude);
-
     } else if (currentMode === 'brief') {
       result = generateFromBrief(!!moreExp);
       if (!result) { btn.disabled = false; return; }
     }
-
     renderOutput(result);
     setStatus('ok', 'Listo — ' + result.prompt.length + ' chars');
     setTimeout(() => setStatus(null), 3000);
@@ -708,9 +1515,23 @@ function runGeneration(moreExp) {
     console.error(e);
     setStatus('err', 'Error: ' + e.message);
   }
-
   btn.disabled = false;
 }
+
+/* ═══════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════ */
+window.addEventListener('load', () => {
+  updateCatalogStatus();
+
+  // Auto-refresh catalog if stale (>24h) or empty
+  const catalog  = getCatalog();
+  const age      = getCatalogAge();
+  const settings = getSettings();
+  if (settings.sc_rss_url && (catalog.length === 0 || (age !== null && age > 86400000))) {
+    doRefreshCatalog();
+  }
+});
 </script>
 </body>
 </html>
