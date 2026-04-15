@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Audio AI Prompter — Optional Ganesh</title>
+  <title>Video AI Prompter — Optional Ganesh</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -61,6 +61,23 @@
       line-height: 1.65;
     }
 
+    .constraints {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    .constraint-tag {
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #555;
+      border: 1px solid #222;
+      padding: 5px 10px;
+      font-family: monospace;
+    }
+
     /* ── Section label ── */
     .label {
       font-size: 10px;
@@ -94,7 +111,7 @@
     /* ── Rows ── */
     .row { margin-bottom: 24px; }
 
-    /* ── Pills ── */
+    /* ── Pills (intensity) ── */
     .pills {
       display: flex;
       gap: 8px;
@@ -216,23 +233,33 @@
     <a class="back" href="../">← Tools</a>
 
     <div class="header">
-      <div class="header-tag">Prompt Tool · Audio</div>
-      <h1>Audio AI Prompter</h1>
-      <p class="header-desc">Describe una emoción, problema o vibe — genera prompts con identidad OG para Suno o ACE Studio. Sin API. Template inteligente anclado en el estilo.</p>
+      <div class="header-tag">Prompt Tool · Video</div>
+      <h1>Video AI Prompter</h1>
+      <p class="header-desc">Describe un mood, vibe de track o referencia visual — genera prompts de video loopable para Runway, Kling, Hailuo, Pika, Sora o Wan. Estética OG, sin excepciones.</p>
+      <div class="constraints">
+        <span class="constraint-tag">9:16</span>
+        <span class="constraint-tag">5–10s</span>
+        <span class="constraint-tag">Loopable</span>
+        <span class="constraint-tag">TikTok / Spotify Canvas</span>
+      </div>
     </div>
 
     <!-- Input -->
     <div class="field">
-      <div class="label">Emoción / Vibe / Problema</div>
-      <textarea id="inputText" placeholder="ej: soledad de madrugada, tensión contenida, energía que no explota, nostalgia sin nombre..."></textarea>
+      <div class="label">Mood / Vibe / Referencia Visual</div>
+      <textarea id="inputText" placeholder="ej: tensión antes de que algo ocurra, calma que duele, movimiento sin destino, noche de ciudad vacía..."></textarea>
     </div>
 
     <!-- Platform -->
     <div class="row">
       <div class="label">Plataforma</div>
       <div class="pills" id="platformPills">
-        <button class="platform-pill active" data-val="Suno">Suno</button>
-        <button class="platform-pill" data-val="ACE Studio">ACE Studio</button>
+        <button class="platform-pill active" data-val="Runway">Runway</button>
+        <button class="platform-pill" data-val="Kling">Kling</button>
+        <button class="platform-pill" data-val="Hailuo">Hailuo</button>
+        <button class="platform-pill" data-val="Pika">Pika</button>
+        <button class="platform-pill" data-val="Sora">Sora</button>
+        <button class="platform-pill" data-val="Wan">Wan</button>
       </div>
     </div>
 
@@ -284,33 +311,104 @@
       avoid: ["polished", "commercial", "clean pop", "generic", "over-produced", "perfect timing"]
     };
 
-    const PAST_PROMPTS = [
-      "lo-fi soul, tape hiss, broken beat, Rhodes piano, room mics, 87 BPM, melancholy",
-      "cinematic drone, field recordings, half-time feel, analog noise, slow build",
-      "1970s funk, dry horns, Fender bass deep and clean, snare crack, vintage room",
-      "ambient electronic, sparse synth pads, no melody, wide reverb, contemplative",
-      "raw R&B, close-miked vocal, minimal production, Rhodes warm, intentional imperfection"
-    ];
+    // ─────────────────────────────────────────────────────────────────
+    // FIXED OUTPUT CONSTRAINTS
+    // ─────────────────────────────────────────────────────────────────
+    const FIXED = {
+      format:   "9:16 vertical",
+      duration: "5-10 seconds",
+      loop:     "seamless loop",
+      use:      "TikTok / Spotify Canvas"
+    };
 
     // ─────────────────────────────────────────────────────────────────
-    // EMOTION → SONIC MAP
+    // VISUAL AESTHETIC LIBRARY (anchored in OG style)
     // ─────────────────────────────────────────────────────────────────
-    const EMOTION_MAP = {
-      sad:        { genre: "soul",              elements: ["Rhodes", "close mic vocal", "minor key", "sparse"],            bpm: [62, 82] },
-      lonely:     { genre: "lo-fi soul",        elements: ["tape hiss", "room mics", "sparse", "wide space"],             bpm: [68, 84] },
-      dark:       { genre: "dark ambient",      elements: ["drone", "sub bass", "grain", "low end texture"],              bpm: [66, 88] },
-      melancholy: { genre: "cinematic soul",    elements: ["Rhodes warm", "tape hiss", "broken beat", "room mics"],       bpm: [74, 88] },
-      energy:     { genre: "neo funk",          elements: ["snare crack", "Fender bass", "tight groove", "analog synth"], bpm: [94, 114] },
-      fire:       { genre: "neo soul",          elements: ["live drums", "analog drive", "tight arrangement"],            bpm: [88, 108] },
-      calm:       { genre: "ambient",           elements: ["sparse pads", "wide reverb", "no melody", "breath"],          bpm: [52, 72] },
-      peace:      { genre: "minimal ambient",   elements: ["silence", "air", "sparse synth", "no rhythm"],               bpm: [48, 68] },
-      tension:    { genre: "glitch soul",       elements: ["glitch", "irregular pulse", "grain", "analog noise"],        bpm: [78, 96] },
-      broken:     { genre: "experimental R&B",  elements: ["intentionally broken", "fragmented rhythm", "distortion"],   bpm: [72, 94] },
-      nostalgia:  { genre: "vintage soul",      elements: ["tape hiss", "vinyl crackle", "warm analog", "1970s room"],   bpm: [76, 92] },
-      raw:        { genre: "raw R&B",           elements: ["close-miked vocal", "minimal production", "room noise"],     bpm: [80, 96] },
-      void:       { genre: "drone ambient",     elements: ["sustained tone", "silence", "depth", "no movement"],         bpm: [50, 70] },
-      rage:       { genre: "industrial soul",   elements: ["distorted bass", "hard groove", "noise floor"],              bpm: [92, 112] },
-      hope:       { genre: "soul",              elements: ["Rhodes", "warm bass", "soft drums", "light texture"],         bpm: [80, 96] }
+    const VISUAL = {
+      palette: [
+        "near-monochrome black and white",
+        "deep blacks with single cold light source",
+        "desaturated with crushed blacks",
+        "high contrast black and grey",
+        "muted tones, underexposed",
+        "near-black palette, single accent light"
+      ],
+      motion: [
+        "extreme slow motion",
+        "micro slow motion",
+        "near-still with subtle drift",
+        "imperceptible movement",
+        "slow push forward",
+        "gentle camera float",
+        "slow vertical drift",
+        "static frame with internal movement"
+      ],
+      texture: [
+        "film grain heavy",
+        "16mm grain",
+        "analog noise",
+        "light leak left edge",
+        "subtle scan lines",
+        "compression artifacts intentional",
+        "slight chromatic aberration",
+        "lens breathing"
+      ],
+      environment: [
+        "empty urban street at night",
+        "single streetlight in fog",
+        "concrete wall with shadow",
+        "hallway with no end",
+        "window rain interior dark",
+        "rooftop city below out of focus",
+        "underground parking structure",
+        "empty room single window",
+        "overpass structure night",
+        "dark studio space"
+      ],
+      subject: [
+        "silhouette against light source",
+        "hands in motion close-up",
+        "face partially in shadow",
+        "body fragment out of context",
+        "abstract urban texture",
+        "no subject, environment only",
+        "slow breath visible",
+        "figure walking away"
+      ],
+      loopTechnique: [
+        "action loops seamlessly on itself",
+        "subtle ambient loop, no clear start or end",
+        "motion completes and resets imperceptibly",
+        "camera drift reverses at midpoint",
+        "breathing loop — expand and contract",
+        "fade to black at end matches opening frame"
+      ]
+    };
+
+    // Platform-specific syntax hints
+    const PLATFORM_HINTS = {
+      Runway:  { prefix: "",        suffix: ", --motion 3, --seed auto" },
+      Kling:   { prefix: "",        suffix: ", camera: static, motion strength: medium" },
+      Hailuo:  { prefix: "",        suffix: ", motion: slow, loop: true" },
+      Pika:    { prefix: "",        suffix: ", -motion 1, -ar 9:16" },
+      Sora:    { prefix: "",        suffix: ", duration: 5s, aspect_ratio: 9:16" },
+      Wan:     { prefix: "",        suffix: ", format: vertical, loop: enabled" }
+    };
+
+    // ─────────────────────────────────────────────────────────────────
+    // MOOD MAP
+    // ─────────────────────────────────────────────────────────────────
+    const MOOD_MAP = {
+      tension:    { environments: ["hallway with no end", "concrete wall with shadow", "underground parking structure"], subjects: ["silhouette against light source", "hands in motion close-up"], motions: ["near-still with subtle drift", "imperceptible movement"] },
+      calm:       { environments: ["empty room single window", "window rain interior dark"], subjects: ["no subject, environment only", "slow breath visible"], motions: ["static frame with internal movement", "gentle camera float"] },
+      dark:       { environments: ["empty urban street at night", "overpass structure night", "underground parking structure"], subjects: ["silhouette against light source", "figure walking away"], motions: ["extreme slow motion", "slow push forward"] },
+      melancholy: { environments: ["single streetlight in fog", "window rain interior dark", "empty room single window"], subjects: ["face partially in shadow", "figure walking away", "body fragment out of context"], motions: ["micro slow motion", "near-still with subtle drift"] },
+      lonely:     { environments: ["empty urban street at night", "rooftop city below out of focus", "empty room single window"], subjects: ["figure walking away", "silhouette against light source"], motions: ["slow push forward", "slow vertical drift"] },
+      energy:     { environments: ["rooftop city below out of focus", "overpass structure night"], subjects: ["silhouette against light source", "body fragment out of context"], motions: ["slow push forward", "slow vertical drift"] },
+      broken:     { environments: ["concrete wall with shadow", "underground parking structure"], subjects: ["abstract urban texture", "body fragment out of context"], motions: ["extreme slow motion", "near-still with subtle drift"] },
+      nostalgia:  { environments: ["empty room single window", "single streetlight in fog"], subjects: ["hands in motion close-up", "face partially in shadow"], motions: ["micro slow motion", "gentle camera float"] },
+      void:       { environments: ["dark studio space", "hallway with no end"], subjects: ["no subject, environment only", "abstract urban texture"], motions: ["static frame with internal movement", "imperceptible movement"] },
+      raw:        { environments: ["concrete wall with shadow", "dark studio space"], subjects: ["face partially in shadow", "hands in motion close-up"], motions: ["extreme slow motion", "micro slow motion"] }
     };
 
     // ─────────────────────────────────────────────────────────────────
@@ -327,20 +425,16 @@
     function detectMood(input) {
       const lower = input.toLowerCase();
       const KEYWORDS = {
-        sad:        ["sad", "tristeza", "triste", "down", "crying", "dolor", "pain", "hurt"],
-        lonely:     ["lonely", "soledad", "solo", "alone", "isolated", "disconnected"],
-        dark:       ["dark", "oscuro", "oscura", "shadow", "negro", "empty", "noche"],
-        melancholy: ["melancholy", "melancolía", "wistful", "longing", "añoranza", "bitter"],
-        energy:     ["energy", "energía", "alive", "powerful", "momentum", "drive", "mueve"],
-        fire:       ["fire", "fuego", "hot", "burning", "passion", "urgency"],
-        calm:       ["calm", "calma", "peace", "paz", "still", "quiet", "serene", "tranquilo"],
-        tension:    ["tension", "tensión", "anxiety", "ansioso", "nervous", "contenida", "unstable"],
-        broken:     ["broken", "roto", "rota", "fractured", "glitch", "error", "fragmentado"],
-        nostalgia:  ["nostalgia", "memory", "recuerdo", "past", "vintage", "old", "retro"],
-        raw:        ["raw", "crudo", "honest", "naked", "exposed", "unfiltered"],
-        void:       ["void", "vacío", "nothingness", "nada", "abismo", "abyss"],
-        rage:       ["rage", "rabia", "fury", "furia", "anger", "enojo"],
-        hope:       ["hope", "esperanza", "light", "luz", "forward", "lifting"]
+        tension:    ["tension", "tensión", "anxiety", "ansioso", "contenida", "before", "antes", "unstable", "nervous"],
+        calm:       ["calm", "calma", "peace", "paz", "still", "quiet", "serene", "tranquilo", "duele"],
+        dark:       ["dark", "oscuro", "oscura", "shadow", "negro", "black", "night", "noche", "empty"],
+        melancholy: ["melancholy", "melancolía", "wistful", "longing", "bitter", "sad", "tristeza"],
+        lonely:     ["lonely", "soledad", "solo", "alone", "isolated", "vacío", "disconnected"],
+        energy:     ["energy", "energía", "alive", "powerful", "momentum", "move", "mueve"],
+        broken:     ["broken", "roto", "rota", "glitch", "fractured", "shattered", "fragmentado"],
+        nostalgia:  ["nostalgia", "memory", "recuerdo", "past", "vintage", "retro", "old"],
+        void:       ["void", "vacío", "nothingness", "nada", "abismo", "abyss", "nothing"],
+        raw:        ["raw", "crudo", "real", "honest", "naked", "exposed", "unfiltered"]
       };
 
       const matches = [];
@@ -350,88 +444,117 @@
       return matches.length > 0 ? matches : ["melancholy"];
     }
 
-    function bpmForIntensity(range, intensity) {
-      const [min, max] = range;
-      const spread = intensity === "subtle" ? 0.25 : intensity === "balanced" ? 0.5 : 0.8;
-      const base = Math.round(min + (max - min) * spread);
-      const jitter = Math.round((Math.random() - 0.5) * 6);
-      return Math.min(max, Math.max(min, base + jitter));
-    }
-
     // ─────────────────────────────────────────────────────────────────
     // PROMPT GENERATORS
     // ─────────────────────────────────────────────────────────────────
     function buildMainPrompt(input, intensity, platform) {
       const moods = detectMood(input);
-      const data = EMOTION_MAP[moods[0]] || EMOTION_MAP.melancholy;
-      const parts = [data.genre];
+      const moodKey = moods[0];
+      const moodData = MOOD_MAP[moodKey] || MOOD_MAP.melancholy;
 
-      const nElements = intensity === "subtle" ? 2 : intensity === "balanced" ? 3 : 4;
-      parts.push(...pickN(data.elements, nElements));
+      const parts = [];
 
-      const instrument = pickRandom(OG_IDENTITY.instruments);
-      if (!parts.includes(instrument)) parts.push(instrument);
+      // Subject
+      const subject = pickRandom(moodData.subjects);
+      parts.push(subject);
 
-      if (intensity !== "subtle") {
-        const aesthetic = pickRandom(OG_IDENTITY.aesthetic);
-        if (!parts.includes(aesthetic)) parts.push(aesthetic);
-      }
+      // Environment
+      const env = pickRandom(moodData.environments);
+      parts.push(env);
 
-      parts.push(`${bpmForIntensity(data.bpm, intensity)} BPM`);
+      // Motion
+      const motion = pickRandom(moodData.motions);
+      parts.push(motion);
 
+      // Palette
+      const palette = pickRandom(VISUAL.palette);
+      parts.push(palette);
+
+      // Texture based on intensity
       if (intensity === "subtle") {
-        parts.push("minimal layers", "breathing room", "restraint");
-      } else if (intensity === "aggressive") {
-        parts.push("dense texture", "full character", "maximum presence");
-      }
-
-      if (platform === "ACE Studio") {
-        parts.push("expressive vocal", "micro-timing variation", "breath control");
+        parts.push("minimal grain", "clean shadow");
+      } else if (intensity === "balanced") {
+        parts.push(pickRandom(VISUAL.texture));
       } else {
-        parts.push("no " + pickRandom(OG_IDENTITY.avoid));
+        parts.push(...pickN(VISUAL.texture, 2));
       }
 
-      return [...new Set(parts)].join(", ");
+      // OG aesthetic
+      const aesthetic = pickRandom(OG_IDENTITY.aesthetic);
+      parts.push(`${aesthetic} aesthetic`);
+
+      // Loop technique
+      const loop = pickRandom(VISUAL.loopTechnique);
+      parts.push(loop);
+
+      // Fixed constraints
+      parts.push(FIXED.format);
+      parts.push(FIXED.duration);
+
+      // Intensity tail
+      if (intensity === "aggressive") {
+        parts.push("maximum visual weight", "intentionally imperfect");
+      }
+
+      // Platform suffix
+      const hint = PLATFORM_HINTS[platform] || { prefix: "", suffix: "" };
+      const base = [...new Set(parts)].join(", ");
+      return hint.prefix + base + hint.suffix;
     }
 
     function buildVariation(input, intensity, platform) {
       const moods = detectMood(input);
-      const data = EMOTION_MAP[moods[0]] || EMOTION_MAP.melancholy;
+      const moodKey = moods[0];
+      const moodData = MOOD_MAP[moodKey] || MOOD_MAP.melancholy;
 
-      const pastParts = pickRandom(PAST_PROMPTS).split(", ");
-      const parts = [data.genre];
+      const parts = [];
 
-      // Borrow 1–2 elements from a past prompt for tonal anchoring
-      const nFromPast = intensity === "aggressive" ? 2 : 1;
-      parts.push(...pastParts.slice(1, 1 + nFromPast));
+      // Swap subject and environment from alternate picks
+      const subjects = [...moodData.subjects].sort(() => Math.random() - 0.5);
+      const envs = [...moodData.environments].sort(() => Math.random() - 0.5);
+      parts.push(subjects[subjects.length > 1 ? 1 : 0]);
+      parts.push(envs[envs.length > 1 ? 1 : 0]);
 
-      if (intensity !== "subtle") {
-        parts.push(pickRandom(OG_IDENTITY.sonic_refs) + " influence");
-      }
+      // Different motion
+      const motion = pickRandom(VISUAL.motion);
+      parts.push(motion);
 
-      parts.push(pickRandom(OG_IDENTITY.moods));
-      parts.push(`${bpmForIntensity(data.bpm, intensity)} BPM`);
+      // Different palette
+      const palette = pickRandom(VISUAL.palette.filter(p => !parts.includes(p)));
+      parts.push(palette);
 
+      // Texture
+      parts.push(pickRandom(VISUAL.texture));
+
+      // Different OG aesthetic framing
+      const aesthetic = pickRandom(OG_IDENTITY.aesthetic);
+      const moodRef = pickRandom(OG_IDENTITY.moods);
+      parts.push(`${aesthetic}, ${moodRef} mood`);
+
+      // Loop variation
+      parts.push(pickRandom(VISUAL.loopTechnique));
+
+      // Fixed constraints
+      parts.push(FIXED.format);
+      parts.push(FIXED.duration);
+
+      // Intensity
       if (intensity === "subtle") {
-        parts.push("sparse", "restraint", "space over texture");
+        parts.push("minimal elements", "stillness preferred");
       } else if (intensity === "aggressive") {
-        parts.push("saturated", "intentionally broken", "maximum character");
-      } else {
-        parts.push("controlled imperfection");
+        parts.push("raw texture heavy", "broken light");
       }
 
-      if (platform === "ACE Studio") {
-        parts.push("raw vocal take", "human timing");
-      }
-
-      return [...new Set(parts)].join(", ");
+      const hint = PLATFORM_HINTS[platform] || { prefix: "", suffix: "" };
+      const base = [...new Set(parts)].join(", ");
+      return hint.prefix + base + hint.suffix;
     }
 
     // ─────────────────────────────────────────────────────────────────
     // UI
     // ─────────────────────────────────────────────────────────────────
     let intensity = "balanced";
-    let platform  = "Suno";
+    let platform  = "Runway";
 
     document.querySelectorAll("#intensityPills .pill").forEach(btn => {
       btn.addEventListener("click", () => {
@@ -462,8 +585,8 @@
       const main      = buildMainPrompt(input, intensity, platform);
       const variation = buildVariation(input, intensity, platform);
 
-      const mainEl = document.getElementById("mainOutput");
-      const varEl  = document.getElementById("varOutput");
+      const mainEl      = document.getElementById("mainOutput");
+      const varEl       = document.getElementById("varOutput");
       const copyMainBtn = document.getElementById("copyMain");
       const copyVarBtn  = document.getElementById("copyVar");
 
@@ -472,8 +595,8 @@
       mainEl.classList.remove("empty-state");
       varEl.classList.remove("empty-state");
 
-      copyMainBtn.style.display = "inline-block";
-      copyVarBtn.style.display  = "inline-block";
+      copyMainBtn.style.display  = "inline-block";
+      copyVarBtn.style.display   = "inline-block";
       copyMainBtn.dataset.prompt = main;
       copyVarBtn.dataset.prompt  = variation;
     });

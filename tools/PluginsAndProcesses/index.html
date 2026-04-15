@@ -2,1356 +2,816 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Optional Ganesh — Plugins + Processes</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+<title>Decision Engine — Optional Ganesh</title>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
-    --bg: #050505; --bg2: #0c0c0c; --bg3: #111111;
-    --line: rgba(255,255,255,0.08); --line2: rgba(255,255,255,0.14);
-    --text: rgba(255,255,255,0.92); --text2: rgba(255,255,255,0.45); --text3: rgba(255,255,255,0.22);
-    --mono: "Space Mono","SF Mono","Fira Mono",monospace;
-    --sans: "Syne",-apple-system,BlinkMacSystemFont,sans-serif;
-    --accent: #f59e0b; --accent-dim: rgba(245,158,11,0.12);
-    --r: 8px; --rl: 12px;
+    --bg: #050505;
+    --surface: #0c0c0c;
+    --surface2: #111111;
+    --line: rgba(255,255,255,0.08);
+    --line2: rgba(255,255,255,0.14);
+    --text: rgba(255,255,255,0.92);
+    --muted: rgba(255,255,255,0.45);
+    --hint: rgba(255,255,255,0.18);
+    --accent: rgba(255,255,255,0.85);
+    --green: rgba(120,210,140,0.9);
+    --warn: rgba(220,170,80,0.9);
+    --red: rgba(210,90,80,0.9);
+    --blue: rgba(100,160,230,0.9);
+    --amber: rgba(245,158,11,0.9);
+    --mono: "SF Mono", "Fira Code", "Fira Mono", Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
-  body {
-    font-family: var(--sans);
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
     background:
       radial-gradient(circle at 20% 20%, rgba(255,255,255,0.035), transparent 30%),
       radial-gradient(circle at 80% 30%, rgba(255,255,255,0.025), transparent 28%),
       linear-gradient(180deg, #070707 0%, #020202 100%);
     color: var(--text);
-    padding: 2rem 1.5rem 4rem;
-    max-width: 860px;
-    margin: 0 auto;
-    font-size: 14px;
-    line-height: 1.6;
-    min-height: 100vh;
+    font-family: var(--sans);
+    letter-spacing: 0.01em;
   }
-  body::after {
+
+  html { font-size: 16px; }
+  body { min-height: 100vh; padding: 0; min-width: 375px; }
+
+  body::before {
     content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    background-size: 200px 200px;
-    opacity: 0.025;
-    pointer-events: none;
-    z-index: 9999;
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    opacity: 0.4;
   }
 
-  .masthead { margin-bottom: 1.5rem; }
-  .masthead-label { font-size: 10px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text3); margin-bottom: 4px; }
-  .masthead-title { font-size: 18px; font-weight: 500; color: var(--text); }
+  .page {
+    position: relative; z-index: 1;
+    max-width: 740px; margin: 0 auto;
+    padding: 4.5rem 2rem 5rem;
+  }
 
-  /* Main panel switcher */
-  .main-tabs { display: flex; gap: 0; margin-bottom: 1.5rem; border: 1px solid var(--line2); border-radius: 10px; overflow: hidden; width: fit-content; }
-  .main-tab { font-size: 12px; font-weight: 600; padding: 7px 20px; background: transparent; color: var(--text2); cursor: pointer; transition: all 0.15s; font-family: var(--sans); border: none; letter-spacing: 0.05em; text-transform: uppercase; }
-  .main-tab:not(:last-child) { border-right: 1px solid var(--line2); }
-  .main-tab:hover { background: rgba(255,255,255,0.05); color: var(--text); }
-  .main-tab.active { background: var(--accent-dim); color: var(--accent); }
+  /* Header */
+  header { margin-bottom: 2.5rem; }
 
-  .main-panel { display: none; }
-  .main-panel.active { display: block; }
+  .logo {
+    font-size: 11px; font-family: var(--mono); letter-spacing: 0.2em;
+    color: var(--muted); text-transform: uppercase; margin-bottom: 1.2rem;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .logo a { color: var(--muted); text-decoration: none; transition: color 180ms ease; }
+  .logo a:hover { color: var(--text); }
 
-  /* Sub tabs */
-  .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1.75rem; }
-  .tab { font-size: 12px; font-weight: 500; padding: 5px 13px; border-radius: 20px; border: 1px solid var(--line2); background: transparent; color: var(--text2); cursor: pointer; transition: all 0.15s; font-family: var(--sans); }
-  .tab:hover { background: rgba(255,255,255,0.06); color: var(--text); }
-  .tab.active { background: var(--accent-dim); color: var(--accent); border-color: rgba(245,158,11,0.3); }
+  h1 {
+    font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 700;
+    letter-spacing: -0.03em; line-height: 1.05; color: var(--text);
+  }
+  h1 span { color: var(--accent); }
 
-  .section { display: none; }
-  .section.on { display: block; }
+  .subtitle {
+    margin-top: 0.75rem; font-family: var(--mono); font-size: 12px; color: var(--muted);
+  }
 
-  .sec-head { font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 2px; }
-  .sec-sub { font-size: 12px; color: var(--text2); margin-bottom: 1rem; }
-  .divider { height: 0.5px; background: var(--line); margin: 1.25rem 0; }
-  .group-label { font-size: 10px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text3); margin: 1.25rem 0 0.5rem; }
+  /* Settings gear */
+  .settings-toggle {
+    background: none; border: 1px solid var(--line); border-radius: 3px;
+    color: var(--hint); font-size: 14px; padding: 3px 8px; cursor: pointer;
+    transition: all 0.15s; letter-spacing: 0; font-family: var(--sans);
+  }
+  .settings-toggle:hover { color: var(--muted); border-color: var(--line2); }
 
-  /* Plugin Arsenal card styles */
-  .card { background: transparent; border: 1px solid var(--line); border-radius: var(--rl); margin-bottom: 7px; overflow: hidden; }
-  .card-hd { display: flex; align-items: center; justify-content: space-between; padding: 9px 13px; cursor: pointer; user-select: none; transition: background 0.12s; }
-  .card-hd:hover { background: rgba(255,255,255,0.025); }
-  .card-left { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
-  .card-name { font-size: 13px; font-weight: 500; color: var(--text); }
-  .card-char { font-size: 12px; color: var(--text2); }
-  .chev { font-size: 10px; color: var(--text3); transition: transform 0.18s; flex-shrink: 0; margin-left: 8px; }
-  .card-hd.open .chev { transform: rotate(90deg); }
-  .card-bd { display: none; padding: 0 13px 13px; border-top: 1px solid var(--line); }
-  .card-bd.open { display: block; }
+  /* Setup screen */
+  #setup-screen {
+    border: 1px solid var(--line); border-radius: 6px;
+    background: var(--surface); overflow: hidden; margin-bottom: 2rem;
+  }
+  .setup-header {
+    padding: 1rem 1.25rem; background: var(--surface2);
+    border-bottom: 1px solid var(--line);
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .setup-body { padding: 1.5rem 1.25rem; }
+  .setup-hint {
+    font-family: var(--mono); font-size: 12px; color: var(--hint);
+    line-height: 1.7; margin-bottom: 1.25rem; padding: 0.75rem;
+    border: 1px solid var(--line); border-radius: 3px;
+    background: rgba(255,255,255,0.02);
+  }
+  .setup-hint code { color: var(--muted); }
 
-  .badge { font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 10px; white-space: nowrap; }
-  .b-pultec   { background: rgba(133,79,11,0.15);  color: rgba(255,185,90,0.85); }
-  .b-mastering{ background: rgba(24,95,165,0.15);  color: rgba(100,175,255,0.85); }
-  .b-console  { background: rgba(153,60,29,0.15);  color: rgba(255,140,100,0.85); }
-  .b-waves    { background: rgba(59,109,17,0.15);  color: rgba(130,210,80,0.85); }
-  .b-digital  { background: rgba(95,94,90,0.15);   color: rgba(180,178,170,0.85); }
-  .b-dynameq  { background: rgba(83,74,183,0.15);  color: rgba(170,160,255,0.85); }
-  .b-smart    { background: rgba(15,110,86,0.15);  color: rgba(60,210,165,0.85); }
-  .b-fet      { background: rgba(153,60,29,0.15);  color: rgba(255,140,100,0.85); }
-  .b-optical  { background: rgba(133,79,11,0.15);  color: rgba(255,185,90,0.85); }
-  .b-vca      { background: rgba(24,95,165,0.15);  color: rgba(100,175,255,0.85); }
-  .b-varimu   { background: rgba(83,74,183,0.15);  color: rgba(170,160,255,0.85); }
-  .b-modern   { background: rgba(15,110,86,0.15);  color: rgba(60,210,165,0.85); }
-  .b-creative { background: rgba(153,53,86,0.15);  color: rgba(255,120,160,0.85); }
-  .b-strip    { background: rgba(95,94,90,0.15);   color: rgba(180,178,170,0.85); }
-  .b-tape     { background: rgba(133,79,11,0.15);  color: rgba(255,185,90,0.85); }
-  .b-analog   { background: rgba(153,60,29,0.15);  color: rgba(255,140,100,0.85); }
-  .b-lofi     { background: rgba(95,94,90,0.15);   color: rgba(180,178,170,0.85); }
-  .b-trans    { background: rgba(24,95,165,0.15);  color: rgba(100,175,255,0.85); }
-  .b-hybrid   { background: rgba(83,74,183,0.15);  color: rgba(170,160,255,0.85); }
-  .b-multi    { background: rgba(15,110,86,0.15);  color: rgba(60,210,165,0.85); }
-  .b-vintage  { background: rgba(133,79,11,0.15);  color: rgba(255,185,90,0.85); }
-  .b-conv     { background: rgba(59,109,17,0.15);  color: rgba(130,210,80,0.85); }
-  .b-spatial  { background: rgba(15,110,86,0.15);  color: rgba(60,210,165,0.85); }
-  .b-algo     { background: rgba(95,94,90,0.15);   color: rgba(180,178,170,0.85); }
-  .b-tdel     { background: rgba(133,79,11,0.15);  color: rgba(255,185,90,0.85); }
-  .b-ddel     { background: rgba(24,95,165,0.15);  color: rgba(100,175,255,0.85); }
-  .b-cdel     { background: rgba(153,53,86,0.15);  color: rgba(255,120,160,0.85); }
-  .b-chorus   { background: rgba(83,74,183,0.15);  color: rgba(170,160,255,0.85); }
-  .b-phaser   { background: rgba(153,60,29,0.15);  color: rgba(255,140,100,0.85); }
-  .b-rotary   { background: rgba(15,110,86,0.15);  color: rgba(60,210,165,0.85); }
-  .b-mmod     { background: rgba(133,79,11,0.15);  color: rgba(255,185,90,0.85); }
-  .b-ai       { background: rgba(153,53,86,0.15);  color: rgba(255,120,160,0.85); }
+  /* Field */
+  .field { margin-bottom: 1.25rem; }
+  .field label {
+    display: block; font-family: var(--mono); font-size: 11px;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 0.5rem;
+  }
 
-  .new-badge { font-size: 9px; font-weight: 600; background: rgba(15,110,86,0.18); color: rgba(60,210,165,0.9); padding: 1px 6px; border-radius: 6px; letter-spacing: 0.05em; text-transform: uppercase; }
+  input[type="text"], input[type="password"] {
+    width: 100%; background: var(--surface); border: 1px solid var(--line);
+    color: var(--text); font-family: var(--mono); font-size: 13px;
+    line-height: 1.6; padding: 0.75rem 1rem; border-radius: 4px;
+    outline: none; transition: border-color 0.2s; height: 44px;
+  }
+  input[type="text"]::placeholder, input[type="password"]::placeholder {
+    color: rgba(255,255,255,0.18);
+  }
+  input[type="text"]:focus, input[type="password"]:focus {
+    border-color: var(--line2);
+  }
 
-  .info-grid { display: grid; grid-template-columns: 90px 1fr; gap: 3px 12px; margin-top: 10px; font-size: 12px; }
-  .info-grid .lbl { color: var(--text2); font-weight: 500; }
-  .info-grid .val { color: var(--text); }
-  .uses { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 5px; }
-  .use-tag { font-size: 11px; padding: 2px 8px; background: rgba(255,255,255,0.04); border: 1px solid var(--line); border-radius: 6px; color: var(--text2); }
-  .use-tag span { color: var(--text3); margin: 0 3px; }
-  .tip { font-size: 11px; color: var(--text2); font-style: italic; margin-top: 8px; border-left: 2px solid var(--line2); padding-left: 8px; }
+  /* Buttons */
+  .save-btn {
+    font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 0.55rem 1.2rem;
+    border: 1px solid var(--line2); border-radius: 3px;
+    background: rgba(255,255,255,0.06); color: var(--text);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .save-btn:hover { background: rgba(255,255,255,0.1); }
 
-  .best-list { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
-  .best-pill { font-size: 12px; font-weight: 500; padding: 3px 10px; border-radius: 12px; background: var(--bg2); border: 1px solid var(--line); color: var(--text); }
+  .run-btn {
+    width: 100%; padding: 0.85rem; font-family: var(--sans); font-size: 15px;
+    font-weight: 600; letter-spacing: 0.05em;
+    background: rgba(255,255,255,0.1); color: var(--text);
+    border: 1px solid var(--line2); border-radius: 4px; cursor: pointer;
+    transition: background 0.2s, transform 0.1s; margin-bottom: 1.5rem;
+  }
+  .run-btn:hover { background: rgba(255,255,255,0.16); }
+  .run-btn:active { transform: scale(0.99); }
+  .run-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
 
-  .rule-table { width: 100%; font-size: 12px; border-collapse: collapse; margin-top: 10px; }
-  .rule-table td { padding: 5px 8px; border-bottom: 1px solid var(--line); color: var(--text); vertical-align: top; }
-  .rule-table tr:hover td { background: rgba(255,255,255,0.025); }
-  .rule-table td:first-child { color: var(--text2); font-weight: 500; width: 42%; }
+  /* Status bar */
+  .status-bar {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem;
+    font-family: var(--mono); font-size: 12px; color: var(--muted);
+    min-height: 24px;
+  }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
+  .dot.loading { background: var(--warn); animation: pulse 1s infinite; }
+  .dot.ok { background: var(--green); }
+  .dot.err { background: var(--red); }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-  /* Master System chain styles */
-  .chain-card { border: 0.5px solid var(--line); border-radius: var(--rl); margin-bottom: 10px; overflow: hidden; background: transparent; }
-  .chain-hd { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; cursor: pointer; user-select: none; transition: background 0.12s; }
-  .chain-hd:hover { background: rgba(255,255,255,0.03); }
-  .chain-hd-left { display: flex; align-items: center; gap: 10px; }
-  .chain-emoji { font-size: 16px; line-height: 1; }
-  .chain-title { font-size: 14px; font-weight: 500; }
-  .chain-genre { font-size: 11px; color: var(--text2); margin-left: 2px; }
-  .chain-hd .chev { font-size: 10px; color: var(--text3); transition: transform 0.18s; }
-  .chain-hd.open .chev { transform: rotate(90deg); }
-  .chain-bd { display: none; border-top: 0.5px solid var(--line); }
-  .chain-bd.open { display: block; }
+  /* Result card */
+  .result-card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 6px; overflow: hidden;
+    animation: fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
 
-  .chain-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  .chain-table th { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); padding: 8px 10px; text-align: left; border-bottom: 0.5px solid var(--line); background: rgba(255,255,255,0.03); }
-  .chain-table td { padding: 8px 10px; border-bottom: 0.5px solid var(--line); vertical-align: top; color: var(--text); }
-  .chain-table tr:last-child td { border-bottom: none; }
-  .chain-table tr:hover td { background: rgba(255,255,255,0.025); }
-  .step-num { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: rgba(255,255,255,0.06); color: var(--text2); font-size: 10px; font-weight: 500; flex-shrink: 0; }
-  .plugin-name { font-weight: 500; color: var(--text); display: block; }
-  .plugin-note { font-size: 11px; color: var(--text2); }
-  .target-val { font-family: var(--mono); font-size: 11px; color: var(--text2); white-space: nowrap; }
-  .result-row { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 14px; border-top: 0.5px solid var(--line); background: rgba(255,255,255,0.03); }
-  .result-tag { font-size: 11px; padding: 2px 8px; border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--text2); border: 0.5px solid var(--line); }
-  .result-label { font-size: 11px; color: var(--text3); align-self: center; margin-right: 4px; }
+  .result-row {
+    display: grid; grid-template-columns: 110px 1fr;
+    gap: 0; border-bottom: 1px solid var(--line);
+    font-size: 13px; line-height: 1.6;
+  }
+  .result-row:last-child { border-bottom: none; }
 
-  .targets-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; margin-top: 10px; }
-  .target-card { background: var(--bg2); border: 0.5px solid var(--line); border-radius: var(--r); padding: 10px 12px; }
-  .target-lbl { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); margin-bottom: 4px; }
-  .target-num { font-size: 18px; font-weight: 500; font-family: var(--mono); color: var(--text); }
+  .result-key {
+    font-family: var(--mono); font-size: 10px; font-weight: 600;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    padding: 0.85rem 0.9rem; background: rgba(255,255,255,0.025);
+    border-right: 1px solid var(--line);
+    display: flex; align-items: flex-start; padding-top: 0.95rem;
+  }
 
-  .atmos-zone { margin-bottom: 8px; border: 0.5px solid var(--line); border-radius: var(--r); overflow: hidden; }
-  .atmos-zone-hd { display: flex; align-items: center; gap: 10px; padding: 8px 12px; cursor: pointer; transition: background 0.12s; }
-  .atmos-zone-hd:hover { background: rgba(255,255,255,0.03); }
-  .zone-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .dot-green { background: #3B6D11; }
-  .dot-yellow { background: #854F0B; }
-  .dot-red { background: #993C1D; }
-  .zone-title { font-size: 13px; font-weight: 500; }
-  .zone-sub { font-size: 11px; color: var(--text2); }
-  .atmos-zone-bd { display: none; padding: 0 12px 12px; border-top: 0.5px solid var(--line); }
-  .atmos-zone-bd.open { display: block; }
-  .plugin-pills { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
-  .pill { font-size: 11px; padding: 2px 9px; border-radius: 10px; background: var(--bg2); border: 0.5px solid var(--line); color: var(--text2); }
-  .pill-ok { background: #EAF3DE; border-color: #C0DD97; color: #3B6D11; }
-  .pill-ctx { background: #FAEEDA; border-color: #FAC775; color: #854F0B; }
-  .pill-no { background: #FCEBEB; border-color: #F7C1C1; color: #A32D2D; }
+  .result-val {
+    font-family: var(--mono); font-size: 12px; color: var(--text);
+    padding: 0.85rem 1rem; line-height: 1.65;
+  }
 
-  .flow { display: flex; flex-direction: column; gap: 0; margin: 1rem 0; }
-  .flow-step { display: flex; align-items: stretch; }
-  .flow-step-inner { flex: 1; padding: 10px 14px; border: 0.5px solid var(--line); border-radius: var(--r); background: var(--bg); }
-  .flow-step-inner:hover { background: var(--bg2); cursor: pointer; }
-  .flow-step-num { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); margin-bottom: 2px; }
-  .flow-step-name { font-size: 14px; font-weight: 500; }
-  .flow-step-desc { font-size: 11px; color: var(--text2); margin-top: 2px; }
-  .flow-arrow { display: flex; align-items: center; justify-content: center; height: 16px; color: var(--text3); font-size: 11px; }
-  .detail-block { display: none; padding: 10px 14px; background: var(--bg2); border: 0.5px solid var(--line); border-radius: 0 0 var(--r) var(--r); border-top: none; margin-top: -1px; }
-  .detail-block.open { display: block; }
+  .key-diagnosis { color: var(--amber); }
+  .key-plugin    { color: rgba(255,255,255,0.92); }
+  .key-range     { color: var(--green); }
+  .key-warning   { color: var(--red); }
+  .key-alt       { color: var(--blue); }
 
-  .depth-layers { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 1rem 0; }
-  .depth-cell { padding: 10px 8px; border: 0.5px solid var(--line); border-radius: var(--r); text-align: center; }
-  .depth-num { font-size: 10px; color: var(--text3); margin-bottom: 3px; }
-  .depth-name { font-size: 11px; font-weight: 500; color: var(--text); margin-bottom: 3px; }
-  .depth-ex { font-size: 10px; color: var(--text2); }
+  /* Settings panel */
+  .settings-panel {
+    margin-top: 3rem; border: 1px solid var(--line); border-radius: 6px;
+    background: var(--surface); overflow: hidden;
+  }
+  .settings-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.75rem 1rem; background: var(--surface2);
+    border-bottom: 1px solid var(--line);
+  }
+  .settings-title {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .settings-close {
+    background: none; border: none; color: var(--hint); font-size: 18px;
+    cursor: pointer; padding: 0 4px; line-height: 1; transition: color 0.15s;
+  }
+  .settings-close:hover { color: var(--muted); }
+  .settings-body { padding: 1.25rem; }
+  .settings-hint {
+    font-family: var(--mono); font-size: 11px; color: var(--hint); line-height: 1.65;
+    margin-bottom: 1.25rem; padding: 0.75rem; border: 1px solid var(--line);
+    border-radius: 3px; background: rgba(255,255,255,0.02);
+  }
+  .settings-hint code { color: var(--muted); }
 
-  .tip-box { background: var(--bg2); border: 0.5px solid var(--line); border-radius: var(--r); padding: 10px 12px; font-size: 12px; color: var(--text2); margin: 10px 0; }
-  .tip-box strong { color: var(--text); }
+  /* Divider */
+  .divider { height: 1px; background: var(--line); margin: 2rem 0; }
 
-  .three-pillars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 1rem 0; }
-  .pillar { background: var(--bg2); border: 0.5px solid var(--line); border-radius: var(--r); padding: 12px; text-align: center; }
-  .pillar-name { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
-  .pillar-desc { font-size: 11px; color: var(--text2); }
+  /* Backend selector */
+  .backend-select {
+    display: flex; gap: 0; overflow: hidden;
+    border: 1px solid var(--line2); border-radius: 3px; width: fit-content;
+  }
+  .backend-btn {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 6px 14px;
+    background: transparent; color: var(--muted);
+    border: none; border-right: 1px solid var(--line2);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .backend-btn:last-child { border-right: none; }
+  .backend-btn:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+  .backend-btn.active { background: rgba(255,255,255,0.08); color: var(--text); }
 
-  .pct-row { display: flex; gap: 8px; margin: 1rem 0; flex-wrap: wrap; }
-  .pct-card { flex: 1; min-width: 120px; background: var(--bg2); border: 0.5px solid var(--line); border-radius: var(--r); padding: 10px 12px; }
-  .pct-num { font-size: 22px; font-weight: 500; font-family: var(--mono); }
-  .pct-label { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  /* Backend badge */
+  .backend-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--hint);
+    margin-top: 0.65rem; min-height: 16px;
+  }
 
-  .badge-analog { background: #FAEEDA; color: #854F0B; font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 500; }
-  .badge-modern { background: #E6F1FB; color: #185FA5; font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 500; }
-  .badge-rough  { background: #FAECE7; color: #993C1D; font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 500; }
-  .badge-wide   { background: #EEEDFE; color: #534AB7; font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 500; }
-  .badge-color  { background: #EAF3DE; color: #3B6D11; font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 500; }
-
-  @media (max-width: 600px) {
-    .depth-layers { grid-template-columns: repeat(3, 1fr); }
-    .three-pillars { grid-template-columns: 1fr; }
-    body { padding: 1rem 1rem 3rem; }
+  @media (max-width: 520px) {
+    .page { padding: 2rem 1.2rem 4rem; }
+    h1 { font-size: 2rem; }
+    .result-row { grid-template-columns: 90px 1fr; }
+    .result-key { font-size: 9px; padding: 0.75rem 0.65rem; }
+    .result-val { padding: 0.75rem 0.85rem; font-size: 11px; }
   }
 </style>
 </head>
 <body>
 
-<a href="/" style="display:inline-flex;align-items:center;gap:6px;color:rgba(255,255,255,0.32);font-size:11px;letter-spacing:0.2em;text-transform:uppercase;text-decoration:none;margin-bottom:28px;transition:color 180ms ease;" onmouseover="this.style.color='rgba(255,255,255,0.65)'" onmouseout="this.style.color='rgba(255,255,255,0.32)'">← Tools</a>
+<a href="/" style="position:fixed;top:18px;left:24px;z-index:50;display:inline-flex;align-items:center;gap:6px;color:rgba(255,255,255,0.32);font-size:11px;letter-spacing:0.2em;text-transform:uppercase;text-decoration:none;transition:color 180ms ease;" onmouseover="this.style.color='rgba(255,255,255,0.65)'" onmouseout="this.style.color='rgba(255,255,255,0.32)'">← Tools</a>
 
-<div class="masthead">
-  <div class="masthead-label">Optional Ganesh · Plugins + Processes</div>
-  <div class="masthead-title">Plugin Arsenal + Master Chains</div>
-</div>
+<div class="page">
+  <header>
+    <div class="logo">
+      <a href="/">Optional Ganesh / Tools</a>
+      <button class="settings-toggle" onclick="toggleSettings()" title="Configuración API">⚙</button>
+    </div>
+    <h1>Decision <span>Engine</span></h1>
+    <p class="subtitle">// Diagnóstico → decisión → movimiento mínimo</p>
+    <div id="backend-badge" class="backend-badge"></div>
+  </header>
 
-<div class="main-tabs">
-  <button class="main-tab active" onclick="switchMain('arsenal', this)">Plugin Arsenal</button>
-  <button class="main-tab" onclick="switchMain('processes', this)">Master System</button>
-  <button class="main-tab" onclick="switchMain('assist', this)">Mixing Assistant</button>
-</div>
+  <!-- Setup screen: shown when not yet configured -->
+  <div id="setup-screen">
+    <div class="setup-header">Configuración — Primera vez</div>
+    <div class="setup-body">
+      <div class="field">
+        <label>Backend</label>
+        <div class="backend-select">
+          <button class="backend-btn active" id="setup-btn-anthropic" onclick="selectBackend('setup','anthropic')">Anthropic API</button>
+          <button class="backend-btn" id="setup-btn-ollama" onclick="selectBackend('setup','ollama')">Ollama Local</button>
+        </div>
+      </div>
 
-<!-- ========== PANEL: PLUGIN ARSENAL ========== -->
-<div id="panel-arsenal" class="main-panel active">
-  <div class="tabs" id="arsenal-tabs">
-    <button class="tab active" onclick="go('eq','arsenal',this)">EQ</button>
-    <button class="tab" onclick="go('comp','arsenal',this)">Compresores</button>
-    <button class="tab" onclick="go('tape','arsenal',this)">Tape / Saturación</button>
-    <button class="tab" onclick="go('lim','arsenal',this)">Limiters</button>
-    <button class="tab" onclick="go('rev','arsenal',this)">Reverbs</button>
-    <button class="tab" onclick="go('del','arsenal',this)">Delays</button>
-    <button class="tab" onclick="go('mod','arsenal',this)">Modulación</button>
-    <button class="tab" onclick="go('tools','arsenal',this)">Tools</button>
-  </div>
+      <div id="setup-anthropic-fields">
+        <div class="setup-hint">
+          Obtén tu clave en <code>console.anthropic.com</code> → API Keys.<br>
+          Se guarda en <code>localStorage</code> como <code>og_api_key</code>. Nunca sale de tu navegador.
+        </div>
+        <div class="field">
+          <label>API Key</label>
+          <input type="password" id="setup-key-input" placeholder="sk-ant-..." autocomplete="off">
+        </div>
+      </div>
 
-  <!-- EQ -->
-  <div class="section on" id="a-eq">
-    <div class="sec-head">EQ</div>
-    <div class="sec-sub">Pasivos · Mastering · Consola · Waves · Digital / Quirúrgico · Dynamic</div>
+      <div id="setup-ollama-fields" style="display:none">
+        <div class="setup-hint">
+          Ollama corre en tu máquina. No necesitas API key.<br>
+          Asegúrate de que Ollama está activo antes de diagnosticar.
+        </div>
+        <div class="field">
+          <label>Modelo</label>
+          <input type="text" id="setup-ollama-model" placeholder="mistral">
+        </div>
+        <div class="field">
+          <label>URL</label>
+          <input type="text" id="setup-ollama-url" placeholder="http://localhost:11434">
+        </div>
+      </div>
 
-    <div class="group-label">Pultec (pasivos)</div>
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-pultec">Pultec</span><span class="card-name">UADx Pultec EQP-1A</span><span class="card-char">— graves + aire</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Tipo</span><span class="val">EQ pasivo valvular. Curvas musicales amplias, no quirúrgicas.</span></div>
-    <div class="uses"><span class="use-tag">kick<span>graves grandes</span></span><span class="use-tag">bajo<span>peso</span></span><span class="use-tag">master bus<span>brillo</span></span><span class="use-tag">synths<span>aire</span></span></div>
-    <div class="tip">Truco: boost + attenuate simultáneos en la misma frecuencia de graves → cuerpo sin barro.</div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-pultec">Pultec</span><span class="card-name">UADx Pultec MEQ-5</span><span class="card-char">— midrange</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Tipo</span><span class="val">Pultec de medios. Tres bandas de midrange con boost y cut independientes.</span></div>
-    <div class="uses"><span class="use-tag">voz<span>presencia</span></span><span class="use-tag">guitarra<span>claridad</span></span><span class="use-tag">piano<span>definición</span></span></div>
-    <div class="tip">Cuando un instrumento está perdido en la mezcla sin que los medios suenen forzados.</div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-pultec">Pultec</span><span class="card-name">UADx Pultec HLF-3C</span><span class="card-char">— filtro pasivo</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="uses"><span class="use-tag">quitar subgraves</span><span class="use-tag">limpiar guitarras</span><span class="use-tag">overheads</span></div>
-    <div class="tip">High-pass con carácter analógico. Más musical que un HPF digital.</div></div></div>
-
-    <div class="group-label">Mastering EQ</div>
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-mastering">Mastering</span><span class="card-name">Pulsar W495</span><span class="card-char">— inspirado en Neumann PEV</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Tipo</span><span class="val">EQ de mastering de alta musicalidad. Bandas fijas: baja frecuencia, midrange y shelving de aire.</span></div>
-    <div class="uses"><span class="use-tag">master<span>ajustes finos</span></span><span class="use-tag">mix bus<span>pulido</span></span><span class="use-tag">strings<span>claridad</span></span></div>
-    <div class="tip">Cuando 0.5 dB cambia todo. Para decisiones de mastering de precisión.</div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-mastering">Mastering</span><span class="card-name">IK T-RackS Master EQ 432</span><span class="card-char">— modelo del API 9632</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Tipo</span><span class="val">EQ de mastering analógico. Carácter grande y abierto. Basado en el API 9632.</span></div>
-    <div class="uses"><span class="use-tag">master bus</span><span class="use-tag">mezcla completa</span></div>
-    <div class="tip">Cuando una mezcla necesita más dimensión y cuerpo en el espectro completo.</div></div></div>
-
-    <div class="group-label">Consola</div>
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-console">Consola</span><span class="card-name">IK T-RackS EQ 73</span><span class="card-char">— Neve 1073</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Sonido</span><span class="val">Grueso, cálido. Solo 4 bandas fijas — su limitación es su virtud.</span></div>
-    <div class="uses"><span class="use-tag">bajo<span>densidad</span></span><span class="use-tag">kick<span>peso</span></span><span class="use-tag">voces<span>carácter</span></span></div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-console">Consola</span><span class="card-name">IK T-RackS EQ 81</span><span class="card-char">— Neve 1081</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Sonido</span><span class="val">Mismo carácter Neve que el 73, con más bandas y control.</span></div>
-    <div class="uses"><span class="use-tag">guitarras</span><span class="use-tag">voces</span><span class="use-tag">mezcla general</span></div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-console">Consola</span><span class="card-name">IK T-RackS Focusrite Red 2 EQ</span><span class="card-char">— británico transparente</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Sonido</span><span class="val">Consola Focusrite Red. Muy transparente, más limpio que el estilo Neve.</span></div>
-    <div class="uses"><span class="use-tag">voces</span><span class="use-tag">piano</span><span class="use-tag">mezcla limpia</span></div></div></div>
-
-    <div class="group-label">Waves</div>
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-waves">Waves</span><span class="card-name">Waves V-EQ3 / V-EQ4</span><span class="card-char">— Neve 1073 / 1081</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="uses"><span class="use-tag">V-EQ3 → voces, guitarras, bajos</span><span class="use-tag">V-EQ4 → mezcla general, instrumentos complejos</span></div>
-    <div class="tip">V-EQ3 = 1073 (3 bandas), V-EQ4 = 1081 (4 bandas). Ambos añaden color analógico Neve.</div></div></div>
-
-    <div class="group-label">Digital / Quirúrgico</div>
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-digital">Digital</span><span class="card-name">Logic Channel EQ</span><span class="card-char">— transparente</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Tipo</span><span class="val">EQ paramétrico de fase mínima. 8 bandas totalmente configurables.</span></div>
-    <div class="uses"><span class="use-tag">limpieza<span>precisión</span></span><span class="use-tag">corrección<span>quirúrgico</span></span><span class="use-tag">notches<span>resonancias</span></span></div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-digital">Digital</span><span class="card-name">Logic Linear Phase EQ</span><span class="card-char">— mastering</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Tipo</span><span class="val">EQ de fase lineal. No altera la fase pero introduce latencia.</span></div>
-    <div class="uses"><span class="use-tag">mastering</span><span class="use-tag">procesamiento paralelo</span></div>
-    <div class="tip">Solo para mastering o parallel processing. En mezcla normal usa Channel EQ.</div></div></div>
-
-    <div class="group-label">Dynamic EQ</div>
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-dynameq">Dynamic</span><span class="card-name">MAutoDynamicEQ</span><span class="card-char">— dinámico adaptativo</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Tipo</span><span class="val">EQ dinámico de MeldaProduction. Cada banda actúa como compresor/expansor de frecuencia.</span></div>
-    <div class="uses"><span class="use-tag">voz<span>resonancias variables</span></span><span class="use-tag">guitarra<span>control</span></span><span class="use-tag">mix bus<span>equilibrio dinámico</span></span></div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-smart">Inteligente</span><span class="card-name">Oeksound soothe2</span><span class="card-char">— resonance suppressor</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Tipo</span><span class="val">Supresor de resonancias adaptativo. No es un EQ dinámico convencional — detecta y reduce peaks espectrales en tiempo real.</span></div>
-    <div class="uses"><span class="use-tag">voces</span><span class="use-tag">guitarras</span><span class="use-tag">overheads</span></div>
-    <div class="tip">Para frecuencias irritantes que aparecen y desaparecen. Depth 20-40% en mastering.</div></div></div>
-
-    <div class="divider"></div>
-    <div class="group-label">Los 6 más importantes</div>
-    <div class="best-list">
-      <span class="best-pill">Pultec EQP-1A</span><span class="best-pill">Pulsar W495</span><span class="best-pill">Channel EQ</span>
-      <span class="best-pill">MAutoDynamicEQ</span><span class="best-pill">EQ 73</span><span class="best-pill">soothe2</span>
+      <button class="save-btn" onclick="saveSetupConfig()">Guardar y continuar</button>
     </div>
   </div>
 
-  <!-- COMPRESORES -->
-  <div class="section" id="a-comp">
-    <div class="sec-head">Compresores</div>
-    <div class="sec-sub">FET · Optical · VCA · Vari-Mu · Modern / Mastering · Creative · Channel Strips</div>
-
-    <div class="group-label">FET — ataque rápido</div>
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-fet">FET</span><span class="card-name">UADx 1176</span><span class="card-char">— Rev A / Rev E / AE / LN</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Carácter</span><span class="val">Ultra rápido, agresivo, punch. Rev A más oscuro, LN más limpio y neutro.</span></div>
-    <div class="uses"><span class="use-tag">snare<span>ataque</span></span><span class="use-tag">kick<span>punch</span></span><span class="use-tag">vocal rock<span>energía</span></span><span class="use-tag">bass<span>control</span></span><span class="use-tag">room mics<span>explosión</span></span></div>
-    <div class="tip">All-buttons-in mode (ratio ilimitada) para sonido agresivo y saturado.</div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-fet">FET</span><span class="card-name">IK T-RackS Black 76</span><span class="card-char">— estilo 1176 limpio</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="uses"><span class="use-tag">batería</span><span class="use-tag">percusión</span><span class="use-tag">vocal moderna</span></div></div></div>
-
-    <div class="group-label">Optical — suaves</div>
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-optical">Optical</span><span class="card-name">UADx LA-2A</span><span class="card-char">— Gray / Silver / Tube</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Carácter</span><span class="val">Opto. Ratio ~3:1 en compress, ~100:1 en limit. Release dependiente del programa.</span></div>
-    <div class="uses"><span class="use-tag">voces<span>nivelado</span></span><span class="use-tag">bajo<span>sustain</span></span><span class="use-tag">pads<span>estabilidad</span></span><span class="use-tag">guitarra limpia<span>suavidad</span></span></div>
-    <div class="tip">Compresión que no se escucha. El release automático se adapta al material.</div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-optical">Optical</span><span class="card-name">IK T-RackS White 2A / Opto Compressor</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="uses"><span class="use-tag">voces</span><span class="use-tag">bajo</span><span class="use-tag">piano</span><span class="use-tag">vocal pop</span><span class="use-tag">acústicos</span></div></div></div>
-
-    <div class="group-label">VCA — control preciso</div>
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-vca">VCA</span><span class="card-name">UADx SSL G Bus Compressor</span><span class="card-char">— glue</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Carácter</span><span class="val">VCA estilo SSL 4000G. El "glue compressor" por excelencia.</span></div>
-    <div class="uses"><span class="use-tag">mix bus<span>cohesión</span></span><span class="use-tag">drum bus<span>groove</span></span><span class="use-tag">rock mix<span>pegamento</span></span></div>
-    <div class="tip">Attack 30ms, release auto, ratio 2:1, GR 2-3 dB = receta clásica.</div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-vca">VCA</span><span class="card-name">UADx dbx 160</span><span class="card-char">— punch clásico</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Carácter</span><span class="val">VCA muy rápido y musical. OverEasy para compresión suave sin threshold duro.</span></div>
-    <div class="uses"><span class="use-tag">kick<span>pegada</span></span><span class="use-tag">snare<span>snap</span></span><span class="use-tag">bass<span>control</span></span></div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-vca">VCA</span><span class="card-name">Softube VCA Compressor</span><span class="card-char">— limpio</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="uses"><span class="use-tag">buses</span><span class="use-tag">mezcla moderna</span></div></div></div>
-
-    <div class="group-label">Vari-Mu — glue vintage</div>
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-varimu">Vari-Mu</span><span class="card-name">UADx Fairchild 660 / 670</span><span class="card-char">— profundidad analógica</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Carácter</span><span class="val">Vari-Mu valvular. Grande, cálido, tridimensional. 670 = stereo con M/S. 660 = mono.</span></div>
-    <div class="uses"><span class="use-tag">master bus<span>profundidad</span></span><span class="use-tag">strings<span>suavidad</span></span><span class="use-tag">piano<span>cohesión</span></span></div>
-    <div class="tip">Cuando una mezcla necesita profundidad analógica real. Todo el control está en el time constant.</div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-varimu">Vari-Mu</span><span class="card-name">IK T-RackS Dyna-Mu</span><span class="card-char">— moderno</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="uses"><span class="use-tag">mix bus</span><span class="use-tag">mastering ligero</span></div></div></div>
-
-    <div class="group-label">Modern / Mastering</div>
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-modern">Modern</span><span class="card-name">Safari Pedals Sun Bear</span><span class="card-char">— mastering grade bus</span><span class="new-badge">nuevo</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid">
-      <span class="lbl">Tipo</span><span class="val">Compresor de bus de mastering de alta precisión. Diseñado por Noam Levinberg (mastering engineer, 20 años de experiencia).</span>
-      <span class="lbl">Saturation</span><span class="val">Tape Mode (warmth suave) · Tube Mode (armónicos ricos)</span>
-      <span class="lbl">Features</span><span class="val">M/S Matrix · Sidechain Filter · Gravity Mode (glue extra) · Blend (parallel) · Wild Mode · Auto Gain · Oversampling</span>
+  <!-- Main tool: shown when API key exists -->
+  <div id="main-tool" style="display:none">
+    <div class="field">
+      <label>Describe el problema</label>
+      <input type="text" id="problem-input"
+        placeholder="ej. la voz se pierde en el mix, el kick no tiene punch, la mezcla suena fangosa…">
     </div>
-    <div class="uses"><span class="use-tag">mix bus<span>glue + warmth</span></span><span class="use-tag">mastering<span>control dinámico</span></span><span class="use-tag">drum bus<span>punch</span></span></div>
-    <div class="tip">Tape Mode = suave y musical. Tube Mode = carácter fuerte. Gravity Mode = extra cohesión. Blend para parallel compression nativa.</div></div></div>
+    <button class="run-btn" id="submit-btn" onclick="diagnose()">→ Diagnosticar</button>
 
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-modern">Modern</span><span class="card-name">Drawmer S73</span><span class="card-char">— smart mastering</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Carácter</span><span class="val">Compresor inteligente de mastering. Mínimos controles, decisiones automáticas.</span></div>
-    <div class="uses"><span class="use-tag">mastering</span><span class="use-tag">stems</span><span class="use-tag">mezcla rápida</span></div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-modern">Modern</span><span class="card-name">NI Solid Bus Comp / Supercharger</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="uses"><span class="use-tag">drum bus</span><span class="use-tag">mix bus</span><span class="use-tag">bass + saturación (Supercharger)</span></div></div></div>
-
-    <div class="group-label">Creative</div>
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-creative">Creative</span><span class="card-name">Soundtoys Devil-Loc / Devil-Loc Deluxe</span><span class="card-char">— extremo</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Carácter</span><span class="val">Inspirado en el Shure Level-Loc. Compresión extrema no lineal. Para destrucción controlada.</span></div>
-    <div class="uses"><span class="use-tag">drum bus<span>destrucción</span></span><span class="use-tag">room mics<span>agresividad</span></span><span class="use-tag">guitarras<span>carácter</span></span></div></div></div>
-
-    <div class="group-label">Channel Strips</div>
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-strip">Channel Strip</span><span class="card-name">IK T-RackS Channel Strips</span><span class="card-char">— EQ + comp combinados</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Incluye</span><span class="val">Neve 1073, 1081, SSL 4000E/G y otros en formato channel strip completo (EQ + compresión + filtros).</span></div>
-    <div class="uses"><span class="use-tag">voces</span><span class="use-tag">guitarras</span><span class="use-tag">mezcla completa en un plugin</span></div>
-    <div class="tip">Más eficiente en CPU que EQ y comp por separado cuando el carácter de consola es el objetivo.</div></div></div>
-
-    <div class="divider"></div>
-    <div class="group-label">Regla simple</div>
-    <table class="rule-table">
-      <tr><td>ataque / punch rápido</td><td>1176</td></tr>
-      <tr><td>compresión invisible</td><td>LA-2A</td></tr>
-      <tr><td>pegada en kick / snare</td><td>dbx 160</td></tr>
-      <tr><td>glue del mix bus</td><td>SSL G Bus</td></tr>
-      <tr><td>profundidad analógica</td><td>Fairchild 670</td></tr>
-      <tr><td>mastering bus con carácter</td><td>Sun Bear</td></tr>
-      <tr><td>mastering ligero / rápido</td><td>Dyna-Mu · Drawmer S73</td></tr>
-    </table>
+    <div class="status-bar" id="status-bar"></div>
+    <div id="result-area"></div>
   </div>
 
-  <!-- TAPE / SATURACIÓN -->
-  <div class="section" id="a-tape">
-    <div class="sec-head">Tape / Saturación</div>
-    <div class="sec-sub">Tape emulation · Analog color · Lo-fi creative</div>
-
-    <div class="group-label">Tape — multipista</div>
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-tape">Tape</span><span class="card-name">UADx Studer A800</span><span class="card-char">— cohesión</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Carácter</span><span class="val">Emulación del Studer A800 de 24 pistas. Engorda graves, suaviza transientes, cohesión natural.</span></div>
-    <div class="uses"><span class="use-tag">drum bus<span>pegamento</span></span><span class="use-tag">guitarras<span>cuerpo</span></span><span class="use-tag">synths<span>densidad</span></span><span class="use-tag">stems<span>cohesión</span></span></div>
-    <div class="tip">IPS 15 para más brillo, IPS 7.5 para más graves. Cuando la mezcla suena digital o delgada.</div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-tape">Tape</span><span class="card-name">UADx Ampex ATR-102</span><span class="card-char">— mastering tape</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Carácter</span><span class="val">Mastering tape de 2 pistas (1/2" y 1"). Más profundidad estéreo y brillo que el Studer.</span></div>
-    <div class="uses"><span class="use-tag">master bus<span>profundidad</span></span><span class="use-tag">mix bus<span>cohesión</span></span><span class="use-tag">pads<span>suavidad</span></span></div>
-    <div class="tip">Úsalo después del compresor de mastering. Bias alto = más saturación, bajo = más transparencia.</div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-tape">Tape</span><span class="card-name">UADx Oxide Tape Recorder</span><span class="card-char">— rápido y práctico</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Carácter</span><span class="val">Tape simplificado de UAD. Menor CPU que el Studer. Muy práctico para stems y buses.</span></div>
-    <div class="uses"><span class="use-tag">buses</span><span class="use-tag">stems</span><span class="use-tag">mezcla rápida</span></div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-tape">Tape</span><span class="card-name">IK T-RackS Tape Machines</span><span class="card-char">— 80 / 99 / 440 / 388</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid">
-      <span class="lbl">TM 80</span><span class="val">Studer A80 → buses, mezcla completa</span>
-      <span class="lbl">TM 99</span><span class="val">Revox B77 → instrumentos, guitarras</span>
-      <span class="lbl">TM 440</span><span class="val">Ampex 440 → voces, bajo</span>
-      <span class="lbl">TM 388</span><span class="val">Tascam 388 cassette multitrack → lo-fi, indie, beats</span>
-    </div></div></div>
-
-    <div class="group-label">Analog Color</div>
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-analog">Analog</span><span class="card-name">IK T-RackS Saturator X</span><span class="card-char">— multialgoritmo</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Carácter</span><span class="val">Múltiples modos (tube, tape, transformer, transistor). De sutil a muy agresivo.</span></div>
-    <div class="uses"><span class="use-tag">bajo<span>armónicos</span></span><span class="use-tag">drum bus<span>energía</span></span><span class="use-tag">synth<span>densidad</span></span></div>
-    <div class="tip">En paralelo para mantener dinámica mientras se añaden armónicos.</div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-analog">Analog</span><span class="card-name">Soundtoys Little Radiator</span><span class="card-char">— preamp valvular</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Carácter</span><span class="val">Emulación de preamp valvular. Calor vintage sutil y armónicos pares.</span></div>
-    <div class="uses"><span class="use-tag">voz<span>carácter</span></span><span class="use-tag">bajo<span>armónicos</span></span><span class="use-tag">synth<span>grosor</span></span></div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-analog">Analog</span><span class="card-name">Softube Saturation Knob</span><span class="card-char">— simple un knob</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Carácter</span><span class="val">Tres modos: Keep Low, Neutral, Keep High. Rápido y musical.</span></div>
-    <div class="uses"><span class="use-tag">bajo</span><span class="use-tag">guitarras</span><span class="use-tag">drum bus</span></div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-analog">Analog</span><span class="card-name">Waves Magma Tube Channel</span><span class="card-char">— valvular</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="uses"><span class="use-tag">voces</span><span class="use-tag">guitarras</span><span class="use-tag">buses</span></div></div></div>
-
-    <div class="group-label">Lo-Fi / Creative Color</div>
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-lofi">Lo-Fi</span><span class="card-name">XLN Audio RC-20 Retro Color</span><span class="card-char">— noise, distortion, wobble, space</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Tipo</span><span class="val">Multi-efecto de color analógico. 6 módulos independientes combinables.</span></div>
-    <div class="uses"><span class="use-tag">synths<span>textura</span></span><span class="use-tag">beats<span>carácter</span></span><span class="use-tag">pads<span>nostalgia</span></span></div>
-    <div class="tip">Para identidad estética fuerte. Cada módulo tiene bypass independiente.</div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-lofi">Lo-Fi</span><span class="card-name">Wavesfactory Cassette Transport</span><span class="card-char">— cassette</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="uses"><span class="use-tag">indie</span><span class="use-tag">lo-fi</span><span class="use-tag">ambient</span></div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-lofi">Lo-Fi</span><span class="card-name">Freakshow Industries</span><span class="card-char">— experimental</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="uses"><span class="use-tag">sound design</span><span class="use-tag">glitch</span><span class="use-tag">ambient</span></div></div></div>
-
-    <div class="divider"></div>
-    <div class="group-label">Regla simple</div>
-    <table class="rule-table">
-      <tr><td>mezcla fría / digital</td><td>Studer A800</td></tr>
-      <tr><td>master plano</td><td>ATR-102</td></tr>
-      <tr><td>instrumento débil</td><td>Saturator X</td></tr>
-      <tr><td>voz demasiado limpia</td><td>Little Radiator</td></tr>
-      <tr><td>estética lo-fi</td><td>RC-20</td></tr>
-      <tr><td>indie / tape vintage</td><td>Cassette Transport</td></tr>
-    </table>
-  </div>
-
-  <!-- LIMITERS -->
-  <div class="section" id="a-lim">
-    <div class="sec-head">Limiters / Maximizers</div>
-    <div class="sec-sub">Último paso de la cadena · control de picos y loudness final</div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-trans">Transparente</span><span class="card-name">IK T-RackS Stealth Limiter</span><span class="card-char">— moderno y limpio</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Carácter</span><span class="val">Limiter transparente de mastering. Algoritmo ISL (Inter-Sample Limiting) para true peak preciso.</span></div>
-    <div class="uses"><span class="use-tag">master final<span>transparencia</span></span><span class="use-tag">electronic<span>loudness</span></span><span class="use-tag">rock moderno<span>punch</span></span></div>
-    <div class="tip">GR máximo 1-2 dB para resultados naturales.</div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-trans">Transparente</span><span class="card-name">Sonnox Oxford Limiter</span><span class="card-char">— alta precisión</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Carácter</span><span class="val">Limiter de mastering de referencia. Enhanced mode para mayor transparencia. Enhance dial para añadir densidad percibida.</span></div>
-    <div class="uses"><span class="use-tag">master final<span>precisión</span></span><span class="use-tag">cine<span>control dinámico</span></span></div>
-    <div class="tip">Limitar sin cambiar el carácter tonal. Uno de los limiters de mastering más respetados.</div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-hybrid">Hybrid</span><span class="card-name">Cradle The God Particle</span><span class="card-char">— comp + sat + limit</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Carácter</span><span class="val">Procesador híbrido todo-en-uno. Combina compresión espectral, saturación armónica y limiting. No es solo un limiter.</span></div>
-    <div class="uses"><span class="use-tag">mix bus<span>cohesión</span></span><span class="use-tag">master moderno<span>loudness</span></span><span class="use-tag">electronic<span>energía</span></span></div>
-    <div class="tip">Ideal combinado con ATR-102 antes y Oxford/Stealth después.</div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-trans">Transparente</span><span class="card-name">UADx Precision Limiter</span><span class="card-char">— limpio UAD</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="uses"><span class="use-tag">mix bus</span><span class="use-tag">mastering ligero</span></div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-multi">Multi-banda</span><span class="card-name">IK T-RackS Quad Limiter</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="uses"><span class="use-tag">mezcla desbalanceada<span>control de bandas</span></span><span class="use-tag">master problemático<span>estabilizar graves</span></span></div>
-    <div class="tip">Cuando hay una banda específica que genera los picos.</div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-digital">Agresivo</span><span class="card-name">IK T-RackS Brickwall Limiter</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="uses"><span class="use-tag">stems</span><span class="use-tag">buses</span><span class="use-tag">demos</span></div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-hybrid">All-in-one</span><span class="card-name">Safari Pedals Noam's Mastering Console</span><span class="card-char">— console de mastering</span><span class="new-badge">nuevo</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid">
-      <span class="lbl">Tipo</span><span class="val">Suite de mastering todo-en-uno. Basada en la console de tubo real de Safari HQ (Noam Levinberg). Sin compresor dedicado — la compresión viene de la saturación de tubo interna.</span>
-      <span class="lbl">Módulos</span><span class="val">Tube Saturation · High/Low Cut Filters · Bax EQ · MS Matrix · De-Esser · Clipper (fijo, on/off)</span>
+  <!-- Settings panel: always accessible via gear icon -->
+  <div id="settings-panel" class="settings-panel" style="display:none">
+    <div class="settings-header">
+      <span class="settings-title">Configuración</span>
+      <button class="settings-close" onclick="toggleSettings()">×</button>
     </div>
-    <div class="uses"><span class="use-tag">mix bus<span>polish final</span></span><span class="use-tag">master<span>carácter analógico</span></span><span class="use-tag">stems<span>refinado</span></span></div>
-    <div class="tip">No reemplaza un limiter — úsalo antes del limiter final. La MS Matrix es especialmente efectiva para control de imagen.</div></div></div>
+    <div class="settings-body">
+      <div class="field">
+        <label>Backend</label>
+        <div class="backend-select">
+          <button class="backend-btn active" id="settings-btn-anthropic" onclick="selectBackend('settings','anthropic')">Anthropic API</button>
+          <button class="backend-btn" id="settings-btn-ollama" onclick="selectBackend('settings','ollama')">Ollama Local</button>
+        </div>
+      </div>
 
-    <div class="divider"></div>
-    <div class="group-label">Regla simple</div>
-    <table class="rule-table">
-      <tr><td>master moderno</td><td>Stealth Limiter</td></tr>
-      <tr><td>master transparente</td><td>Oxford Limiter</td></tr>
-      <tr><td>mix bus con carácter</td><td>God Particle</td></tr>
-      <tr><td>limitación ligera UAD</td><td>Precision Limiter</td></tr>
-      <tr><td>mezcla problemática por frecuencia</td><td>Quad Limiter</td></tr>
-      <tr><td>mastering con console analógica</td><td>Noam's Mastering Console</td></tr>
-      <tr><td>stems / demos</td><td>Brickwall Limiter</td></tr>
-    </table>
-  </div>
+      <div id="settings-anthropic-fields">
+        <div class="settings-hint">
+          Clave en <code>localStorage</code> como <code>og_api_key</code>.<br>
+          Consola: <code>console.anthropic.com</code> → API Keys.
+        </div>
+        <div class="field">
+          <label>Nueva clave</label>
+          <input type="password" id="settings-key-input" placeholder="sk-ant-..." autocomplete="off">
+        </div>
+      </div>
 
-  <!-- REVERBS -->
-  <div class="section" id="a-rev">
-    <div class="sec-head">Reverbs</div>
-    <div class="sec-sub">Vintage hardware · Modern algorithmic · Convolution · Spatial</div>
+      <div id="settings-ollama-fields" style="display:none">
+        <div class="settings-hint">
+          Ollama corre localmente. No necesita API key.
+        </div>
+        <div class="field">
+          <label>Modelo</label>
+          <input type="text" id="settings-ollama-model" placeholder="mistral">
+        </div>
+        <div class="field">
+          <label>URL</label>
+          <input type="text" id="settings-ollama-url" placeholder="http://localhost:11434">
+        </div>
+      </div>
 
-    <div class="group-label">Vintage hardware</div>
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-vintage">Vintage</span><span class="card-name">UADx Lexicon 224</span><span class="card-char">— digital clásica 1978</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Tipo</span><span class="val">Emulación del Lexicon 224, uno de los primeros reverberadores digitales. Carácter único, no totalmente limpio.</span></div>
-    <div class="uses"><span class="use-tag">vocal<span>profundidad vintage</span></span><span class="use-tag">snare<span>cola musical</span></span><span class="use-tag">synths<span>ambiente</span></span></div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-vintage">Vintage</span><span class="card-name">UADx EMT 140 Plate</span><span class="card-char">— plate mecánica</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Tipo</span><span class="val">Plate reverb mecánica (plancha de acero físicamente). Más brillante que reverbs de sala.</span></div>
-    <div class="uses"><span class="use-tag">voces<span>presencia</span></span><span class="use-tag">snare<span>carácter clásico</span></span><span class="use-tag">guitarras<span>sustain</span></span></div>
-    <div class="tip">Referencia en grabaciones 60-70s. Cola densa sin ensuciar la mezcla.</div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-vintage">Vintage</span><span class="card-name">UADx Capitol Chambers</span><span class="card-char">— cámaras reales de Capitol Studios</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Tipo</span><span class="val">Emulación de las cámaras de eco reales de Capitol Studios (Hollywood). Una de las reverbs más distintivas del catálogo UAD.</span></div>
-    <div class="uses"><span class="use-tag">voces<span>espacio real</span></span><span class="use-tag">piano<span>profundidad</span></span><span class="use-tag">strings<span>dimensión</span></span></div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-vintage">Vintage</span><span class="card-name">UADx Pure Plate / Sound City Studios</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="uses"><span class="use-tag">Pure Plate → vocal moderna, pop, piano</span><span class="use-tag">Sound City → drum room, guitarras, mezcla completa</span></div></div></div>
-
-    <div class="group-label">Modern / Algorithmic</div>
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-algo">Modern</span><span class="card-name">Relab LX480</span><span class="card-char">— Lexicon 480L</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Tipo</span><span class="val">Emulación del Lexicon 480L (sucesor del 224). Más grande y moderno que el 224.</span></div>
-    <div class="uses"><span class="use-tag">pads<span>espacio</span></span><span class="use-tag">voces<span>profundidad</span></span><span class="use-tag">ambient<span>atmósfera</span></span></div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-algo">Modern</span><span class="card-name">Logic ChromaVerb / Softube TSAR-1R</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="uses"><span class="use-tag">pop</span><span class="use-tag">electrónica</span><span class="use-tag">synths</span><span class="use-tag">stems</span></div></div></div>
-
-    <div class="group-label">Convolution</div>
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-conv">Convolution</span><span class="card-name">Logic Space Designer</span><span class="card-char">— realismo total</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Tipo</span><span class="val">Reverb de convolución. Usa impulse responses de espacios reales. No puede sonar artificial.</span></div>
-    <div class="uses"><span class="use-tag">orquesta<span>naturalidad</span></span><span class="use-tag">piano<span>realismo</span></span><span class="use-tag">cine<span>ambiente</span></span></div></div></div>
-
-    <div class="group-label">Spatial / 3D</div>
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-spatial">Spatial</span><span class="card-name">Dear Reality Exoverb / Exoverb Micro</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="uses"><span class="use-tag">electrónica</span><span class="use-tag">mezcla moderna</span><span class="use-tag">buses</span></div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-spatial">Creative</span><span class="card-name">Safari Pedals Rhino Reverb</span><span class="card-char">— experimental</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="uses"><span class="use-tag">sound design</span><span class="use-tag">ambient</span></div></div></div>
-
-    <div class="divider"></div>
-    <div class="group-label">Regla simple</div>
-    <table class="rule-table">
-      <tr><td>vocal vintage</td><td>Lexicon 224</td></tr>
-      <tr><td>snare clásica</td><td>EMT 140 Plate</td></tr>
-      <tr><td>espacio realista</td><td>Capitol Chambers</td></tr>
-      <tr><td>pads modernos</td><td>LX480</td></tr>
-      <tr><td>orquesta / piano</td><td>Space Designer</td></tr>
-      <tr><td>pop moderno</td><td>ChromaVerb</td></tr>
-    </table>
-  </div>
-
-  <!-- DELAYS -->
-  <div class="section" id="a-del">
-    <div class="sec-head">Delays</div>
-    <div class="sec-sub">Tape · Digital · Creative</div>
-
-    <div class="group-label">Tape delays</div>
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-tdel">Tape</span><span class="card-name">UADx Galaxy Tape Echo</span><span class="card-char">— Roland RE-201 Space Echo</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Carácter</span><span class="val">Emulación del Roland RE-201. Oscuro, cálido, repeticiones que se degradan naturalmente.</span></div>
-    <div class="uses"><span class="use-tag">guitarras<span>eco vintage</span></span><span class="use-tag">voces<span>atmósfera</span></span><span class="use-tag">dub<span>repetición orgánica</span></span></div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-tdel">Tape</span><span class="card-name">UADx EP-34 Tape Echo</span><span class="card-char">— Maestro Echoplex</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Carácter</span><span class="val">Emulación del Maestro EP-3 Echoplex. Más brillante que el Space Echo.</span></div>
-    <div class="uses"><span class="use-tag">guitarras</span><span class="use-tag">leads</span><span class="use-tag">rock clásico</span></div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-tdel">Tape</span><span class="card-name">Pulsar Echorec</span><span class="card-char">— Binson Echorec</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Carácter</span><span class="val">Emulación del Binson Echorec (disco magnético, no cinta). Repeticiones rítmicas múltiples únicas.</span></div>
-    <div class="uses"><span class="use-tag">guitarras<span>psicodelia</span></span><span class="use-tag">Rhodes<span>groove</span></span><span class="use-tag">pads<span>movimiento</span></span></div>
-    <div class="tip">Favorito de Pink Floyd. Para delays hipnóticos con ritmo propio.</div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-tdel">Tape + Chorus</span><span class="card-name">Safari Pedals Fox Echo Chorus</span><span class="card-char">— Roland Echo Chorus Classic</span><span class="new-badge">nuevo</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid">
-      <span class="lbl">Tipo</span><span class="val">Homenaje al Roland Echo Chorus Classic. Tape delay analógico + chorus modulado combinados.</span>
-      <span class="lbl">Módulos</span><span class="val">Echo (6 modos de tape head) · Chorus · Sound on Sound (feedback tape) · EQ · Noise · Blend · Auto Gain · Width</span>
+      <button class="save-btn" onclick="saveSettingsConfig()">Guardar</button>
     </div>
-    <div class="uses"><span class="use-tag">guitarras<span>eco + width</span></span><span class="use-tag">Rhodes / synths<span>movimiento</span></span><span class="use-tag">voces<span>atmósfera</span></span><span class="use-tag">dub</span></div>
-    <div class="tip">Sound on Sound = tape feedback que se graba sobre sí mismo. Sin tempo sync — imita el comportamiento analógico.</div></div></div>
-
-    <div class="group-label">Digital delays</div>
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-ddel">Digital</span><span class="card-name">Soundtoys EchoBoy</span><span class="card-char">— muy versátil</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Tipo</span><span class="val">Delay digital multimodal. Emula múltiples hardware (Studio, Tape, Analog, etc.).</span></div>
-    <div class="uses"><span class="use-tag">voces<span>slapback</span></span><span class="use-tag">guitarras<span>repetición</span></span><span class="use-tag">synths<span>movimiento</span></span></div>
-    <div class="tip">El delay más versátil del arsenal. Ritmo, eco, slapback: todo en uno.</div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-ddel">Digital</span><span class="card-name">NI Replika</span><span class="card-char">— limpio estéreo</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="uses"><span class="use-tag">electrónica</span><span class="use-tag">synths</span><span class="use-tag">ambient</span></div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-ddel">Digital</span><span class="card-name">Logic Echo / Tape Delay</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="uses"><span class="use-tag">pop</span><span class="use-tag">producción rápida</span><span class="use-tag">guitarras</span><span class="use-tag">dub</span></div></div></div>
-
-    <div class="group-label">Creative delays</div>
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-cdel">Creative</span><span class="card-name">Soundtoys Little PrimalTap</span><span class="card-char">— glitch + pitch shifting</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Tipo</span><span class="val">Basado en el Lexicon Prime Time. Delay con pitch shifting, degradación y efectos raros.</span></div>
-    <div class="uses"><span class="use-tag">sound design</span><span class="use-tag">experimental</span></div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-cdel">Creative</span><span class="card-name">IK T-RackS Tape Echo / Space Delay</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="uses"><span class="use-tag">guitarras</span><span class="use-tag">dub</span><span class="use-tag">ambient</span><span class="use-tag">synths</span></div></div></div>
-
-    <div class="divider"></div>
-    <div class="group-label">Regla simple</div>
-    <table class="rule-table">
-      <tr><td>vocal pop</td><td>EchoBoy</td></tr>
-      <tr><td>guitarra vintage</td><td>Galaxy Tape Echo</td></tr>
-      <tr><td>psicodelia / dub</td><td>Echorec</td></tr>
-      <tr><td>delay + chorus vintage</td><td>Fox Echo Chorus</td></tr>
-      <tr><td>electrónica</td><td>Replika</td></tr>
-      <tr><td>experimental</td><td>Little PrimalTap</td></tr>
-    </table>
-  </div>
-
-  <!-- MODULACIÓN -->
-  <div class="section" id="a-mod">
-    <div class="sec-head">Modulación</div>
-    <div class="sec-sub">Chorus · Phaser · Rotary · Creative multi-FX</div>
-
-    <div class="group-label">Chorus</div>
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-chorus">Chorus</span><span class="card-name">UADx Studio D Chorus</span><span class="card-char">— Roland Dimension D</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Carácter</span><span class="val">Emulación del Roland SDD-320 Dimension D. Solo 4 botones. El más natural y discreto de todos.</span></div>
-    <div class="uses"><span class="use-tag">voces<span>apertura sin efecto obvio</span></span><span class="use-tag">pads<span>amplitud</span></span><span class="use-tag">mix bus sutil<span>width</span></span></div>
-    <div class="tip">Cuando necesitas abrir el estéreo sin que nadie note un chorus.</div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-chorus">Chorus</span><span class="card-name">UADx Brigade Chorus</span><span class="card-char">— Boss CE-1</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Carácter</span><span class="val">Emulación del Boss CE-1 (el primer Boss chorus). BBD analógico, cálido y ancho.</span></div>
-    <div class="uses"><span class="use-tag">guitarras limpias<span>ancho</span></span><span class="use-tag">Rhodes<span>movimiento</span></span><span class="use-tag">synth pads<span>densidad</span></span></div></div></div>
-
-    <div class="group-label">Phaser</div>
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-phaser">Phaser</span><span class="card-name">Soundtoys PhaseMistress</span><span class="card-char">— avanzado</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Carácter</span><span class="val">Phaser muy flexible con múltiples etapas y modos. De vintage sutil a swoosh agresivo.</span></div>
-    <div class="uses"><span class="use-tag">guitarras<span>movimiento</span></span><span class="use-tag">pads<span>textura</span></span><span class="use-tag">drums<span>groove</span></span></div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-phaser">Phaser</span><span class="card-name">Safari Pedals Hawk Phaser / Softube Fix Phaser</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="uses"><span class="use-tag">guitarras<span>psicodelia</span></span><span class="use-tag">Rhodes<span>groove</span></span><span class="use-tag">leads</span></div></div></div>
-
-    <div class="group-label">Rotary</div>
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-rotary">Rotary</span><span class="card-name">UADx Waterfall Rotary</span><span class="card-char">— Leslie</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Carácter</span><span class="val">Emulación del altavoz rotatorio Leslie. El movimiento Doppler más orgánico posible.</span></div>
-    <div class="uses"><span class="use-tag">Hammond<span>clásico</span></span><span class="use-tag">guitarras<span>movimiento</span></span><span class="use-tag">pads<span>atmósfera</span></span></div></div></div>
-
-    <div class="group-label">Multi / Creative</div>
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-mmod">Creative</span><span class="card-name">Output Movement</span><span class="card-char">— modulación rítmica</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Tipo</span><span class="val">Multi-efecto de modulación rítmica. Ritmo, volumen, filtros y efectos sincronizados al tempo.</span></div>
-    <div class="uses"><span class="use-tag">synths<span>movimiento</span></span><span class="use-tag">beats<span>groove</span></span><span class="use-tag">ambient<span>textura</span></span></div></div></div>
-
-    <div class="divider"></div>
-    <div class="group-label">Regla simple</div>
-    <table class="rule-table">
-      <tr><td>abrir estéreo sin que se note</td><td>Studio D Chorus</td></tr>
-      <tr><td>guitarra psicodélica</td><td>PhaseMistress</td></tr>
-      <tr><td>órgano / pad vintage</td><td>Waterfall Rotary</td></tr>
-      <tr><td>pad ancho y cálido</td><td>Brigade Chorus</td></tr>
-      <tr><td>delay + chorus vintage</td><td>Fox Echo Chorus</td></tr>
-      <tr><td>groove electrónico rítmico</td><td>Output Movement</td></tr>
-    </table>
-  </div>
-
-  <!-- TOOLS -->
-  <div class="section" id="a-tools">
-    <div class="sec-head">Tools</div>
-    <div class="sec-sub">AI · Metering · Monitor Calibration</div>
-
-    <div class="group-label">AI Assistant</div>
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-ai">AI</span><span class="card-name">Safari Audio Meaw:Assist</span><span class="card-char">— AI cat friend en el DAW</span><span class="new-badge">nuevo</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid">
-      <span class="lbl">Tipo</span><span class="val">Plugin de IA conversacional para producción y mezcla. Funciona dentro del DAW como cualquier plugin.</span>
-      <span class="lbl">Modos</span><span class="val">Producer Cat (ideas, letras, arreglos, dirección creativa) · Engineer Cat (mezcla, diagnóstico, decisiones técnicas)</span>
-      <span class="lbl">Input</span><span class="val">Texto o audio — graba, reproduce o arrastra secciones del track al plugin.</span>
-      <span class="lbl">Modelo</span><span class="val">Modelo propio de Safari Audio. Entrenado para producción musical. No usa tu audio para entrenar.</span>
-    </div>
-    <div class="uses"><span class="use-tag">mixing questions</span><span class="use-tag">music theory</span><span class="use-tag">plugin suggestions</span><span class="use-tag">creative blocks</span><span class="use-tag">LUFS / BPM / técnico</span></div>
-    <div class="tip">Más útil para diagnóstico y segundas opiniones que para tomar decisiones finales.</div></div></div>
-
-    <div class="group-label">Metering</div>
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-digital">Metering</span><span class="card-name">iZotope Insight / Tonal Balance Control</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="uses"><span class="use-tag">Insight → análisis LUFS, loudness, espectro</span><span class="use-tag">TBC → balance tonal comparado con referencias</span></div></div></div>
-
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-digital">Metering</span><span class="card-name">Logic Loudness Meter / IK T-RackS Metering</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="uses"><span class="use-tag">LUFS integrado y true peak</span><span class="use-tag">referencia rápida en mastering</span></div></div></div>
-
-    <div class="group-label">Monitor Calibration</div>
-    <div class="card"><div class="card-hd" onclick="tog(this)"><div class="card-left"><span class="badge b-digital">Cal</span><span class="card-name">SoundID Reference (Sonarworks)</span></div><span class="chev">▶</span></div>
-    <div class="card-bd"><div class="info-grid"><span class="lbl">Uso</span><span class="val">Compensación de la respuesta de monitores Genelec 8020D y headphones Audeze. Solo en la escucha.</span></div>
-    <div class="tip">Siempre en bypass al exportar el master final.</div></div></div>
-  </div>
-</div>
-
-<!-- ========== PANEL: MASTER SYSTEM ========== -->
-<div id="panel-processes" class="main-panel">
-  <div class="tabs" id="processes-tabs">
-    <button class="tab active" onclick="go('mini','processes',this)">Mac Mini</button>
-    <button class="tab" onclick="go('mbp','processes',this)">MacBook Pro</button>
-    <button class="tab" onclick="go('targets','processes',this)">Targets</button>
-    <button class="tab" onclick="go('atmos','processes',this)">Atmos Map</button>
-    <button class="tab" onclick="go('flow','processes',this)">Atmos Flow</button>
-  </div>
-
-  <!-- MAC MINI -->
-  <div class="section on" id="p-mini">
-    <div class="sec-head">Master Chains — Mac Mini</div>
-    <div class="sec-sub">3 cadenas · UADx full rig</div>
-
-    <div class="chain-card">
-      <div class="chain-hd" onclick="togc(this)">
-        <div class="chain-hd-left"><span class="chain-emoji">🔥</span><span><span class="badge-analog">Analog Core</span></span><span class="chain-title">Depth Version</span><span class="chain-genre">— signature</span></div>
-        <span class="chev">▶</span>
-      </div>
-      <div class="chain-bd">
-        <table class="chain-table">
-          <thead><tr><th>#</th><th>Plugin</th><th>Target</th><th>Nota</th></tr></thead>
-          <tbody>
-            <tr><td><span class="step-num">1</span></td><td><span class="plugin-name">Pultec EQP-1A</span></td><td class="target-val">–18 RMS</td><td class="plugin-note">60 Hz boost + atten sutil / 10 kHz aire leve</td></tr>
-            <tr><td><span class="step-num">2</span></td><td><span class="plugin-name">Fairchild 670</span></td><td class="target-val">–16 RMS</td><td class="plugin-note">1–2 dB GR · glue musical</td></tr>
-            <tr><td><span class="step-num">3</span></td><td><span class="plugin-name">Studer A800</span></td><td class="target-val">–14 LUFS</td><td class="plugin-note">Cohesión analógica</td></tr>
-            <tr><td><span class="step-num">4</span></td><td><span class="plugin-name">Oxford Inflator</span></td><td class="target-val">–13 LUFS</td><td class="plugin-note">15–25% · densidad controlada</td></tr>
-            <tr><td><span class="step-num">5</span></td><td><span class="plugin-name">God Particle</span></td><td class="target-val">–12 LUFS</td><td class="plugin-note">Balance espectral + micro-dinámica</td></tr>
-            <tr><td><span class="step-num">6</span></td><td><span class="plugin-name">ATR-102</span></td><td class="target-val">–11.5 LUFS</td><td class="plugin-note">Profundidad estéreo natural</td></tr>
-            <tr><td><span class="step-num">7</span></td><td><span class="plugin-name">Oxford Limiter</span></td><td class="target-val">–10 LUFS / –1 dBTP</td><td class="plugin-note">1–2 dB GR máximo</td></tr>
-          </tbody>
-        </table>
-        <div class="result-row"><span class="result-label">resultado →</span><span class="result-tag">centro sólido</span><span class="result-tag">profundidad tridimensional</span><span class="result-tag">Soul / Jazz / Rock</span></div>
-      </div>
-    </div>
-
-    <div class="chain-card">
-      <div class="chain-hd" onclick="togc(this)">
-        <div class="chain-hd-left"><span class="chain-emoji">⚡</span><span><span class="badge-modern">Modern Control</span></span><span class="chain-title">Open Clean</span><span class="chain-genre">— limpio y abierto</span></div>
-        <span class="chev">▶</span>
-      </div>
-      <div class="chain-bd">
-        <table class="chain-table">
-          <thead><tr><th>#</th><th>Plugin</th><th>Target</th><th>Nota</th></tr></thead>
-          <tbody>
-            <tr><td><span class="step-num">1</span></td><td><span class="plugin-name">Lindell 80 Series</span></td><td class="target-val">–18 RMS</td><td class="plugin-note">Tilt tonal sutil</td></tr>
-            <tr><td><span class="step-num">2</span></td><td><span class="plugin-name">Capitol Compressor</span></td><td class="target-val">–16 RMS</td><td class="plugin-note">1 dB GR</td></tr>
-            <tr><td><span class="step-num">3</span></td><td><span class="plugin-name">Studer A800</span></td><td class="target-val">–14 LUFS</td><td class="plugin-note">Punch cohesivo</td></tr>
-            <tr><td><span class="step-num">4</span></td><td><span class="plugin-name">God Particle</span></td><td class="target-val">–12 LUFS</td><td class="plugin-note">Control moderno del espectro</td></tr>
-            <tr><td><span class="step-num">5</span></td><td><span class="plugin-name">ATR-102</span></td><td class="target-val">–11.5 LUFS</td><td class="plugin-note">Apertura y profundidad</td></tr>
-            <tr><td><span class="step-num">6</span></td><td><span class="plugin-name">Oxford Limiter</span></td><td class="target-val">–10 LUFS / –1 dBTP</td><td class="plugin-note">Loudness transparente</td></tr>
-          </tbody>
-        </table>
-        <div class="result-row"><span class="result-label">resultado →</span><span class="result-tag">más limpio</span><span class="result-tag">más abierto</span><span class="result-tag">menos romántico</span></div>
-      </div>
-    </div>
-
-    <div class="chain-card">
-      <div class="chain-hd" onclick="togc(this)">
-        <div class="chain-hd-left"><span class="chain-emoji">🧨</span><span><span class="badge-rough">Rough Statement</span></span><span class="chain-title">Texture Wide</span><span class="chain-genre">— grit + espacio lateral</span></div>
-        <span class="chev">▶</span>
-      </div>
-      <div class="chain-bd">
-        <table class="chain-table">
-          <thead><tr><th>#</th><th>Plugin</th><th>Target</th><th>Nota</th></tr></thead>
-          <tbody>
-            <tr><td><span class="step-num">1</span></td><td><span class="plugin-name">Studer A800</span></td><td class="target-val">–17 RMS</td><td class="plugin-note">Color inicial</td></tr>
-            <tr><td><span class="step-num">2</span></td><td><span class="plugin-name">Drawmer S73</span></td><td class="target-val">–16 RMS</td><td class="plugin-note">Densidad paralela</td></tr>
-            <tr><td><span class="step-num">3</span></td><td><span class="plugin-name">Magma Tube III</span></td><td class="target-val">–14 LUFS</td><td class="plugin-note">Grit armónico</td></tr>
-            <tr><td><span class="step-num">4</span></td><td><span class="plugin-name">Oxford Inflator</span></td><td class="target-val">–13 LUFS</td><td class="plugin-note">Re-densificación</td></tr>
-            <tr><td><span class="step-num">5</span></td><td><span class="plugin-name">God Particle</span></td><td class="target-val">–12 LUFS</td><td class="plugin-note">Rebalance post-color</td></tr>
-            <tr><td><span class="step-num">6</span></td><td><span class="plugin-name">ATR-102</span></td><td class="target-val">–11.5 LUFS</td><td class="plugin-note">Profundidad estéreo</td></tr>
-            <tr><td><span class="step-num">7</span></td><td><span class="plugin-name">Stealth Limiter</span></td><td class="target-val">–10 LUFS / –1 dBTP</td><td class="plugin-note">Control final</td></tr>
-          </tbody>
-        </table>
-        <div class="result-row"><span class="result-label">resultado →</span><span class="result-tag">textura viva</span><span class="result-tag">espacio lateral real</span><span class="result-tag">identidad fuerte</span></div>
-      </div>
-    </div>
-
-    <div class="tip-box"><strong>Tres plugins absolutamente centrales en el Mac Mini:</strong> Studer A800 (pega la mezcla) · God Particle (equilibrio moderno) · ATR-102 (profundidad final).</div>
-  </div>
-
-  <!-- MACBOOK PRO -->
-  <div class="section" id="p-mbp">
-    <div class="sec-head">Master Chains — MacBook Pro</div>
-    <div class="sec-sub">4 cadenas · arsenal portátil</div>
-
-    <div class="chain-card">
-      <div class="chain-hd" onclick="togc(this)">
-        <div class="chain-hd-left"><span class="chain-emoji">🔥</span><span><span class="badge-analog">Analog Depth</span></span><span class="chain-title">Signature</span><span class="chain-genre">— Soul / Jazz / Rock / estética orgánica</span></div>
-        <span class="chev">▶</span>
-      </div>
-      <div class="chain-bd">
-        <table class="chain-table">
-          <thead><tr><th>#</th><th>Plugin</th><th>Target</th><th>Nota</th></tr></thead>
-          <tbody>
-            <tr><td><span class="step-num">1</span></td><td><span class="plugin-name">UADx Pultec EQP-1A</span></td><td class="target-val">–18 RMS</td><td class="plugin-note">+1 dB @ 60 Hz / +1 dB @ 12 kHz</td></tr>
-            <tr><td><span class="step-num">2</span></td><td><span class="plugin-name">UADx Fairchild 670</span></td><td class="target-val">–16 RMS</td><td class="plugin-note">1–2 dB GR · time constant 2</td></tr>
-            <tr><td><span class="step-num">3</span></td><td><span class="plugin-name">UADx Studer A800</span></td><td class="target-val">–15 LUFS</td><td class="plugin-note">IPS 15 / Drive 1–2</td></tr>
-            <tr><td><span class="step-num">4</span></td><td><span class="plugin-name">Cradle God Particle</span></td><td class="target-val">–13 LUFS</td><td class="plugin-note">Drive +1 / Density 20</td></tr>
-            <tr><td><span class="step-num">5</span></td><td><span class="plugin-name">UADx Ampex ATR-102</span></td><td class="target-val">–12 LUFS</td><td class="plugin-note">Bias +2 / HF +1</td></tr>
-            <tr><td><span class="step-num">6</span></td><td><span class="plugin-name">T-RackS Stealth Limiter</span></td><td class="target-val">–10–11 LUFS / –1 dBTP</td><td class="plugin-note">1–2 dB GR</td></tr>
-          </tbody>
-        </table>
-        <div class="result-row"><span class="result-label">resultado →</span><span class="result-tag">centro fuerte</span><span class="result-tag">profundidad analógica</span><span class="result-tag">estéreo natural</span><span class="result-tag">mezcla "respira"</span></div>
-      </div>
-    </div>
-
-    <div class="chain-card">
-      <div class="chain-hd" onclick="togc(this)">
-        <div class="chain-hd-left"><span class="chain-emoji">⚡</span><span><span class="badge-modern">Modern Open</span></span><span class="chain-title">Claridad + Aire</span><span class="chain-genre">— Pop / Electrónica / Indie moderno</span></div>
-        <span class="chev">▶</span>
-      </div>
-      <div class="chain-bd">
-        <table class="chain-table">
-          <thead><tr><th>#</th><th>Plugin</th><th>Target</th><th>Nota</th></tr></thead>
-          <tbody>
-            <tr><td><span class="step-num">1</span></td><td><span class="plugin-name">T-RackS Linear Phase EQ</span></td><td class="target-val">–18 RMS</td><td class="plugin-note">HPF 30 Hz</td></tr>
-            <tr><td><span class="step-num">2</span></td><td><span class="plugin-name">Oeksound soothe2</span></td><td class="target-val">–17 RMS</td><td class="plugin-note">Depth 35%</td></tr>
-            <tr><td><span class="step-num">3</span></td><td><span class="plugin-name">UADx Capitol Mastering Comp</span></td><td class="target-val">–15 LUFS</td><td class="plugin-note">GR 1 dB</td></tr>
-            <tr><td><span class="step-num">4</span></td><td><span class="plugin-name">MAAG EQ2</span></td><td class="target-val">–14 LUFS</td><td class="plugin-note">+1.5 dB Air Band</td></tr>
-            <tr><td><span class="step-num">5</span></td><td><span class="plugin-name">Cradle God Particle</span></td><td class="target-val">–12.5 LUFS</td><td class="plugin-note">Character Modern</td></tr>
-            <tr><td><span class="step-num">6</span></td><td><span class="plugin-name">UADx Precision Limiter</span></td><td class="target-val">–10–11 LUFS</td><td class="plugin-note">Transparente</td></tr>
-          </tbody>
-        </table>
-        <div class="result-row"><span class="result-label">resultado →</span><span class="result-tag">claridad moderna</span><span class="result-tag">hi-fi</span><span class="result-tag">mucha separación</span></div>
-      </div>
-    </div>
-
-    <div class="chain-card">
-      <div class="chain-hd" onclick="togc(this)">
-        <div class="chain-hd-left"><span class="chain-emoji">🧨</span><span><span class="badge-color">Color &amp; Punch</span></span><span class="chain-title">Energía + Groove</span><span class="chain-genre">— Rock / Funk / Alt</span></div>
-        <span class="chev">▶</span>
-      </div>
-      <div class="chain-bd">
-        <table class="chain-table">
-          <thead><tr><th>#</th><th>Plugin</th><th>Target</th><th>Nota</th></tr></thead>
-          <tbody>
-            <tr><td><span class="step-num">1</span></td><td><span class="plugin-name">UADx 1176 Rev E</span></td><td class="target-val">–18 RMS</td><td class="plugin-note">GR 2 dB</td></tr>
-            <tr><td><span class="step-num">2</span></td><td><span class="plugin-name">Pulsar W495</span></td><td class="target-val">–16 RMS</td><td class="plugin-note">+0.5 dB low / +1 dB air</td></tr>
-            <tr><td><span class="step-num">3</span></td><td><span class="plugin-name">UADx Studer A800</span></td><td class="target-val">–14 LUFS</td><td class="plugin-note">Drive 2</td></tr>
-            <tr><td><span class="step-num">4</span></td><td><span class="plugin-name">T-RackS Classic Clipper</span></td><td class="target-val">–13 LUFS</td><td class="plugin-note">Soft clip 10–15%</td></tr>
-            <tr><td><span class="step-num">5</span></td><td><span class="plugin-name">God Particle</span></td><td class="target-val">–12 LUFS</td><td class="plugin-note">Drive +2</td></tr>
-            <tr><td><span class="step-num">6</span></td><td><span class="plugin-name">Stealth Limiter</span></td><td class="target-val">–10 LUFS</td><td class="plugin-note">Ceiling final</td></tr>
-          </tbody>
-        </table>
-        <div class="result-row"><span class="result-label">resultado →</span><span class="result-tag">impacto rítmico</span><span class="result-tag">mezcla hacia delante</span><span class="result-tag">carácter analógico fuerte</span></div>
-      </div>
-    </div>
-
-    <div class="chain-card">
-      <div class="chain-hd" onclick="togc(this)">
-        <div class="chain-hd-left"><span class="chain-emoji">🌌</span><span><span class="badge-wide">Wide Cinematic</span></span><span class="chain-title">Profundidad + Estéreo</span><span class="chain-genre">— Ambient / Cinematic / OG atmospheres</span></div>
-        <span class="chev">▶</span>
-      </div>
-      <div class="chain-bd">
-        <table class="chain-table">
-          <thead><tr><th>#</th><th>Plugin</th><th>Target</th><th>Nota</th></tr></thead>
-          <tbody>
-            <tr><td><span class="step-num">1</span></td><td><span class="plugin-name">Pulsar W495</span></td><td class="target-val">–18 RMS</td><td class="plugin-note">Sculpt muy suave</td></tr>
-            <tr><td><span class="step-num">2</span></td><td><span class="plugin-name">soothe2</span></td><td class="target-val">–16 RMS</td><td class="plugin-note">Depth 25%</td></tr>
-            <tr><td><span class="step-num">3</span></td><td><span class="plugin-name">UADx Fairchild 670</span></td><td class="target-val">–15 LUFS</td><td class="plugin-note">GR 1 dB</td></tr>
-            <tr><td><span class="step-num">4</span></td><td><span class="plugin-name">UADx ATR-102</span></td><td class="target-val">–13 LUFS</td><td class="plugin-note">Tape width</td></tr>
-            <tr><td><span class="step-num">5</span></td><td><span class="plugin-name">God Particle</span></td><td class="target-val">–12 LUFS</td><td class="plugin-note">Character Wide</td></tr>
-            <tr><td><span class="step-num">6</span></td><td><span class="plugin-name">Precision Limiter</span></td><td class="target-val">–11 LUFS</td><td class="plugin-note">Control final</td></tr>
-          </tbody>
-        </table>
-        <div class="result-row"><span class="result-label">resultado →</span><span class="result-tag">mezcla muy profunda</span><span class="result-tag">estéreo natural</span><span class="result-tag">música atmosférica</span></div>
-      </div>
-    </div>
-
-    <div class="divider"></div>
-    <div class="group-label">Uso recomendado</div>
-    <div class="pct-row">
-      <div class="pct-card"><div class="pct-num">80%</div><div class="pct-label">Analog Depth · tu sonido principal</div></div>
-      <div class="pct-card"><div class="pct-num">15%</div><div class="pct-label">Modern Open · pop / indie</div></div>
-      <div class="pct-card"><div class="pct-num">5%</div><div class="pct-label">Color &amp; Punch · rock / funk</div></div>
-    </div>
-    <div class="tip-box">Eso crea <strong>consistencia estética</strong>. No cambies de cadena cada canción.</div>
-  </div>
-
-  <!-- TARGETS -->
-  <div class="section" id="p-targets">
-    <div class="sec-head">Master Targets</div>
-    <div class="sec-sub">Métricas de referencia · mantener siempre</div>
-
-    <div class="targets-grid">
-      <div class="target-card"><div class="target-lbl">True Peak</div><div class="target-num">–1 dBTP</div></div>
-      <div class="target-card"><div class="target-lbl">LUFS (integrated)</div><div class="target-num">–14 → –11</div></div>
-      <div class="target-card"><div class="target-lbl">RMS</div><div class="target-num">–14 → –12</div></div>
-      <div class="target-card"><div class="target-lbl">Dynamic Range</div><div class="target-num">8 → 10</div></div>
-      <div class="target-card"><div class="target-lbl">Stereo Correlation</div><div class="target-num">0.85 → 0.95</div></div>
-    </div>
-
-    <div class="divider"></div>
-    <div class="group-label">Los tres plugins centrales del sistema</div>
-    <div class="three-pillars">
-      <div class="pillar"><div class="pillar-name">Studer A800</div><div class="pillar-desc">pega la mezcla</div></div>
-      <div class="pillar"><div class="pillar-name">God Particle</div><div class="pillar-desc">equilibrio moderno</div></div>
-      <div class="pillar"><div class="pillar-name">ATR-102</div><div class="pillar-desc">profundidad final</div></div>
-    </div>
-
-    <div class="divider"></div>
-    <div class="group-label">Referencia rápida por género</div>
-    <table class="rule-table">
-      <tr><td>Soul / Jazz / Rock orgánico</td><td>Analog Depth / Analog Core</td></tr>
-      <tr><td>Pop / Indie moderno / Electrónica limpia</td><td>Modern Open</td></tr>
-      <tr><td>Rock / Funk / Alt</td><td>Color &amp; Punch</td></tr>
-      <tr><td>Ambient / Cinematic / Atmósferas</td><td>Wide Cinematic</td></tr>
-      <tr><td>Mezcla con mucho grit / textura</td><td>Rough Statement / Texture Wide</td></tr>
-    </table>
-  </div>
-
-  <!-- ATMOS MAP -->
-  <div class="section" id="p-atmos">
-    <div class="sec-head">Atmos Plugin Map</div>
-    <div class="sec-sub">🟢 Safe · 🟡 Contextual · 🔴 Avoid</div>
-
-    <div class="atmos-zone">
-      <div class="atmos-zone-hd" onclick="togz(this)">
-        <span class="zone-dot dot-green"></span>
-        <div><span class="zone-title">🟢 SAFE — Atmos Workhorses</span><span class="zone-sub"> · trabajan por canal, base de objetos</span></div>
-      </div>
-      <div class="atmos-zone-bd">
-        <div class="group-label" style="margin-top:10px">EQ / Tonal Control</div>
-        <div class="plugin-pills"><span class="pill pill-ok">Logic Channel EQ</span><span class="pill pill-ok">Pultec EQP-1A</span><span class="pill pill-ok">Pultec MEQ-5</span><span class="pill pill-ok">Lindell 80 EQ</span><span class="pill pill-ok">Focusrite Red 2</span><span class="pill pill-ok">Pulsar W495</span><span class="pill pill-ok">MAutoDynamicEQ</span><span class="pill pill-ok">soothe2</span><span class="pill pill-ok">spiff</span></div>
-        <div class="tip-box" style="margin-top:8px">En Atmos el EQ es <strong>mucho más importante que el compresor</strong>.</div>
-        <div class="group-label">Compression</div>
-        <div class="plugin-pills"><span class="pill pill-ok">UADx 1176</span><span class="pill pill-ok">UADx LA-2A</span><span class="pill pill-ok">UADx LA-3A</span><span class="pill pill-ok">Fairchild 660/670</span><span class="pill pill-ok">dbx160</span><span class="pill pill-ok">API 2500 (dual mono)</span><span class="pill pill-ok">Softube VCA</span><span class="pill pill-ok">Drawmer S73 (suave)</span></div>
-        <div class="tip-box" style="margin-top:8px">Menos compresión que en stereo. El espacio lo necesita.</div>
-        <div class="group-label">Utility</div>
-        <div class="plugin-pills"><span class="pill pill-ok">Gain / Trim</span><span class="pill pill-ok">Filters</span><span class="pill pill-ok">MAutoPitch</span><span class="pill pill-ok">Relay</span><span class="pill pill-ok">Mastering the Mix Reso</span><span class="pill pill-ok">Multimeter</span></div>
-      </div>
-    </div>
-
-    <div class="atmos-zone">
-      <div class="atmos-zone-hd" onclick="togz(this)">
-        <span class="zone-dot dot-yellow"></span>
-        <div><span class="zone-title">🟡 CONTEXTUAL — Usar con intención</span><span class="zone-sub"> · funcionan si se colocan correctamente</span></div>
-      </div>
-      <div class="atmos-zone-bd">
-        <div class="group-label" style="margin-top:10px">Saturation / Analog Color</div>
-        <div class="plugin-pills"><span class="pill pill-ctx">Studer A800</span><span class="pill pill-ctx">ATR-102</span><span class="pill pill-ctx">Oxide Tape</span><span class="pill pill-ctx">Saturation Knob</span><span class="pill pill-ctx">IK T-RackS sat.</span><span class="pill pill-ctx">RC-20</span><span class="pill pill-ctx">Magma Tube III</span></div>
-        <table class="rule-table" style="margin-top:8px"><tr><td>Objetos individuales</td><td>✔ perfecto</td></tr><tr><td>Grupos pequeños</td><td>✔ a veces</td></tr><tr><td>Atmos master</td><td>❌ evitar</td></tr></table>
-        <div class="tip-box" style="margin-top:8px">El color funciona <strong>antes del espacio</strong>, nunca después.</div>
-        <div class="group-label">Reverbs / Delays</div>
-        <div class="plugin-pills"><span class="pill pill-ctx">Lexicon 224</span><span class="pill pill-ctx">EMT 140</span><span class="pill pill-ctx">Pure Plate</span><span class="pill pill-ctx">Capitol Chambers</span><span class="pill pill-ctx">TSAR-1R</span><span class="pill pill-ctx">Exoverb</span><span class="pill pill-ctx">Galaxy Tape Echo</span><span class="pill pill-ctx">EP-34</span><span class="pill pill-ctx">Replika</span><span class="pill pill-ctx">Echorec</span></div>
-        <table class="rule-table" style="margin-top:8px"><tr><td>Mono reverb objects</td><td>✔ ideal</td></tr><tr><td>FX buses</td><td>✔ válido</td></tr><tr><td>Stereo reverb en master</td><td>❌ nunca</td></tr></table>
-        <div class="tip-box" style="margin-top:8px">La reverb se trata como <strong>objeto espacial</strong>, no como "wash".</div>
-        <div class="group-label">Advanced Dynamics / Spectral</div>
-        <div class="plugin-pills"><span class="pill pill-ctx">MAutoDynamicEQ</span><span class="pill pill-ctx">Ozone EQ</span><span class="pill pill-ctx">Ozone Dynamics</span><span class="pill pill-ctx">Neutron modules</span></div>
-        <div class="tip-box" style="margin-top:8px">Para reparar objetos problemáticos y controlar resonancias. <strong>No usar como carácter del mix.</strong></div>
-      </div>
-    </div>
-
-    <div class="atmos-zone">
-      <div class="atmos-zone-hd" onclick="togz(this)">
-        <span class="zone-dot dot-red"></span>
-        <div><span class="zone-title">🔴 AVOID — rompen la traducción Atmos</span><span class="zone-sub"> · dependen de trucos de imagen estéreo</span></div>
-      </div>
-      <div class="atmos-zone-bd">
-        <div class="group-label" style="margin-top:10px">Stereo Mastering Tools</div>
-        <div class="plugin-pills"><span class="pill pill-no">Lurssen Mastering Console</span><span class="pill pill-no">God Particle (grupos/master)</span><span class="pill pill-no">Ozone Imager</span><span class="pill pill-no">Stereo wideners</span><span class="pill pill-no">M/S processors</span></div>
-        <div class="tip-box" style="margin-top:8px">Atmos <strong>no necesita wideners</strong>. El espacio ya existe.</div>
-        <div class="group-label">Stereo Glue / Chorus Smear</div>
-        <div class="plugin-pills"><span class="pill pill-no">Stereo bus compressors</span><span class="pill pill-no">Stereo tape tricks</span><span class="pill pill-no">Crossfeed processors</span><span class="pill pill-no">Chorus para crear width</span><span class="pill pill-no">Stereo enhancers</span><span class="pill pill-no">Micro-shift tricks</span></div>
-        <div class="tip-box" style="margin-top:8px">El espacio viene del <strong>panner 3D</strong>, no del plugin.</div>
-      </div>
-    </div>
-
-    <div class="divider"></div>
-    <div class="group-label">3 armas secretas en Atmos</div>
-    <div class="three-pillars">
-      <div class="pillar"><div class="pillar-name">soothe2</div><div class="pillar-desc">limpia objetos sin romper espacio</div></div>
-      <div class="pillar"><div class="pillar-name">Pulsar W495</div><div class="pillar-desc">tono natural perfecto para beds</div></div>
-      <div class="pillar"><div class="pillar-name">Capitol Chambers</div><div class="pillar-desc">reverb para crear profundidad real</div></div>
-    </div>
-  </div>
-
-  <!-- ATMOS FLOW -->
-  <div class="section" id="p-flow">
-    <div class="sec-head">Atmos Mixing Flow</div>
-    <div class="sec-sub">Optional Ganesh System · 6 etapas</div>
-
-    <div class="flow">
-      <div class="flow-step"><div class="flow-step-inner" onclick="togf(this)"><div class="flow-step-num">1 — Source</div><div class="flow-step-name">La materia prima</div><div class="flow-step-desc">¿Objeto o bed? ¿Cerca o lejos? ¿Direccional o difuso?</div></div></div>
-      <div class="detail-block" id="f1"><table class="rule-table"><tr><td>Voz, lead, percusión</td><td>Objeto → se mueve</td></tr><tr><td>Pads, ambientes</td><td>Bed → envuelve</td></tr></table></div>
-      <div class="flow-arrow">↓</div>
-
-      <div class="flow-step"><div class="flow-step-inner" onclick="togf(this)"><div class="flow-step-num">2 — Tone</div><div class="flow-step-name">Definir la identidad del objeto</div><div class="flow-step-desc">EQ decide qué espacio ocupa el sonido</div></div></div>
-      <div class="detail-block" id="f2"><div class="plugin-pills" style="margin-bottom:8px"><span class="pill pill-ok">Logic Channel EQ</span><span class="pill pill-ok">Pultec EQP-1A</span><span class="pill pill-ok">Pulsar W495</span><span class="pill pill-ok">Lindell 80 EQ</span></div><table class="rule-table"><tr><td>Objeto borroso</td><td>cortar 200–400 Hz</td></tr><tr><td>Objeto lejano</td><td>boost 3–5 kHz</td></tr><tr><td>Objeto demasiado frontal</td><td>reducir 4–6 kHz</td></tr></table><div class="tip-box" style="margin-top:8px">En Atmos el EQ define <strong>profundidad</strong>.</div></div>
-      <div class="flow-arrow">↓</div>
-
-      <div class="flow-step"><div class="flow-step-inner" onclick="togf(this)"><div class="flow-step-num">3 — Dynamics</div><div class="flow-step-name">Estabilidad en el espacio</div><div class="flow-step-desc">Un objeto inestable se mueve raro en Atmos</div></div></div>
-      <div class="detail-block" id="f3"><div class="plugin-pills" style="margin-bottom:8px"><span class="pill pill-ok">UADx 1176</span><span class="pill pill-ok">LA-2A</span><span class="pill pill-ok">dbx160</span><span class="pill pill-ok">Fairchild</span><span class="pill pill-ok">Softube VCA</span></div><table class="rule-table"><tr><td>Percusión</td><td>1176</td></tr><tr><td>Voces</td><td>LA-2A</td></tr><tr><td>Buses</td><td>Fairchild</td></tr><tr><td>Transient control</td><td>spiff</td></tr></table><div class="tip-box" style="margin-top:8px">Atmos necesita <strong>menos compresión que stereo</strong>.</div></div>
-      <div class="flow-arrow">↓</div>
-
-      <div class="flow-step"><div class="flow-step-inner" onclick="togf(this)"><div class="flow-step-num">4 — Color</div><div class="flow-step-name">Carácter armónico</div><div class="flow-step-desc">¿Limpio, vintage, roto o texturizado?</div></div></div>
-      <div class="detail-block" id="f4"><div class="plugin-pills" style="margin-bottom:8px"><span class="pill pill-ctx">Studer A800</span><span class="pill pill-ctx">ATR-102</span><span class="pill pill-ctx">Oxide</span><span class="pill pill-ctx">Saturation Knob</span><span class="pill pill-ctx">RC-20</span></div><table class="rule-table"><tr><td>Saturación antes del espacio</td><td>✔</td></tr><tr><td>Saturación después del reverb</td><td>❌</td></tr></table></div>
-      <div class="flow-arrow">↓</div>
-
-      <div class="flow-step"><div class="flow-step-inner" onclick="togf(this)"><div class="flow-step-num">5 — Space</div><div class="flow-step-name">Colocar el sonido en el universo</div><div class="flow-step-desc">Reverbs y delays como objetos espaciales</div></div></div>
-      <div class="detail-block" id="f5"><div class="plugin-pills" style="margin-bottom:8px"><span class="pill pill-ctx">Capitol Chambers</span><span class="pill pill-ctx">Lexicon 224</span><span class="pill pill-ctx">EMT 140</span><span class="pill pill-ctx">TSAR-1R</span><span class="pill pill-ctx">Exoverb</span><span class="pill pill-ctx">Galaxy Tape Echo</span><span class="pill pill-ctx">Replika</span><span class="pill pill-ctx">Echorec</span></div><table class="rule-table"><tr><td>Lead</td><td>reverb corta</td></tr><tr><td>Objeto lejano</td><td>reverb larga</td></tr><tr><td>Ambiente</td><td>muy difusa</td></tr></table></div>
-      <div class="flow-arrow">↓</div>
-
-      <div class="flow-step"><div class="flow-step-inner" onclick="togf(this)"><div class="flow-step-num">6 — Atmos Render</div><div class="flow-step-name">Último control</div><div class="flow-step-desc">Lo importante es el panner 3D, no el plugin</div></div></div>
-      <div class="detail-block" id="f6"><div class="plugin-pills" style="margin-bottom:8px"><span class="pill pill-ok">Multimeter</span><span class="pill pill-ok">Reso</span><span class="pill pill-ok">Relay</span></div><div class="tip-box">Chequear: correlación · balance LCR · altura · traducción binaural</div></div>
-    </div>
-
-    <div class="divider"></div>
-    <div class="group-label">Sistema de 5 capas de profundidad</div>
-    <div class="depth-layers">
-      <div class="depth-cell"><div class="depth-num">Layer 1</div><div class="depth-name">Very Close</div><div class="depth-ex">voz, lead</div></div>
-      <div class="depth-cell"><div class="depth-num">Layer 2</div><div class="depth-name">Front</div><div class="depth-ex">guitarra, piano</div></div>
-      <div class="depth-cell"><div class="depth-num">Layer 3</div><div class="depth-name">Mid</div><div class="depth-ex">pads, strings</div></div>
-      <div class="depth-cell"><div class="depth-num">Layer 4</div><div class="depth-name">Far</div><div class="depth-ex">coros, drones</div></div>
-      <div class="depth-cell"><div class="depth-num">Layer 5</div><div class="depth-name">Ambient Field</div><div class="depth-ex">atmósferas</div></div>
-    </div>
-
-    <div class="divider"></div>
-    <div class="group-label">Emoción → posición</div>
-    <table class="rule-table">
-      <tr><td>íntimo</td><td>Layer 1 — sin reverb, presencia absoluta</td></tr>
-      <tr><td>presente</td><td>Layer 2 — reverb &lt;1.5s</td></tr>
-      <tr><td>envolvente</td><td>Layer 3 — saturación ligera + reverb media</td></tr>
-      <tr><td>épico</td><td>Layer 4 — reverb larga, poca compresión</td></tr>
-      <tr><td>inmersivo</td><td>Layer 5 — delay → reverb → automatización</td></tr>
-    </table>
-
-    <div class="tip-box" style="margin-top:1.25rem"><strong>Optional Ganesh Atmos aesthetic:</strong> centro sólido · instrumentos flotando · reverbs profundas · movimiento lento. No necesitas caos. Necesitas profundidad. Tu música pide layers 3–5.</div>
-    <div class="tip-box" style="margin-top:8px"><strong>Truco poderoso:</strong> Studer → Reverb → Delay = máquina de profundidad automática.</div>
-  </div>
-</div>
-
-<!-- ========== PANEL: MIXING ASSISTANT ========== -->
-<div id="panel-assist" class="main-panel">
-  <div class="tabs" id="assist-tabs">
-    <button class="tab active" onclick="go('problems','assist',this)">10 Problemas</button>
-    <button class="tab" onclick="go('fastmode','assist',this)">Fast Mode</button>
-    <button class="tab" onclick="go('mastering','assist',this)">Mastering</button>
-    <button class="tab" onclick="go('atmos','assist',this)">Atmos</button>
-  </div>
-
-  <div class="section on" id="mx-problems">
-    <div class="sec-head">10 Problemas — Cadenas de 3 herramientas</div>
-    <div class="sec-sub">Identifica el problema. Aplica la cadena.</div>
-
-    <div class="chain-card">
-      <div class="chain-hd" onclick="togc(this)">
-        <div class="chain-hd-left"><span class="chain-emoji">🎤</span><div><div class="chain-title">La voz se pierde / sin presencia</div><div class="chain-genre">Claridad · cut-through</div></div></div>
-        <span class="chev">▶</span>
-      </div>
-      <div class="chain-bd">
-        <table class="chain-table"><tr><th>#</th><th>Plugin</th><th>Ajuste</th></tr>
-          <tr><td><span class="step-num">1</span></td><td><span class="plugin-name">UAD Pultec HLF-3C</span><span class="plugin-note">Presence EQ</span></td><td class="target-val">+2-3dB @ 3-4kHz</td></tr>
-          <tr><td><span class="step-num">2</span></td><td><span class="plugin-name">Oeksound soothe2</span><span class="plugin-note">Resonance control</span></td><td class="target-val">-3dB max, 5-8kHz</td></tr>
-          <tr><td><span class="step-num">3</span></td><td><span class="plugin-name">UAD LA-2A</span><span class="plugin-note">Optical compression</span></td><td class="target-val">-3dB GR en picos</td></tr>
-        </table>
-        <div class="tip-box" style="margin:0;border-radius:0;border:none;border-top:0.5px solid var(--line)">Pre-delay 10-15ms antes del reverb. La voz llega antes = más "real" y presente.</div>
-      </div>
-    </div>
-
-    <div class="chain-card">
-      <div class="chain-hd" onclick="togc(this)">
-        <div class="chain-hd-left"><span class="chain-emoji">🥁</span><div><div class="chain-title">Kick sin punch ni cuerpo</div><div class="chain-genre">Transient · sub-bass</div></div></div>
-        <span class="chev">▶</span>
-      </div>
-      <div class="chain-bd">
-        <table class="chain-table"><tr><th>#</th><th>Plugin</th><th>Ajuste</th></tr>
-          <tr><td><span class="step-num">1</span></td><td><span class="plugin-name">SSL E Channel EQ</span><span class="plugin-note">Cuerpo + definición</span></td><td class="target-val">+3dB @ 60Hz, HP @ 30Hz</td></tr>
-          <tr><td><span class="step-num">2</span></td><td><span class="plugin-name">UADx 1176 Rev A</span><span class="plugin-note">Punch transient</span></td><td class="target-val">Attack 7 (lento), Release 1</td></tr>
-          <tr><td><span class="step-num">3</span></td><td><span class="plugin-name">Parallel comp (NY)</span><span class="plugin-note">Bus kick</span></td><td class="target-val">Heavy comp, blend 30-40%</td></tr>
-        </table>
-        <div class="tip-box" style="margin:0;border-radius:0;border:none;border-top:0.5px solid var(--line)">Attack lento en el 1176 = deja pasar el transient. Comprime el sustain, no el ataque.</div>
-      </div>
-    </div>
-
-    <div class="chain-card">
-      <div class="chain-hd" onclick="togc(this)">
-        <div class="chain-hd-left"><span class="chain-emoji">🌫️</span><div><div class="chain-title">Mezcla lodosa / fangosa</div><div class="chain-genre">Low-mid cleanup</div></div></div>
-        <span class="chev">▶</span>
-      </div>
-      <div class="chain-bd">
-        <table class="chain-table"><tr><th>#</th><th>Plugin</th><th>Ajuste</th></tr>
-          <tr><td><span class="step-num">1</span></td><td><span class="plugin-name">Channel EQ (Logic)</span><span class="plugin-note">Por pista</span></td><td class="target-val">HP según instrumento: voz @80Hz, git @100Hz</td></tr>
-          <tr><td><span class="step-num">2</span></td><td><span class="plugin-name">UAD SSL 4000 E</span><span class="plugin-note">Bus/sub-mix</span></td><td class="target-val">-2dB paramétrico @ 200-400Hz</td></tr>
-          <tr><td><span class="step-num">3</span></td><td><span class="plugin-name">soothe2</span><span class="plugin-note">En bus master</span></td><td class="target-val">Resonance control 250-500Hz, gentle</td></tr>
-        </table>
-        <div class="tip-box" style="margin:0;border-radius:0;border:none;border-top:0.5px solid var(--line)">Primero corta en cada pista. soothe2 solo maneja lo que queda. No al revés.</div>
-      </div>
-    </div>
-
-    <div class="chain-card">
-      <div class="chain-hd" onclick="togc(this)">
-        <div class="chain-hd-left"><span class="chain-emoji">🔥</span><div><div class="chain-title">Demasiado harsh / agresivo</div><div class="chain-genre">De-harshness · high-freq</div></div></div>
-        <span class="chev">▶</span>
-      </div>
-      <div class="chain-bd">
-        <table class="chain-table"><tr><th>#</th><th>Plugin</th><th>Ajuste</th></tr>
-          <tr><td><span class="step-num">1</span></td><td><span class="plugin-name">Oeksound soothe2</span><span class="plugin-note">Primary fix</span></td><td class="target-val">2-8kHz, sensitivity high, -4dB</td></tr>
-          <tr><td><span class="step-num">2</span></td><td><span class="plugin-name">De-esser (Logic)</span><span class="plugin-note">Vocal focus</span></td><td class="target-val">Threshold -20dB, 5-8kHz</td></tr>
-          <tr><td><span class="step-num">3</span></td><td><span class="plugin-name">EQ shelf suave</span><span class="plugin-note">Finisher</span></td><td class="target-val">-1dB shelf desde 8kHz</td></tr>
-        </table>
-        <div class="tip-box" style="margin:0;border-radius:0;border:none;border-top:0.5px solid var(--line)">soothe2 primero. Si aún hay problema: de-esser. Si aún: shelf. No los tres a full al mismo tiempo.</div>
-      </div>
-    </div>
-
-    <div class="chain-card">
-      <div class="chain-hd" onclick="togc(this)">
-        <div class="chain-hd-left"><span class="chain-emoji">🌊</span><div><div class="chain-title">Sin profundidad ni espacio</div><div class="chain-genre">Reverb · delay · depth</div></div></div>
-        <span class="chev">▶</span>
-      </div>
-      <div class="chain-bd">
-        <table class="chain-table"><tr><th>#</th><th>Plugin</th><th>Ajuste</th></tr>
-          <tr><td><span class="step-num">1</span></td><td><span class="plugin-name">Lexicon 224</span><span class="plugin-note">Main reverb send</span></td><td class="target-val">Pre-delay 20-30ms, decay 1.5-2.5s</td></tr>
-          <tr><td><span class="step-num">2</span></td><td><span class="plugin-name">Galaxy Tape Echo</span><span class="plugin-note">Pre-reverb delay</span></td><td class="target-val">Sutil, low feedback, antes del reverb</td></tr>
-          <tr><td><span class="step-num">3</span></td><td><span class="plugin-name">Send automation</span><span class="plugin-note">Movimiento dinámico</span></td><td class="target-val">Dry @ verses, wet @ choruses</td></tr>
-        </table>
-        <div class="tip-box" style="margin:0;border-radius:0;border:none;border-top:0.5px solid var(--line)">Delay → Reverb = profundidad sin alejar el elemento. Más espacio, menos distancia percibida.</div>
-      </div>
-    </div>
-
-    <div class="chain-card">
-      <div class="chain-hd" onclick="togc(this)">
-        <div class="chain-hd-left"><span class="chain-emoji">🔆</span><div><div class="chain-title">Falta de calidez / demasiado digital</div><div class="chain-genre">Tape · harmonic · warmth</div></div></div>
-        <span class="chev">▶</span>
-      </div>
-      <div class="chain-bd">
-        <table class="chain-table"><tr><th>#</th><th>Plugin</th><th>Ajuste</th></tr>
-          <tr><td><span class="step-num">1</span></td><td><span class="plugin-name">ATR-102</span><span class="plugin-note">Tape color — primero</span></td><td class="target-val">15ips, Input +2, neutral bias</td></tr>
-          <tr><td><span class="step-num">2</span></td><td><span class="plugin-name">Studer A800</span><span class="plugin-note">Tape saturation</span></td><td class="target-val">Gentle, no clip, warmth mode</td></tr>
-          <tr><td><span class="step-num">3</span></td><td><span class="plugin-name">UAD Neve 1073</span><span class="plugin-note">Low shelf + air</span></td><td class="target-val">+2dB @ 60Hz, +1dB @ 12kHz</td></tr>
-        </table>
-        <div class="tip-box" style="margin:0;border-radius:0;border:none;border-top:0.5px solid var(--line)">ATR-102 define el color. Studer es más saturación. Usa uno a full, el otro al 30%.</div>
-      </div>
-    </div>
-
-    <div class="chain-card">
-      <div class="chain-hd" onclick="togc(this)">
-        <div class="chain-hd-left"><span class="chain-emoji">⚡</span><div><div class="chain-title">Batería plana / sin energía</div><div class="chain-genre">Bus comp · parallel · transient</div></div></div>
-        <span class="chev">▶</span>
-      </div>
-      <div class="chain-bd">
-        <table class="chain-table"><tr><th>#</th><th>Plugin</th><th>Ajuste</th></tr>
-          <tr><td><span class="step-num">1</span></td><td><span class="plugin-name">UAD SSL G Bus Comp</span><span class="plugin-note">Glue + punch</span></td><td class="target-val">Ratio 4:1, attack 30ms, release auto, -3dB GR</td></tr>
-          <tr><td><span class="step-num">2</span></td><td><span class="plugin-name">Parallel comp (NY)</span><span class="plugin-note">Bus batería</span></td><td class="target-val">Heavy comp, blend 25-35%</td></tr>
-          <tr><td><span class="step-num">3</span></td><td><span class="plugin-name">Oeksound spiff</span><span class="plugin-note">Transient control</span></td><td class="target-val">Attack boost, gentle release</td></tr>
-        </table>
-        <div class="tip-box" style="margin:0;border-radius:0;border:none;border-top:0.5px solid var(--line)">SSL G para glue. NY para punch. spiff para presencia. Los tres trabajan en capas distintas.</div>
-      </div>
-    </div>
-
-    <div class="chain-card">
-      <div class="chain-hd" onclick="togc(this)">
-        <div class="chain-hd-left"><span class="chain-emoji">↔️</span><div><div class="chain-title">Mezcla estrecha / sin anchura</div><div class="chain-genre">Stereo · width · M-S</div></div></div>
-        <span class="chev">▶</span>
-      </div>
-      <div class="chain-bd">
-        <table class="chain-table"><tr><th>#</th><th>Plugin</th><th>Ajuste</th></tr>
-          <tr><td><span class="step-num">1</span></td><td><span class="plugin-name">Mid-Side EQ</span><span class="plugin-note">Side channel</span></td><td class="target-val">+2dB sides @ 8kHz, -1dB sides @ 200Hz</td></tr>
-          <tr><td><span class="step-num">2</span></td><td><span class="plugin-name">Eventide H9000</span><span class="plugin-note">Chorus ligero</span></td><td class="target-val">Solo en sides, wet 20-30%</td></tr>
-          <tr><td><span class="step-num">3</span></td><td><span class="plugin-name">Waves S1 Stereo Imager</span><span class="plugin-note">Final width</span></td><td class="target-val">Width 1.2-1.4, rotation 0</td></tr>
-        </table>
-        <div class="tip-box" style="margin:0;border-radius:0;border:none;border-top:0.5px solid var(--line)">Centro siempre mono y sólido. La anchura viene de los sides, no de achicar el centro.</div>
-      </div>
-    </div>
-
-    <div class="chain-card">
-      <div class="chain-hd" onclick="togc(this)">
-        <div class="chain-hd-left"><span class="chain-emoji">📊</span><div><div class="chain-title">No alcanza el volumen objetivo</div><div class="chain-genre">Loudness · LUFS · limiting</div></div></div>
-        <span class="chev">▶</span>
-      </div>
-      <div class="chain-bd">
-        <table class="chain-table"><tr><th>#</th><th>Plugin</th><th>Ajuste</th></tr>
-          <tr><td><span class="step-num">1</span></td><td><span class="plugin-name">UAD Neve 33609</span><span class="plugin-note">Bus glue</span></td><td class="target-val">Ratio 2:1, gentle, -1-2dB GR</td></tr>
-          <tr><td><span class="step-num">2</span></td><td><span class="plugin-name">Sonnox Inflator</span><span class="plugin-note">Perceived loudness</span></td><td class="target-val">Process 50%, Effect 25-35%</td></tr>
-          <tr><td><span class="step-num">3</span></td><td><span class="plugin-name">God Particle</span><span class="plugin-note">Final limiting</span></td><td class="target-val">-0.3dBTP ceiling</td></tr>
-        </table>
-        <div class="tip-box" style="margin:0;border-radius:0;border:none;border-top:0.5px solid var(--line)">Target en mezcla: -18 LUFS. Target final streaming: -14 LUFS. No comprimas para ganar volumen — usa el mastering chain.</div>
-      </div>
-    </div>
-
-    <div class="chain-card">
-      <div class="chain-hd" onclick="togc(this)">
-        <div class="chain-hd-left"><span class="chain-emoji">💀</span><div><div class="chain-title">Suena muerto / sin vida / aburrido</div><div class="chain-genre">Harmonic · air · excite</div></div></div>
-        <span class="chev">▶</span>
-      </div>
-      <div class="chain-bd">
-        <table class="chain-table"><tr><th>#</th><th>Plugin</th><th>Ajuste</th></tr>
-          <tr><td><span class="step-num">1</span></td><td><span class="plugin-name">Soundtoys Decapitator</span><span class="plugin-note">Harmonic excitement</span></td><td class="target-val">Style A, Drive 3-5, mix 50-70%</td></tr>
-          <tr><td><span class="step-num">2</span></td><td><span class="plugin-name">UAD Pultec EQP-1A</span><span class="plugin-note">Air</span></td><td class="target-val">+2dB @ 16kHz (boost sin atenuar)</td></tr>
-          <tr><td><span class="step-num">3</span></td><td><span class="plugin-name">ATR-102</span><span class="plugin-note">Tape breath</span></td><td class="target-val">30ips, gentle input, no clip</td></tr>
-        </table>
-        <div class="tip-box" style="margin:0;border-radius:0;border:none;border-top:0.5px solid var(--line)">Una mezcla muerta no necesita más plugins — necesita que la performance tenga vida. Los plugins solo amplifican lo que ya hay.</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="section" id="mx-fastmode">
-    <div class="sec-head">Fast Mode</div>
-    <div class="sec-sub">Un problema, una solución. Sin explicaciones.</div>
-    <table class="rule-table" style="margin-top:1rem">
-      <tr><td style="width:38%">Voz sin presencia</td><td>soothe2 → Pultec HLF-3C</td></tr>
-      <tr><td>Kick sin punch</td><td>1176 (attack lento) → SSL EQ 60Hz</td></tr>
-      <tr><td>Mezcla lodosa</td><td>HP filter en capas → soothe2 bus</td></tr>
-      <tr><td>Harsh / agresivo</td><td>soothe2 → De-esser</td></tr>
-      <tr><td>Sin profundidad</td><td>Lexicon 224 send → pre-delay 20ms</td></tr>
-      <tr><td>Sin calidez</td><td>ATR-102 (15ips) → Neve 1073</td></tr>
-      <tr><td>Batería plana</td><td>SSL G Bus Comp → NY parallel</td></tr>
-      <tr><td>Mezcla estrecha</td><td>M-S EQ sides → S1 width 1.3</td></tr>
-      <tr><td>Sin volumen</td><td>Sonnox Inflator → God Particle</td></tr>
-      <tr><td>Sin vida</td><td>Decapitator Style A → Pultec EQP-1A air</td></tr>
-    </table>
-  </div>
-
-  <div class="section" id="mx-mastering">
-    <div class="sec-head">Mastering — OG Chain</div>
-    <div class="sec-sub">Target: −18 LUFS mix → −14 LUFS final (streaming).</div>
-
-    <div class="chain-card" style="margin-top:1rem">
-      <div class="chain-hd open" style="cursor:default">
-        <div class="chain-hd-left"><span class="chain-emoji">🎛️</span><div><div class="chain-title">Mac Mini — Mastering Chain</div><div class="chain-genre">ATR-102 · SSL · Sonnox · God Particle</div></div></div>
-      </div>
-      <div class="chain-bd open">
-        <table class="chain-table"><tr><th>#</th><th>Plugin</th><th>Ajuste</th></tr>
-          <tr><td><span class="step-num">1</span></td><td><span class="plugin-name">ATR-102</span><span class="plugin-note">Tape color — first in chain</span></td><td class="target-val">15ips, Input +2, neutral bias</td></tr>
-          <tr><td><span class="step-num">2</span></td><td><span class="plugin-name">UAD SSL G Bus Comp</span><span class="plugin-note">Glue compression</span></td><td class="target-val">Ratio 2:1, attack 30ms, release auto, -2dB GR</td></tr>
-          <tr><td><span class="step-num">3</span></td><td><span class="plugin-name">UAD Neve 1073</span><span class="plugin-note">Tonal correction</span></td><td class="target-val">+0.5dB @ 16kHz, -0.5dB @ 250Hz si lodoso</td></tr>
-          <tr><td><span class="step-num">4</span></td><td><span class="plugin-name">Sonnox Inflator</span><span class="plugin-note">Perceived loudness</span></td><td class="target-val">Process 50%, Effect 25-35%</td></tr>
-          <tr><td><span class="step-num">5</span></td><td><span class="plugin-name">God Particle</span><span class="plugin-note">Final limiting</span></td><td class="target-val">Ceiling -0.3dBTP</td></tr>
-          <tr><td><span class="step-num">✓</span></td><td><span class="plugin-name">LUFS check</span><span class="plugin-note">iZotope Insight / Multimeter</span></td><td class="target-val">−14 LUFS int · −1dBTP · LRA &lt;9</td></tr>
-        </table>
-        <div class="tip-box" style="margin:0;border-radius:0;border:none;border-top:0.5px solid var(--line)"><strong>Monitor calibrado con SoundID</strong> durante toda la sesión. Comparar con referencia en −14 LUFS antes del chain final.</div>
-      </div>
-    </div>
-
-    <div class="targets-grid" style="margin-top:1rem">
-      <div class="target-card"><div class="target-lbl">Mix target</div><div class="target-num">−18 LUFS</div></div>
-      <div class="target-card"><div class="target-lbl">Streaming final</div><div class="target-num">−14 LUFS</div></div>
-      <div class="target-card"><div class="target-lbl">True Peak</div><div class="target-num">−1 dBTP</div></div>
-      <div class="target-card"><div class="target-lbl">LRA</div><div class="target-num">&lt;9 LU</div></div>
-    </div>
-
-    <div class="tip-box" style="margin-top:1rem">Si en la mezcla ya está a −18 LUFS, el chain añade ~4dB de loudness percibido. No comprimas la mezcla para ganar volumen — deja que el mastering haga su trabajo.</div>
-  </div>
-
-  <div class="section" id="mx-atmos">
-    <div class="sec-head">Atmos — Mixing Assistant</div>
-    <div class="sec-sub">Decisiones rápidas para inmersivo. Profundidad sobre movimiento.</div>
-
-    <div class="divider"></div>
-    <div class="group-label">Posicionamiento</div>
-    <table class="rule-table">
-      <tr><td style="width:40%">Voz, lead, kick</td><td>Objeto → posición fija, al frente</td></tr>
-      <tr><td>Pads, strings, atmósferas</td><td>Bed → envuelve, Layer 3-5</td></tr>
-      <tr><td>Hi-hats, percusión menor</td><td>Objeto → puede moverse levemente</td></tr>
-      <tr><td>Reverb return</td><td>Bed → muy difuso, Layer 4-5</td></tr>
-      <tr><td>Sub-bass / LFE</td><td>Centro / Bed — nunca en altura</td></tr>
-    </table>
-
-    <div class="divider"></div>
-    <div class="group-label">EQ en Atmos</div>
-    <table class="rule-table">
-      <tr><td style="width:40%">Objeto borroso en campo</td><td>Cortar 200-400Hz</td></tr>
-      <tr><td>Objeto demasiado frontal</td><td>Reducir 4-6kHz</td></tr>
-      <tr><td>Objeto lejano / sin definición</td><td>Boost 3-5kHz</td></tr>
-      <tr><td>Demasiado brillante en altura</td><td>-2dB shelf desde 10kHz en Top channels</td></tr>
-    </table>
-
-    <div class="divider"></div>
-    <div class="group-label">Plugins por tarea</div>
-    <table class="rule-table">
-      <tr><td style="width:40%">EQ por objeto</td><td>Channel EQ · Pultec HLF-3C · Pulsar W495</td></tr>
-      <tr><td>Compresión</td><td>LA-2A (voces) · 1176 (percusión) · Fairchild (buses)</td></tr>
-      <tr><td>Saturación</td><td>ATR-102 · Studer A800 — siempre antes del espacio</td></tr>
-      <tr><td>Reverb</td><td>Capitol Chambers · Lexicon 224 · TSAR-1R</td></tr>
-      <tr><td>Delay</td><td>Galaxy Tape Echo · Echorec · Replika</td></tr>
-      <tr><td>Control / metering</td><td>Multimeter (Reso) · Relay</td></tr>
-    </table>
-
-    <div class="tip-box" style="margin-top:1rem"><strong>OG Atmos aesthetic:</strong> centro sólido · instrumentos flotando · reverbs profundas · movimiento lento. Profundidad sobre movimiento. Layers 3-5.</div>
-    <div class="tip-box"><strong>Targets Atmos:</strong> −20 LUFS integrado · −1dBTP · Dialog norm −27 LKFS.</div>
   </div>
 </div>
 
 <script>
-function switchMain(panel, btn) {
-  document.querySelectorAll('.main-panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.main-tab').forEach(b => b.classList.remove('active'));
-  document.getElementById('panel-' + panel).classList.add('active');
-  btn.classList.add('active');
+// ─── OG BRAIN ──────────────────────────────────────────────────────────────
+const OG_BRAIN = `
+=== OG ARSENAL (Optional Ganesh Plugin Knowledge Base) ===
+
+EQ PLUGINS:
+- Pultec EQP-1A (UADx): Pasivo valvular. Graves + aire. Truco: boost + attenuate simultáneos en misma freq de graves = cuerpo sin barro. Uses: kick graves, bajo peso, master bus brillo, synths aire. Top para air y sub glue en mastering.
+- Pultec MEQ-5 (UADx): Midrange. Tres bandas boost/cut independientes. Uses: voz presencia, guitarra claridad, piano definición. Cuando instrumento está perdido en la mezcla sin medios forzados.
+- Pultec HLF-3C (UADx): HPF pasivo analógico. Más musical que HPF digital. Uses: quitar subgraves, limpiar guitarras, overheads.
+- Pulsar W495: Mastering EQ alta musicalidad (inspirado Neumann PEV). Bandas fijas. Cuando 0.5dB cambia todo. Uses: master ajustes finos, mix bus pulido, strings claridad.
+- IK T-RackS Master EQ 432 (API 9632): EQ mastering analógico, grande y abierto. Uses: master bus, mezcla completa dimensión.
+- IK T-RackS EQ 73 (Neve 1073): Grueso, cálido, 4 bandas fijas — su limitación es su virtud. Uses: bajo densidad, kick peso, voces carácter.
+- IK T-RackS EQ 81 (Neve 1081): Mismo carácter Neve con más bandas. Uses: guitarras, voces, mezcla general.
+- IK T-RackS Focusrite Red 2 EQ: Muy transparente, limpio. Uses: voces, piano, mezcla limpia.
+- Waves V-EQ3 / V-EQ4 (Neve 1073/1081): Color analógico Neve. V-EQ3=3bandas voces/guitarras, V-EQ4=4bandas mezcla compleja.
+- Logic Channel EQ: EQ paramétrico fase mínima 8 bandas. Uses: limpieza, corrección, notches resonancias. Transparente quirúrgico.
+- Logic Linear Phase EQ: Solo mastering o parallel processing. Introduce latencia. No en mezcla normal.
+- MAutoDynamicEQ (MeldaProduction): Cada banda actúa como compresor/expansor. Uses: voz resonancias variables, guitarra control, mix bus equilibrio dinámico.
+- Oeksound soothe2: Supresor resonancias adaptativo. Detecta peaks espectrales en real-time. Depth 20-40% en mastering. Uses: voces, guitarras, overheads. Para frecuencias irritantes que aparecen y desaparecen.
+- Oeksound spiff: Transient control adaptativo. Uses: percusión, batería objetos.
+
+COMPRESSOR PLUGINS:
+- UADx 1176 (Rev A/E/AE/LN): FET ultra rápido agresivo. Rev A más oscuro, LN más limpio. All-buttons-in = ratio ilimitada, agresivo saturado. Uses: snare ataque, kick punch, vocal rock, bass control, room mics explosión. REGLA: para ataque rápido y punch.
+- IK T-RackS Black 76: Estilo 1176 limpio. Uses: batería, percusión, vocal moderna.
+- UADx LA-2A (Gray/Silver/Tube): Opto, ratio ~3:1 compress, release auto adapta al material. Compresión que no se escucha. Uses: voces nivelado, bajo sustain, pads, guitarra limpia. REGLA: para compresión invisible.
+- IK T-RackS White 2A / Opto Compressor: Estilo LA-2A. Uses: voces, bajo, piano, acústicos.
+- UADx SSL G Bus Compressor: VCA estilo SSL 4000G. Attack 30ms, release auto, ratio 2:1, GR 2-3dB = receta clásica. Uses: mix bus cohesión, drum bus groove. REGLA: glue.
+- UADx dbx 160: VCA rápido, OverEasy compresión suave. Uses: kick pegada, snare snap, bass control. REGLA: punch kick/snare.
+- Softube VCA Compressor: Limpio. Uses: buses, mezcla moderna.
+- UADx Fairchild 670: Vari-Mu valvular. 670=stereo M/S, 660=mono. Grande, cálido, tridimensional. Uses: master bus profundidad, strings, piano cohesión. REGLA: profundidad analógica.
+- IK T-RackS Dyna-Mu: Vari-Mu moderno. Uses: mix bus, mastering ligero.
+- Safari Pedals Sun Bear: Mastering bus alta precisión. Tape Mode=warmth suave, Tube Mode=armónicos ricos. Features: M/S Matrix, Sidechain Filter, Gravity Mode (glue extra), Blend (parallel nativo), Wild Mode. Uses: mix bus glue+warmth, mastering, drum bus. REGLA: mastering bus con carácter.
+- Drawmer S73: Smart mastering comp, mínimos controles, decisiones automáticas. Uses: mastering, stems, mezcla rápida.
+- NI Solid Bus Comp / Supercharger: Bus comp y saturación. Uses: drum bus, mix bus, bass.
+- Soundtoys Devil-Loc / Devil-Loc Deluxe: Compresión extrema no lineal (Shure Level-Loc). Destrucción controlada. Uses: drum bus destrucción, room mics agresividad.
+- IK T-RackS Channel Strips (Neve/SSL): EQ + comp + filtros. Más eficiente en CPU. Uses: voces, guitarras.
+
+TAPE / SATURATION PLUGINS:
+- UADx Studer A800: 24 pistas. Engorda graves, suaviza transientes, cohesión natural. IPS 15 = más brillo, IPS 7.5 = más graves. Uses: drum bus, guitarras, synths, stems. REGLA: mezcla fría/digital, pega la mezcla.
+- UADx Ampex ATR-102: Mastering tape 2 pistas (1/2" y 1"). Más profundidad estéreo y brillo. Bias alto=más saturación. Después del compresor de mastering. Uses: master bus, mix bus, pads. REGLA: master plano, profundidad final.
+- UADx Oxide Tape Recorder: Tape simplificado, menor CPU. Uses: buses, stems.
+- IK T-RackS Tape Machines (80/99/440/388): TM80=Studer A80 buses, TM99=Revox B77 guitarras, TM440=Ampex 440 voces/bajo, TM388=Tascam 388 cassette lo-fi.
+- IK T-RackS Saturator X: Tube, tape, transformer, transistor modes. Paralelo para mantener dinámica. Uses: bajo armónicos, drum bus energía, synth densidad.
+- Soundtoys Little Radiator: Preamp valvular, armónicos pares. Uses: voz carácter, bajo, synth grosor. REGLA: voz demasiado limpia.
+- Softube Saturation Knob: 3 modos (Keep Low/Neutral/Keep High). Uses: bajo, guitarras, drum bus.
+- Waves Magma Tube Channel: Valvular. Uses: voces, guitarras, buses.
+- XLN Audio RC-20 Retro Color: Multi-efecto 6 módulos (noise/distortion/wobble/space). Uses: synths, beats, pads nostalgia. REGLA: lo-fi estética.
+- Wavesfactory Cassette Transport: Cassette. Uses: indie, lo-fi, ambient.
+
+LIMITER PLUGINS:
+- IK T-RackS Stealth Limiter: Transparente ISL, true peak. GR max 1-2dB. Uses: master final, electronic, rock moderno. REGLA: master moderno.
+- Sonnox Oxford Limiter: Referencia de mastering. Enhanced mode mayor transparencia. No cambia carácter tonal. Uses: master final precisión, cine. REGLA: master transparente.
+- Cradle The God Particle: Híbrido todo-en-uno (compresión espectral + saturación armónica + limiting). No solo limiter. Uses: mix bus cohesión, master moderno, electronic energía. REGLA: mix bus con carácter, energía final.
+- UADx Precision Limiter: Limpio. Uses: mix bus, mastering ligero.
+- IK T-RackS Quad Limiter: Multi-banda. Uses: mezcla desbalanceada, banda específica generando picos.
+- IK T-RackS Brickwall Limiter: Agresivo. Uses: stems, buses, demos.
+- Safari Pedals Noam's Mastering Console: Suite all-in-one (Tube Sat + Filtros + Bax EQ + MS Matrix + De-Esser + Clipper). Usar antes del limiter final. Uses: mix bus polish, master carácter analógico, stems.
+- Sonnox Oxford Inflator: Densidad percibida. Process 50%, Effect 25-35%. Uses: loudness percibido sin comprimir más.
+
+REVERB PLUGINS:
+- UADx Lexicon 224 (1978): Digital clásica, no totalmente limpia. Uses: vocal profundidad vintage, snare cola musical, synths ambiente. REGLA: vocal vintage.
+- UADx EMT 140 Plate: Plate mecánica, más brillante que sala. Cola densa sin ensuciar. Uses: voces, snare clásica. REGLA: snare clásica 60-70s.
+- UADx Capitol Chambers: Cámaras eco reales Capitol Studios Hollywood. Uses: voces espacio real, piano, strings. REGLA: espacio realista.
+- UADx Pure Plate: Pop moderna, piano.
+- UADx Sound City Studios: Drum room, guitarras, mezcla.
+- Relab LX480 (Lexicon 480L): Más grande y moderno que el 224. Uses: pads espacio, voces profundidad, ambient.
+- Logic ChromaVerb: Moderno. Uses: pop, electrónica, synths.
+- Softube TSAR-1R: Moderno algorítmico.
+- Logic Space Designer: Convolución, impulse responses reales. Uses: orquesta naturalidad, piano realismo, cine.
+- Dear Reality Exoverb / Exoverb Micro: Espacial 3D. Uses: electrónica, mezcla moderna.
+
+DELAY PLUGINS:
+- Soundtoys EchoBoy: Delay digital multimodal (Studio/Tape/Analog). El más versátil del arsenal. Uses: voces slapback, guitarras repetición, synths movimiento. REGLA: vocal pop.
+- UADx Galaxy Tape Echo (Roland RE-201 Space Echo): Oscuro, cálido, repeticiones que se degradan. Uses: guitarras eco vintage, voces atmósfera, dub. REGLA: guitarra vintage.
+- UADx EP-34 Tape Echo (Maestro Echoplex): Más brillante que Space Echo. Uses: guitarras, leads, rock clásico.
+- Pulsar Echorec (Binson): Disco magnético, repeticiones rítmicas múltiples. Favorito Pink Floyd. Uses: guitarras psicodelia, Rhodes groove, pads movimiento. REGLA: psicodelia/dub.
+- Safari Pedals Fox Echo Chorus (Roland Echo Chorus): Tape delay + chorus. Sin tempo sync. Uses: guitarras eco+width, Rhodes/synths, voces.
+- NI Replika: Digital limpio estéreo. Uses: electrónica, synths, ambient.
+- Soundtoys Little PrimalTap: Delay + pitch shifting + degradación. Uses: sound design, experimental.
+
+MODULATION:
+- UADx Studio D Chorus (Roland Dimension D): 4 botones, el más natural. Cuando necesitas abrir estéreo sin que nadie note un chorus. Uses: voces apertura, pads, mix bus sutil.
+- UADx Brigade Chorus (Boss CE-1): BBD analógico, cálido y ancho. Uses: guitarras limpias, Rhodes, synth pads.
+- Soundtoys PhaseMistress: Phaser muy flexible. Uses: guitarras movimiento, pads textura, drums groove.
+- UADx Waterfall Rotary (Leslie): Doppler orgánico. Uses: Hammond, guitarras, pads.
+- Output Movement: Modulación rítmica sincronizada al tempo. Uses: synths, beats, ambient.
+
+=== MASTERING CHAIN (Mac Mini — Primary) ===
+ATR-102 (15ips, Input+2, neutral bias)
+→ UAD SSL G Bus Comp (ratio 2:1, attack 30ms, release auto, GR -2dB)
+→ UAD Neve 1073 (+0.5dB@16kHz, -0.5dB@250Hz si lodoso)
+→ Sonnox Inflator (Process 50%, Effect 25-35%)
+→ God Particle (Ceiling -0.3dBTP)
+Target: −14 LUFS int · −1dBTP · LRA<9
+
+THREE PILLARS: Studer A800 (pega la mezcla) · God Particle (equilibrio moderno) · ATR-102 (profundidad final)
+
+=== MASTER TARGETS ===
+- Mix stage: −18 LUFS
+- Final streaming: −14 LUFS (integrado)
+- True Peak: −1 dBTP
+- Dynamic Range: 8–10 LU
+- LRA: <9 LU
+- Stereo Correlation: 0.85–0.95
+
+=== 10 COMMON PROBLEMS ===
+1. Voz sin presencia: Pultec HLF-3C +2-3dB@3-4kHz → soothe2 -3dB@5-8kHz → LA-2A -3dB GR. Pre-delay 10-15ms antes del reverb.
+2. Kick sin punch: SSL E EQ +3dB@60Hz HP@30Hz → 1176 Rev A attack7 release1 → NY parallel blend 30-40%.
+3. Mezcla lodosa: Channel EQ HP por pista (voz@80Hz, git@100Hz) → SSL 4000E -2dB@200-400Hz bus → soothe2 bus 250-500Hz gentle.
+4. Demasiado harsh: soothe2 2-8kHz sensitivity high -4dB → De-esser threshold -20dB@5-8kHz → shelf -1dB desde 8kHz.
+5. Sin profundidad: Lexicon 224 pre-delay 20-30ms decay 1.5-2.5s → Galaxy Tape Echo sutil antes reverb → send automation (dry@verse, wet@chorus).
+6. Sin calidez/digital: ATR-102 15ips Input+2 → Studer A800 gentle → Neve 1073 +2dB@60Hz +1dB@12kHz.
+7. Batería plana: SSL G Bus ratio 4:1 attack 30ms -3dB GR → NY parallel blend 25-35% → spiff transients.
+8. Mezcla estrecha: M/S EQ +2dB sides@8kHz -1dB sides@200Hz → chorus ligero solo sides 20-30% → S1/Waves width 1.2-1.4.
+9. No alcanza volumen: Neve 33609 glue ratio 2:1 → Sonnox Inflator process50%/effect35% → God Particle -0.3dBTP.
+10. Suena muerto/aburrido: Decapitator Style A Drive 3-5 mix 50-70% → Pultec EQP-1A +2dB@16kHz → ATR-102 30ips gentle.
+
+=== FAST MODE ===
+Voz sin presencia → soothe2 → Pultec HLF-3C
+Kick sin punch → 1176 attack lento → SSL EQ 60Hz
+Mezcla lodosa → HP filter en capas → soothe2 bus
+Harsh/agresivo → soothe2 → De-esser
+Sin profundidad → Lexicon 224 send → pre-delay 20ms
+Sin calidez → ATR-102 (15ips) → Neve 1073
+Batería plana → SSL G Bus Comp → NY parallel
+Mezcla estrecha → M-S EQ sides → width 1.2-1.4
+Sin volumen → Sonnox Inflator → God Particle
+Sin vida → Decapitator Style A → Pultec EQP-1A air
+
+=== ATMOS NOTES ===
+Safe in Atmos: Channel EQ, Pultec EQP-1A, Pulsar W495, MAutoDynamicEQ, soothe2, 1176, LA-2A, Fairchild, dbx160.
+Contextual: Studer A800/ATR-102 (objetos individuales OK, master NEVER), reverbs as objects (never stereo wash on master).
+Avoid: God Particle on buses/master, stereo wideners, M/S processors, bus compressors in Atmos.
+Atmos targets: −20 LUFS integrado · −1dBTP · Dialog norm −27 LKFS.
+`;
+
+// ─── SYSTEM PROMPT ─────────────────────────────────────────────────────────
+const SYSTEM_PROMPT = `You are the Optional Ganesh Decision Engine — a mixing and mastering diagnostic system built on the personal knowledge and plugin arsenal of Diego Lara (Optional Ganesh), a Barcelona-based mixing/mastering engineer and producer.
+
+Your job is to diagnose audio problems and suggest the minimum effective action. Never list everything. Diagnose, then decide. Always respond with exactly this format (no extra text before or after):
+
+DIAGNOSIS: [what's actually wrong, 1 line]
+PLUGIN: [specific plugin from OG arsenal]
+RANGE: [exact parameter range]
+WARNING: [what to avoid]
+ALTERNATIVE: [if that plugin isn't available]
+
+Be direct. Be specific. Never say "it depends." Never list more than one plugin as the main recommendation. Use Spanish or English based on the language of the user's question.
+
+Here is the full OG plugin arsenal and rule system to base your recommendations on:
+
+${OG_BRAIN}`;
+
+// ─── BACKEND STATE ──────────────────────────────────────────────────────────
+function getBackend()    { return localStorage.getItem('og_backend') || 'anthropic'; }
+function getOllamaModel(){ return localStorage.getItem('og_ollama_model') || 'mistral'; }
+function getOllamaUrl()  { return (localStorage.getItem('og_ollama_url') || 'http://localhost:11434').replace(/\/$/, ''); }
+
+function isConfigured() {
+  const b = getBackend();
+  if (b === 'ollama') return true;
+  return !!localStorage.getItem('og_api_key');
 }
 
-function go(id, panel, btn) {
-  const prefixMap = { arsenal: 'a', processes: 'p', assist: 'mx' };
-  const prefix = prefixMap[panel] || 'p';
-  document.querySelectorAll('#panel-' + panel + ' .section').forEach(s => s.classList.remove('on'));
-  const tabContainer = document.getElementById(panel + '-tabs');
-  tabContainer.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
-  document.getElementById(prefix + '-' + id).classList.add('on');
-  btn.classList.add('active');
+// ─── BACKEND BADGE ──────────────────────────────────────────────────────────
+function updateBackendBadge() {
+  const badge = document.getElementById('backend-badge');
+  if (!badge) return;
+  const b = getBackend();
+  const label = b === 'ollama' ? `Ollama · ${getOllamaModel()}` : 'Anthropic';
+  const dotClass = isConfigured() ? 'ok' : '';
+  badge.innerHTML = `<span class="dot ${dotClass}"></span>${label}`;
 }
 
-function tog(hd) {
-  hd.classList.toggle('open');
-  hd.nextElementSibling.classList.toggle('open');
+// ─── BACKEND SELECTOR ───────────────────────────────────────────────────────
+function selectBackend(ctx, backend) {
+  localStorage.setItem('og_backend', backend);
+  // Sync both contexts so gear panel and setup screen stay in step
+  ['setup', 'settings'].forEach(c => applyBackendUI(c, backend));
 }
 
-function togc(hd) {
-  hd.classList.toggle('open');
-  hd.nextElementSibling.classList.toggle('open');
+function applyBackendUI(ctx, backend) {
+  const btnA = document.getElementById(`${ctx}-btn-anthropic`);
+  const btnO = document.getElementById(`${ctx}-btn-ollama`);
+  const fA   = document.getElementById(`${ctx}-anthropic-fields`);
+  const fO   = document.getElementById(`${ctx}-ollama-fields`);
+  if (btnA) btnA.classList.toggle('active', backend === 'anthropic');
+  if (btnO) btnO.classList.toggle('active', backend === 'ollama');
+  if (fA)   fA.style.display = backend === 'anthropic' ? 'block' : 'none';
+  if (fO)   fO.style.display = backend === 'ollama'    ? 'block' : 'none';
 }
 
-function togz(hd) {
-  hd.nextElementSibling.classList.toggle('open');
+// ─── INIT ───────────────────────────────────────────────────────────────────
+function init() {
+  const backend     = getBackend();
+  const ollamaModel = getOllamaModel();
+  const ollamaUrl   = getOllamaUrl();
+
+  // Populate saved Ollama values into both contexts
+  ['setup', 'settings'].forEach(ctx => {
+    applyBackendUI(ctx, backend);
+    const mEl = document.getElementById(`${ctx}-ollama-model`);
+    const uEl = document.getElementById(`${ctx}-ollama-url`);
+    if (mEl) mEl.value = ollamaModel;
+    if (uEl) uEl.value = ollamaUrl;
+  });
+
+  updateBackendBadge();
+
+  if (isConfigured()) {
+    document.getElementById('setup-screen').style.display = 'none';
+    document.getElementById('main-tool').style.display = 'block';
+  } else {
+    document.getElementById('setup-screen').style.display = 'block';
+    document.getElementById('main-tool').style.display = 'none';
+  }
+
+  const input = document.getElementById('problem-input');
+  if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') diagnose(); });
+
+  const setupKey = document.getElementById('setup-key-input');
+  if (setupKey) setupKey.addEventListener('keydown', e => { if (e.key === 'Enter') saveSetupConfig(); });
 }
 
-let openFlow = null;
-function togf(inner) {
-  const stepDiv = inner.parentElement;
-  const detail = stepDiv.nextElementSibling;
-  if (!detail || !detail.classList.contains('detail-block')) return;
-  if (openFlow && openFlow !== detail) openFlow.classList.remove('open');
-  detail.classList.toggle('open');
-  openFlow = detail.classList.contains('open') ? detail : null;
+// ─── CONFIG SAVE ────────────────────────────────────────────────────────────
+function saveSetupConfig() {
+  const backend = getBackend();
+  if (backend === 'anthropic') {
+    const input = document.getElementById('setup-key-input');
+    const val = (input.value || '').trim();
+    if (!val) { input.style.borderColor = 'rgba(210,90,80,0.5)'; return; }
+    localStorage.setItem('og_api_key', val);
+    input.value = '';
+  } else {
+    const mEl = document.getElementById('setup-ollama-model');
+    const uEl = document.getElementById('setup-ollama-url');
+    localStorage.setItem('og_ollama_model', (mEl.value || '').trim() || 'mistral');
+    localStorage.setItem('og_ollama_url',   (uEl.value || '').trim() || 'http://localhost:11434');
+  }
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('main-tool').style.display = 'block';
+  updateBackendBadge();
 }
+
+function saveSettingsConfig() {
+  const backend = getBackend();
+  if (backend === 'anthropic') {
+    const input = document.getElementById('settings-key-input');
+    const val = (input.value || '').trim();
+    if (!val) { input.style.borderColor = 'rgba(210,90,80,0.5)'; return; }
+    localStorage.setItem('og_api_key', val);
+    input.value = '';
+  } else {
+    const mEl = document.getElementById('settings-ollama-model');
+    const uEl = document.getElementById('settings-ollama-url');
+    localStorage.setItem('og_ollama_model', (mEl.value || '').trim() || 'mistral');
+    localStorage.setItem('og_ollama_url',   (uEl.value || '').trim() || 'http://localhost:11434');
+  }
+  document.getElementById('main-tool').style.display = 'block';
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('settings-panel').style.display = 'none';
+  updateBackendBadge();
+  setStatus('ok', 'Configuración guardada.');
+}
+
+// ─── SETTINGS TOGGLE ────────────────────────────────────────────────────────
+function toggleSettings() {
+  const panel = document.getElementById('settings-panel');
+  const opening = panel.style.display === 'none';
+  panel.style.display = opening ? 'block' : 'none';
+  if (opening) {
+    // Sync current saved Ollama values into settings fields
+    const mEl = document.getElementById('settings-ollama-model');
+    const uEl = document.getElementById('settings-ollama-url');
+    if (mEl) mEl.value = getOllamaModel();
+    if (uEl) uEl.value = getOllamaUrl();
+    // Focus the relevant input
+    const focus = getBackend() === 'ollama'
+      ? document.getElementById('settings-ollama-model')
+      : document.getElementById('settings-key-input');
+    if (focus) focus.focus();
+  }
+}
+
+// ─── STATUS BAR ─────────────────────────────────────────────────────────────
+function setStatus(state, message) {
+  const bar = document.getElementById('status-bar');
+  if (!message) { bar.innerHTML = ''; return; }
+  const dotClass = state === 'loading' ? 'loading' : state === 'ok' ? 'ok' : 'err';
+  bar.innerHTML = `<span class="dot ${dotClass}"></span><span>${message}</span>`;
+}
+
+// ─── API CALLS ──────────────────────────────────────────────────────────────
+async function callAnthropic(problem) {
+  const apiKey = localStorage.getItem('og_api_key');
+  if (!apiKey) throw new Error('NO_KEY');
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+      'content-type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 400,
+      system: SYSTEM_PROMPT,
+      messages: [{ role: 'user', content: problem }]
+    })
+  });
+
+  if (!res.ok) {
+    let hint = 'Intenta de nuevo o verifica la clave.';
+    if (res.status === 401) hint = 'Clave inválida. Verifica en console.anthropic.com.';
+    else if (res.status === 429) hint = 'Rate limit alcanzado. Espera un momento.';
+    else if (res.status === 500) hint = 'Error del servidor de Anthropic. Intenta de nuevo.';
+    throw new Error(`Error ${res.status} — ${hint}`);
+  }
+
+  const data = await res.json();
+  return data.content?.[0]?.text || '';
+}
+
+async function callOllama(problem) {
+  const model = getOllamaModel();
+  const url   = getOllamaUrl();
+
+  const res = await fetch(`${url}/api/generate`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      model,
+      system: SYSTEM_PROMPT,
+      prompt: problem,
+      stream: false
+    })
+  });
+
+  if (!res.ok) throw new Error(`Ollama error ${res.status} — ¿Está corriendo en ${url}?`);
+
+  const data = await res.json();
+  return data.response || '';
+}
+
+// ─── DIAGNOSE ───────────────────────────────────────────────────────────────
+async function diagnose() {
+  const input = document.getElementById('problem-input');
+  const problem = (input.value || '').trim();
+  if (!problem) {
+    input.style.borderColor = 'rgba(210,90,80,0.5)';
+    setTimeout(() => { input.style.borderColor = ''; }, 1500);
+    return;
+  }
+
+  const backend = getBackend();
+  if (backend === 'anthropic' && !localStorage.getItem('og_api_key')) {
+    setStatus('err', 'No hay API key. Usa el botón ⚙ para configurar.');
+    return;
+  }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  setStatus('loading', '// analizando...');
+  document.getElementById('result-area').innerHTML = '';
+
+  try {
+    const text = backend === 'ollama'
+      ? await callOllama(problem)
+      : await callAnthropic(problem);
+
+    if (!text) {
+      setStatus('err', 'Respuesta vacía. Intenta de nuevo.');
+      return;
+    }
+
+    setStatus('ok', '// diagnóstico listo');
+    document.getElementById('result-area').innerHTML = renderResult(text);
+
+  } catch (err) {
+    if (err.message === 'NO_KEY') {
+      setStatus('err', 'No hay API key. Usa el botón ⚙ para configurar.');
+    } else if (err.name === 'TypeError') {
+      const hint = backend === 'ollama'
+        ? `No se pudo conectar con Ollama en ${getOllamaUrl()}. ¿Está corriendo?`
+        : 'No se pudo conectar. Verifica tu conexión.';
+      setStatus('err', hint);
+    } else {
+      setStatus('err', err.message || 'Error inesperado.');
+    }
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ─── RENDER RESULT ──────────────────────────────────────────────────────────
+function renderResult(text) {
+  const fields = [
+    { key: 'DIAGNOSIS',   label: 'DIAGNOSIS',   cssClass: 'key-diagnosis' },
+    { key: 'PLUGIN',      label: 'PLUGIN',       cssClass: 'key-plugin'   },
+    { key: 'RANGE',       label: 'RANGE',        cssClass: 'key-range'    },
+    { key: 'WARNING',     label: 'WARNING',      cssClass: 'key-warning'  },
+    { key: 'ALTERNATIVE', label: 'ALTERNATIVE',  cssClass: 'key-alt'      },
+  ];
+
+  const parsed = {};
+  for (const f of fields) {
+    const pattern = new RegExp(`${f.key}:\\s*([\\s\\S]*?)(?=\\n[A-Z]+:|$)`, 'i');
+    const match = text.match(pattern);
+    if (match) parsed[f.key] = match[1].trim();
+  }
+
+  if (!Object.keys(parsed).length) {
+    return `<div class="result-card"><div class="result-row">
+      <span class="result-key key-diagnosis">RESPUESTA</span>
+      <span class="result-val">${escapeHTML(text.trim())}</span>
+    </div></div>`;
+  }
+
+  let html = '<div class="result-card">';
+  for (const f of fields) {
+    if (parsed[f.key]) {
+      html += `<div class="result-row">
+        <span class="result-key ${f.cssClass}">${f.label}</span>
+        <span class="result-val">${escapeHTML(parsed[f.key])}</span>
+      </div>`;
+    }
+  }
+  return html + '</div>';
+}
+
+function escapeHTML(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// ─── BOOT ───────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', init);
 </script>
-<script src="plugin-loader.js"></script>
 </body>
 </html>
