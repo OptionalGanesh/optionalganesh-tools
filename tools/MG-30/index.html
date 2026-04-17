@@ -1087,13 +1087,24 @@ function renderChain() {
 
 function quickToneAsset(id, d) {
   const base = 'assets/quicktone/';
-  if (id === 'wah') return base + 'wah-touch.png';
-  if (id === 'comp') return base + 'comp-rose.png';
-  if (id === 'gate') return base + (d.on ? 'gate-smart.png' : 'gate-noise.png');
+  if (id === 'wah') {
+    const wahMap = ['pedals/wah-touch-full.png', 'utility/exp-pedal.png', 'utility/exp-pedal.png', 'pedals/wah-touch-full.png', 'utility/volume-pedal.png'];
+    return base + (wahMap[d.type] || 'pedals/wah-touch-full.png');
+  }
+  if (id === 'comp') {
+    const compMap = ['comp-rose.png', 'pedals/pedal-00.png', 'pedals/pedal-01.png'];
+    return base + (compMap[d.type] || 'comp-rose.png');
+  }
+  if (id === 'gate') return base + (d.on ? 'pedals/smart-gate-full.png' : 'pedals/noise-gate-full.png');
   if (id === 'efx') {
-    if (d.type === 5) return base + 'efx-blu-driver.png';
-    if (d.type === 4 || d.type === 8) return base + 'efx-turbo-od.png';
-    return base + 'efx-dist-plus.png';
+    const efxMap = [
+      'efx-dist-plus.png', 'pedals/pedal-02.png', 'pedals/pedal-03.png',
+      'pedals/pedal-04.png', 'efx-turbo-od.png', 'efx-blu-driver.png',
+      'pedals/pedal-05.png', 'pedals/pedal-06.png', 'efx-turbo-od.png',
+      'pedals/pedal-07.png', 'pedals/pedal-08.png', 'pedals/pedal-09.png',
+      'pedals/pedal-10.png', 'wah-touch.png'
+    ];
+    return base + (efxMap[d.type] || 'efx-dist-plus.png');
   }
   if (id === 'amp') {
     const idx = Math.max(0, Math.min(26, Number(d.model) || 0));
@@ -1105,10 +1116,34 @@ function quickToneAsset(id, d) {
     return base + 'amps/amp-' + String(assetIdx).padStart(2, '0') + '.png';
   }
   if (id === 'ir') return base + 'cab-sv410.png';
-  if (id === 'eq') return base + 'eq-ten-band.png';
-  if (id === 'mod') return base + 'mod-tremolo.png';
-  if (id === 'delay') return base + 'delay-digital.png';
-  if (id === 'reverb') return base + 'reverb-harmonist.png';
+  if (id === 'eq') return base + 'utility/eq-ten-band-full.png';
+  if (id === 'sr') return base + 'utility/range-sliders-a.png';
+  if (id === 'mod') {
+    const modMap = [
+      'pedals/pedal-11.png', 'pedals/pedal-12.png', 'pedals/pedal-13.png',
+      'mod-tremolo.png', 'pedals/pedal-14.png', 'pedals/pedal-15.png',
+      'pedals/pedal-16.png', 'pedals/pedal-17.png', 'pedals/pedal-18.png',
+      'pedals/pedal-19.png', 'mod-tremolo.png', 'pedals/pedal-20.png',
+      'pedals/harmonist-full.png'
+    ];
+    return base + (modMap[d.type] || 'mod-tremolo.png');
+  }
+  if (id === 'delay') {
+    const delayMap = [
+      'pedals/pedal-21.png', 'delay-digital.png', 'pedals/pedal-22.png',
+      'pedals/pedal-23.png', 'delay-digital.png', 'pedals/pedal-21.png',
+      'delay-digital.png', 'pedals/pedal-22.png'
+    ];
+    return base + (delayMap[d.type] || 'delay-digital.png');
+  }
+  if (id === 'reverb') {
+    const reverbMap = [
+      'pedals/pedal-00.png', 'pedals/pedal-01.png', 'pedals/pedal-02.png',
+      'pedals/pedal-03.png', 'reverb-harmonist.png'
+    ];
+    return base + (reverbMap[d.type] || 'reverb-harmonist.png');
+  }
+  if (id === 'vol') return base + 'utility/volume-pedal.png';
   return '';
 }
 
