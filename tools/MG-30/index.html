@@ -6,23 +6,59 @@
 <title>MG-30 Pack Builder — Optional Ganesh</title>
 <style>
   :root {
-    --bg:#050505; --surface:#0c0c0c; --s2:#111; --s3:#171717;
-    --line:rgba(255,255,255,0.08); --line2:rgba(255,255,255,0.15);
-    --text:rgba(255,255,255,0.92); --muted:rgba(255,255,255,0.45);
-    --dim:rgba(255,255,255,0.22); --hint:rgba(255,255,255,0.07);
-    --on:rgba(190,255,170,0.85); --on-bg:rgba(130,210,90,0.1); --on-border:rgba(130,210,90,0.28);
-    --sel-border:rgba(255,255,255,0.32); --sel-bg:rgba(255,255,255,0.1);
-    --fw-ok:rgba(100,210,100,0.8); --fw-warn:rgba(220,180,60,0.8);
-    --mono:"SF Mono","Fira Code",Consolas,monospace;
-    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  /* Hardware surface palette */
+  --bg: #141414;
+  --surface: #1c1c1c;
+  --s2: #242424;
+  --s3: #2c2c2c;
+  --s4: #323232;
+  --panel: #1a1a1a;
+
+  /* Borders */
+  --line: rgba(255,255,255,0.07);
+  --line2: rgba(255,255,255,0.14);
+  --line3: rgba(255,255,255,0.22);
+
+  /* Text */
+  --text: rgba(255,255,255,0.90);
+  --muted: rgba(255,255,255,0.50);
+  --dim: rgba(255,255,255,0.28);
+  --hint: rgba(255,255,255,0.06);
+
+  /* LED / Active states */
+  --led-on: #7dff6b;
+  --led-on-glow: rgba(125,255,107,0.55);
+  --on: rgba(125,255,107,0.88);
+  --on-bg: rgba(90,200,70,0.09);
+  --on-border: rgba(100,220,80,0.32);
+  --on-glow: 0 0 7px rgba(100,220,80,0.45), 0 0 18px rgba(100,220,80,0.15);
+
+  /* Selected state */
+  --sel-border: rgba(255,255,255,0.55);
+  --sel-bg: rgba(255,255,255,0.07);
+  --sel-glow: 0 0 0 1px rgba(255,255,255,0.18);
+
+  /* Firmware badges */
+  --fw-ok: rgba(100,210,100,0.8);
+  --fw-warn: rgba(220,180,60,0.8);
+
+  /* Type */
+  --mono: "SF Mono","Fira Code",Consolas,monospace;
+  --sans: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+
+  /* Stompbox block size */
+  --block-w: 72px;
+  --block-h: 80px;
+}
+  *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; }
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(ellipse at 20% 0%, rgba(255,255,255,0.025) 0%, transparent 50%),
+      var(--bg);
   }
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  html{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px}
-  body{min-height:100vh;background:
-    radial-gradient(circle at 18% 18%,rgba(255,255,255,0.03),transparent 26%),
-    radial-gradient(circle at 82% 28%,rgba(255,255,255,0.02),transparent 24%),
-    linear-gradient(180deg,#070707 0%,#020202 100%)}
-  .page{max-width:940px;margin:0 auto;padding:2.5rem 1.5rem 6rem}
+  .page { max-width: 980px; margin: 0 auto; padding: 2rem 1.5rem 6rem; }
 
   /* HEADER */
   header{margin-bottom:1.8rem}
