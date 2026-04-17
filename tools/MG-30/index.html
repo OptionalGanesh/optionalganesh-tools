@@ -110,24 +110,36 @@
   .builder{background:var(--surface);border:1px solid var(--line);border-radius:4px;margin-bottom:0;overflow:hidden}
 
   /* SCENE TABS */
-  .scene-row{
-    display:flex;align-items:center;gap:0;border-bottom:1px solid var(--line);
-    background:var(--s2);padding:0 1rem
+  .scene-row {
+    display: flex; align-items: stretch; gap: 0;
+    background: var(--s2); border-bottom: 1px solid var(--line); padding: 0;
   }
-  .scene-label{font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--dim);text-transform:uppercase;margin-right:.8rem}
-  .scene-btn{
-    font-family:var(--mono);font-size:11px;letter-spacing:.08em;padding:.5rem .85rem;
-    background:none;border:none;border-right:1px solid var(--line);color:var(--muted);
-    cursor:pointer;transition:all .12s
+  .scene-label {
+    font-family: var(--mono); font-size: 9px; letter-spacing: .18em; color: var(--dim);
+    text-transform: uppercase; padding: 0 1rem; display: flex; align-items: center;
+    border-right: 1px solid var(--line); flex-shrink: 0;
   }
-  .scene-btn.active{color:var(--text);background:var(--sel-bg)}
-  .scene-btn:hover:not(.active){color:var(--text)}
-  .scene-copy{
-    margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:.1em;
-    color:var(--dim);background:none;border:1px solid var(--line);border-radius:2px;
-    padding:3px 10px;cursor:pointer;transition:all .12s
+  .scene-btn {
+    font-family: var(--mono); font-size: 13px; font-weight: 600; letter-spacing: .12em;
+    padding: .75rem 1.5rem; background: none; border: none; border-right: 1px solid var(--line);
+    color: var(--dim); cursor: pointer; transition: color .1s, background .1s;
+    position: relative;
   }
-  .scene-copy:hover{color:var(--text);border-color:var(--line2)}
+  .scene-btn::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+    background: transparent; transition: background .1s;
+  }
+  .scene-btn.active {
+    color: var(--text); background: var(--sel-bg);
+  }
+  .scene-btn.active::after { background: var(--led-on); }
+  .scene-btn:hover:not(.active) { color: var(--muted); }
+  .scene-copy {
+    margin-left: auto; font-family: var(--mono); font-size: 9px; letter-spacing: .1em;
+    color: var(--dim); background: none; border: none; border-left: 1px solid var(--line);
+    padding: 0 1rem; cursor: pointer; transition: color .12s; white-space: nowrap;
+  }
+  .scene-copy:hover { color: var(--text); }
 
   /* CHAIN STRIP */
   .chain-wrap{padding:1.1rem 1rem .7rem;overflow-x:auto;border-bottom:1px solid var(--line)}
