@@ -6,228 +6,674 @@
 <title>MG-30 Pack Builder — Optional Ganesh</title>
 <style>
   :root {
-    --bg:#050505; --surface:#0c0c0c; --s2:#111; --s3:#171717;
-    --line:rgba(255,255,255,0.08); --line2:rgba(255,255,255,0.15);
-    --text:rgba(255,255,255,0.92); --muted:rgba(255,255,255,0.45);
-    --dim:rgba(255,255,255,0.22); --hint:rgba(255,255,255,0.07);
-    --on:rgba(190,255,170,0.85); --on-bg:rgba(130,210,90,0.1); --on-border:rgba(130,210,90,0.28);
-    --sel-border:rgba(255,255,255,0.32); --sel-bg:rgba(255,255,255,0.1);
-    --fw-ok:rgba(100,210,100,0.8); --fw-warn:rgba(220,180,60,0.8);
-    --mono:"SF Mono","Fira Code",Consolas,monospace;
-    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  /* Hardware surface palette */
+  --bg: #141414;
+  --surface: #1c1c1c;
+  --s2: #242424;
+  --s3: #2c2c2c;
+  --s4: #323232;
+  --panel: #1a1a1a; /* used by .params-panel, .chain-wrap */
+
+  /* Borders */
+  --line: rgba(255,255,255,0.07);
+  --line2: rgba(255,255,255,0.14);
+  --line3: rgba(255,255,255,0.22);
+
+  /* Text */
+  --text: rgba(255,255,255,0.90);
+  --muted: rgba(255,255,255,0.50);
+  --dim: rgba(255,255,255,0.28);
+  --hint: rgba(255,255,255,0.06);
+
+  /* LED / Active states */
+  --led-on: #7dff6b;
+  --led-on-glow: rgba(125,255,107,0.55);
+  --on: rgba(125,255,107,0.88);
+  --on-bg: rgba(90,200,70,0.09);
+  --on-border: rgba(100,220,80,0.32);
+  --on-glow: 0 0 7px rgba(100,220,80,0.45), 0 0 18px rgba(100,220,80,0.15);
+
+  /* Selected state */
+  --sel-border: rgba(255,255,255,0.55);
+  --sel-bg: rgba(255,255,255,0.07);
+  --sel-glow: 0 0 0 1px rgba(255,255,255,0.18);
+
+  /* Firmware badges */
+  --fw-ok: rgba(100,210,100,0.8);
+  --fw-warn: rgba(220,180,60,0.8);
+
+  /* Type */
+  --mono: "SF Mono","Fira Code",Consolas,monospace;
+  --sans: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+
+  /* Stompbox block size */
+  --block-w: 80px; /* used by .chain-block */
+  --block-h: 106px; /* used by .chain-block */
+}
+  *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; }
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(ellipse at 20% 0%, rgba(255,255,255,0.025) 0%, transparent 50%),
+      var(--bg);
   }
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  html{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px}
-  body{min-height:100vh;background:
-    radial-gradient(circle at 18% 18%,rgba(255,255,255,0.03),transparent 26%),
-    radial-gradient(circle at 82% 28%,rgba(255,255,255,0.02),transparent 24%),
-    linear-gradient(180deg,#070707 0%,#020202 100%)}
-  .page{max-width:940px;margin:0 auto;padding:2.5rem 1.5rem 6rem}
+  .page { max-width: 1180px; margin: 0 auto; padding: .85rem 1rem 4rem; }
 
   /* HEADER */
-  header{margin-bottom:1.8rem}
-  .logo{font-size:11px;font-family:var(--mono);letter-spacing:.18em;color:var(--muted);margin-bottom:.9rem}
-  .logo a{color:var(--muted);text-decoration:none}.logo a:hover{color:var(--text)}
-  h1{font-size:clamp(1.6rem,4vw,2.3rem);font-weight:700;letter-spacing:-.03em;line-height:1.1}
-  h1 span{color:rgba(255,255,255,.88)}
-  .subtitle{margin-top:.5rem;font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.04em}
+  header { margin-bottom: 1.6rem; }
+  body.qt-replica header,
+  body.qt-replica .fw-bar,
+  body.qt-replica .import-bar {
+    display: none;
+  }
+  .logo { font-size: 10px; font-family: var(--mono); letter-spacing: .18em; color: var(--dim); margin-bottom: .8rem; }
+  .logo a { color: var(--dim); text-decoration: none; }
+  .logo a:hover { color: var(--muted); }
+  h1 { font-size: clamp(1.4rem,3.5vw,2rem); font-weight: 700; letter-spacing: -.03em; line-height: 1.1; }
+  h1 span { color: rgba(255,255,255,.75); font-weight: 400; }
+  .subtitle { margin-top: .4rem; font-family: var(--mono); font-size: 10px; color: var(--dim); letter-spacing: .04em; }
 
   /* FIRMWARE BAR */
-  .fw-bar{
-    display:flex;align-items:center;gap:.7rem;padding:.6rem 1rem;
-    background:var(--surface);border:1px solid var(--line);border-radius:4px;
-    margin-bottom:1rem;font-family:var(--mono);font-size:10px;
+  .fw-bar {
+    display: flex; align-items: center; gap: .6rem; padding: .55rem .9rem;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 3px;
+    margin-bottom: .8rem; font-family: var(--mono); font-size: 10px;
   }
-  .fw-badge{
-    padding:2px 8px;border-radius:2px;letter-spacing:.1em;text-transform:uppercase;
-    border:1px solid var(--on-border);color:var(--on);background:var(--on-bg);
+  .fw-badge {
+    padding: 2px 7px; border-radius: 2px; letter-spacing: .1em; text-transform: uppercase;
+    border: 1px solid var(--on-border); color: var(--on); background: var(--on-bg);
+    font-size: 9px;
   }
-  .fw-badge.checking{color:var(--muted);border-color:var(--line);background:none}
-  .fw-badge.update{color:var(--fw-warn);border-color:rgba(220,180,60,.3);background:rgba(220,180,60,.08)}
-  .fw-label{color:var(--muted);flex:1}
-  .fw-btn{
-    font-family:var(--mono);font-size:9px;letter-spacing:.1em;padding:3px 10px;
-    background:none;border:1px solid var(--line);color:var(--dim);
-    border-radius:2px;cursor:pointer;transition:all .12s
+  .fw-badge.checking { color: var(--muted); border-color: var(--line); background: none; }
+  .fw-badge.update { color: var(--fw-warn); border-color: rgba(220,180,60,.3); background: rgba(220,180,60,.07); }
+  .fw-label { color: var(--muted); flex: 1; }
+  .fw-btn {
+    font-family: var(--mono); font-size: 9px; letter-spacing: .1em; padding: 3px 9px;
+    background: none; border: 1px solid var(--line); color: var(--dim);
+    border-radius: 2px; cursor: pointer; transition: all .12s;
   }
-  .fw-btn:hover{color:var(--text);border-color:var(--line2)}
+  .fw-btn:hover { color: var(--text); border-color: var(--line2); }
 
   /* IMPORT */
-  .import-bar{
-    display:flex;align-items:center;gap:.7rem;padding:.65rem 1rem;
-    background:var(--surface);border:1px solid var(--line);border-radius:4px;margin-bottom:1.2rem
+  .import-bar {
+    display: flex; align-items: center; gap: .6rem; padding: .6rem .9rem;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 3px;
+    margin-bottom: 1.4rem;
   }
-  .import-label{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;flex:1}
-  .import-hint{font-family:var(--mono);font-size:10px;color:var(--dim)}
-  .import-btn{
-    font-family:var(--mono);font-size:10px;letter-spacing:.1em;padding:5px 14px;
-    background:none;border:1px solid var(--line2);color:var(--text);border-radius:2px;
-    cursor:pointer;transition:all .15s;white-space:nowrap
+  .import-label { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; color: var(--muted); text-transform: uppercase; flex: 1; }
+  .import-hint { font-family: var(--mono); font-size: 10px; color: var(--dim); }
+  .import-btn {
+    font-family: var(--mono); font-size: 10px; letter-spacing: .08em; padding: 5px 13px;
+    background: none; border: 1px solid var(--line2); color: var(--text); border-radius: 2px;
+    cursor: pointer; transition: all .12s; white-space: nowrap;
   }
-  .import-btn:hover{background:var(--hint)}
-  #file-in{display:none}
+  .import-btn:hover { background: var(--hint); }
+  #file-in { display: none; }
 
   /* BUILDER */
-  .builder{background:var(--surface);border:1px solid var(--line);border-radius:4px;margin-bottom:0;overflow:hidden}
+  .builder {
+    background: var(--surface);
+    border: 1px solid var(--line2);
+    border-radius: 4px;
+    margin-bottom: 0;
+    overflow: hidden;
+    box-shadow: 0 2px 20px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.04);
+  }
+
+  .qt-titlebar {
+    height: 38px;
+    display: flex;
+    align-items: center;
+    gap: .8rem;
+    padding: 0 .9rem;
+    background: linear-gradient(180deg, #2a2a2a, #1a1a1a);
+    border-bottom: 1px solid rgba(0,0,0,.75);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+  }
+  .qt-window-dots { display: flex; gap: 6px; flex-shrink: 0; }
+  .qt-window-dots span {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: #555; border: 1px solid rgba(0,0,0,.45);
+  }
+  .qt-window-dots span:nth-child(1) { background: #cf5751; }
+  .qt-window-dots span:nth-child(2) { background: #d3aa43; }
+  .qt-window-dots span:nth-child(3) { background: #52a95c; }
+  .qt-brand {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: .12em;
+    color: rgba(255,255,255,.74);
+    text-transform: uppercase;
+    min-width: 138px;
+  }
+  .qt-device {
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .qt-device-led {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--led-on);
+    box-shadow: 0 0 6px var(--led-on-glow);
+  }
+  .qt-toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    margin-left: .5rem;
+  }
+  .qt-tool-btn {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: .08em;
+    color: rgba(255,255,255,.66);
+    background: #242424;
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 2px;
+    padding: 4px 9px;
+    cursor: pointer;
+  }
+  .qt-tool-btn:hover {
+    color: var(--text);
+    border-color: rgba(255,255,255,.22);
+    background: #2d2d2d;
+  }
+  .qt-workspace {
+    display: grid;
+    grid-template-columns: 190px minmax(0, 1fr);
+    min-height: 456px;
+  }
+  .qt-sidebar {
+    background: #151515;
+    border-right: 1px solid rgba(255,255,255,.08);
+    display: flex;
+    flex-direction: column;
+  }
+  .qt-side-head {
+    height: 34px;
+    display: flex;
+    align-items: center;
+    padding: 0 .8rem;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .15em;
+  }
+  .qt-bank {
+    padding: .55rem;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .qt-patch {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr);
+    gap: .45rem;
+    align-items: center;
+    min-height: 28px;
+    padding: 4px 6px;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: rgba(255,255,255,.48);
+  }
+  .qt-patch.active {
+    color: var(--text);
+    border-color: rgba(125,255,107,.28);
+    background: rgba(125,255,107,.07);
+  }
+  .qt-patch-num { color: var(--dim); }
+  .qt-patch-name {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .qt-side-foot {
+    margin-top: auto;
+    border-top: 1px solid rgba(255,255,255,.07);
+    padding: .65rem .75rem;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--dim);
+    line-height: 1.55;
+  }
+  .qt-main {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background: #171717;
+  }
 
   /* SCENE TABS */
-  .scene-row{
-    display:flex;align-items:center;gap:0;border-bottom:1px solid var(--line);
-    background:var(--s2);padding:0 1rem
+  .scene-row {
+    display: flex; align-items: stretch; gap: 0;
+    background: #202020; border-bottom: 1px solid var(--line); padding: 0;
   }
-  .scene-label{font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--dim);text-transform:uppercase;margin-right:.8rem}
-  .scene-btn{
-    font-family:var(--mono);font-size:11px;letter-spacing:.08em;padding:.5rem .85rem;
-    background:none;border:none;border-right:1px solid var(--line);color:var(--muted);
-    cursor:pointer;transition:all .12s
+  .scene-label {
+    font-family: var(--mono); font-size: 9px; letter-spacing: .18em; color: var(--dim);
+    text-transform: uppercase; padding: 0 1rem; display: flex; align-items: center;
+    border-right: 1px solid var(--line); flex-shrink: 0;
   }
-  .scene-btn.active{color:var(--text);background:var(--sel-bg)}
-  .scene-btn:hover:not(.active){color:var(--text)}
-  .scene-copy{
-    margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:.1em;
-    color:var(--dim);background:none;border:1px solid var(--line);border-radius:2px;
-    padding:3px 10px;cursor:pointer;transition:all .12s
+  .scene-btn {
+    font-family: var(--mono); font-size: 13px; font-weight: 600; letter-spacing: .12em;
+    padding: .75rem 1.5rem; background: none; border: none; border-right: 1px solid var(--line);
+    color: var(--dim); cursor: pointer; transition: color .1s, background .1s;
+    position: relative;
   }
-  .scene-copy:hover{color:var(--text);border-color:var(--line2)}
+  .scene-btn::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+    background: transparent; transition: background .1s;
+  }
+  .scene-btn.active {
+    color: var(--text); background: var(--sel-bg);
+  }
+  .scene-btn.active::after { background: var(--led-on); }
+  .scene-btn:hover:not(.active) { color: var(--muted); }
+  .scene-copy {
+    margin-left: auto; font-family: var(--mono); font-size: 9px; letter-spacing: .1em;
+    color: var(--dim); background: none; border: none; border-left: 1px solid var(--line);
+    padding: 0 1rem; cursor: pointer; transition: color .12s; white-space: nowrap;
+  }
+  .scene-copy:hover { color: var(--text); }
 
   /* CHAIN STRIP */
-  .chain-wrap{padding:1.1rem 1rem .7rem;overflow-x:auto;border-bottom:1px solid var(--line)}
-  .chain-strip{display:flex;align-items:stretch;gap:0;min-width:max-content}
-  .chain-block{
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    gap:5px;padding:9px 10px;border:1px solid var(--line);border-radius:3px;
-    cursor:pointer;transition:all .13s;background:var(--s2);user-select:none;min-width:52px
-  }
-  .chain-block:hover{border-color:var(--line2);background:var(--s3)}
-  .chain-block.selected{border-color:var(--sel-border);background:var(--sel-bg)}
-  .chain-block.active{border-color:var(--on-border);background:var(--on-bg)}
-  .chain-block.active.selected{border-color:rgba(190,255,170,.5);background:rgba(130,210,90,.14)}
-  .chain-block.bypass{opacity:.4}
-  .block-label{font-family:var(--mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
-  .chain-block.active .block-label{color:var(--on)}
-  .chain-block.selected .block-label{color:var(--text)}
-  .block-dot{width:5px;height:5px;border-radius:50%;background:var(--dim);transition:background .12s;flex-shrink:0}
-  .chain-block.active .block-dot{background:var(--on)}
-  .chain-arrow{font-family:var(--mono);font-size:11px;color:var(--dim);padding:0 4px;display:flex;align-items:center;flex-shrink:0}
+.chain-wrap {
+  padding: 1.15rem 1rem 1rem; overflow-x: auto; border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  background-image: repeating-linear-gradient(
+    90deg, transparent, transparent 3px, rgba(255,255,255,0.015) 3px, rgba(255,255,255,0.015) 4px
+  );
+}
+.chain-strip { display: flex; align-items: center; gap: 0; min-width: max-content; }
+
+.chain-block {
+  display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start;
+  gap: 0; padding: 0;
+  width: var(--block-w); height: var(--block-h);
+  border: 1px solid var(--line2);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color .12s, box-shadow .12s;
+  background: var(--s2);
+  user-select: none; position: relative; flex-shrink: 0; overflow: hidden;
+}
+.chain-block:hover { border-color: var(--line3); }
+.chain-block.selected { border-color: var(--sel-border); box-shadow: var(--sel-glow); }
+.chain-block.active { border-color: var(--on-border); box-shadow: var(--on-glow); }
+.chain-block.active.selected { border-color: rgba(140,255,120,.55); box-shadow: var(--on-glow), var(--sel-glow); }
+.chain-block.bypass { opacity: .38; }
+
+/* Colored icon area — top portion of block */
+.block-icon-area {
+  flex: 1; min-height: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--blk-color, rgba(255,255,255,0.06));
+  opacity: .45;
+  transition: opacity .12s;
+}
+.chain-block.active .block-icon-area { opacity: 1; }
+.chain-block.selected .block-icon-area { opacity: .85; }
+.chain-block.active.selected .block-icon-area { opacity: 1; }
+.block-icon-area svg { width: 26px; height: 26px; color: rgba(255,255,255,0.92); flex-shrink: 0; }
+.block-thumb {
+  width: 46px;
+  height: 48px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,.55));
+}
+
+/* Bottom info strip */
+.block-footer {
+  flex-shrink: 0;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 4px 3px 5px;
+  background: var(--s2);
+  border-top: 1px solid rgba(0,0,0,.35);
+}
+
+/* Model name (e.g. "Twin Reverb", "T Scream") */
+.block-model {
+  font-family: var(--mono); font-size: 7px; color: var(--dim);
+  text-align: center; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; max-width: 74px;
+  letter-spacing: .02em;
+}
+.chain-block.active .block-model { color: var(--muted); }
+.chain-block.selected .block-model { color: rgba(255,255,255,.75); }
+
+/* Block label */
+.block-label {
+  font-family: var(--mono); font-size: 8px; letter-spacing: .13em;
+  text-transform: uppercase; color: var(--dim); white-space: nowrap;
+}
+.chain-block.active .block-label { color: var(--on); }
+.chain-block.selected .block-label { color: var(--text); }
+
+/* LED indicator — now inside .block-footer */
+.block-led {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--s4);
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: background .12s, box-shadow .12s;
+  flex-shrink: 0;
+}
+.chain-block.active .block-led {
+  background: var(--led-on);
+  box-shadow: 0 0 5px var(--led-on-glow), 0 0 9px rgba(100,220,80,0.28);
+  border-color: rgba(180,255,160,0.5);
+}
+
+/* Arrow connector between blocks */
+.chain-arrow {
+  font-family: var(--mono); font-size: 10px; color: var(--dim);
+  padding: 0 4px; display: flex; align-items: center; flex-shrink: 0;
+  opacity: .4;
+}
 
   /* PARAMS PANEL */
-  .params-panel{padding:1.1rem 1rem 1rem;min-height:120px;background:var(--bg)}
-  .params-head{
-    display:flex;align-items:center;justify-content:space-between;
-    margin-bottom:.9rem
+  .params-panel {
+    padding: 1rem;
+    min-height: 220px;
+    background: var(--panel);
+    border-top: 1px solid var(--line);
   }
-  .params-block-name{font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
-  .params-ref{font-family:var(--mono);font-size:9px;color:var(--dim);margin-left:.6rem}
-  .toggle-btn{
-    font-family:var(--mono);font-size:9px;letter-spacing:.1em;padding:3px 11px;
-    border-radius:2px;cursor:pointer;transition:all .12s;background:none;
-    border:1px solid var(--line);color:var(--muted)
+  .params-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1rem; padding-bottom: .7rem; border-bottom: 1px solid var(--line);
   }
-  .toggle-btn.on{color:var(--on);border-color:var(--on-border);background:var(--on-bg)}
-  .toggle-btn:hover{border-color:var(--line2)}
-  .pg{display:grid;grid-template-columns:1fr 1fr;gap:.6rem 1.4rem}
-  .pg.w3{grid-template-columns:1fr 1fr 1fr}
-  .pg.w1{grid-template-columns:1fr}
-  .pr{display:flex;flex-direction:column;gap:4px}
-  .pr.full{grid-column:1/-1}
-  .pl{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.04em;display:flex;justify-content:space-between}
-  .pl span{color:var(--dim)}
-  select.ps{
-    width:100%;background:var(--s2);border:1px solid var(--line);color:var(--text);
-    font-family:var(--mono);font-size:12px;padding:5px 8px;border-radius:3px;
-    outline:none;cursor:pointer;transition:border-color .12s
+  .params-block-name {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--text); font-weight: 600;
   }
-  select.ps:focus{border-color:var(--line2)}
-  select.ps option{background:var(--s2)}
-  input[type=range]{
-    width:100%;-webkit-appearance:none;height:3px;background:var(--hint);
-    border-radius:2px;outline:none;cursor:pointer
+  .params-ref { font-family: var(--mono); font-size: 9px; color: var(--dim); margin-left: .6rem; }
+  .toggle-btn {
+    font-family: var(--mono); font-size: 9px; letter-spacing: .12em; padding: 4px 13px;
+    border-radius: 2px; cursor: pointer; transition: all .12s; background: none;
+    border: 1px solid var(--line2); color: var(--muted); text-transform: uppercase;
   }
-  input[type=range]::-webkit-slider-thumb{
-    -webkit-appearance:none;width:13px;height:13px;border-radius:50%;
-    background:rgba(255,255,255,.62);cursor:pointer;transition:background .1s
+  .toggle-btn.on {
+    color: var(--on); border-color: var(--on-border); background: var(--on-bg);
+    box-shadow: 0 0 6px rgba(100,220,80,0.2);
   }
-  input[type=range]:hover::-webkit-slider-thumb{background:rgba(255,255,255,.88)}
-  input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:rgba(255,255,255,.62);border:none;cursor:pointer}
-  .pempty{font-family:var(--mono);font-size:11px;color:var(--dim);padding:.5rem 0}
+  .toggle-btn:hover { border-color: var(--line3); color: var(--text); }
+  .pg { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem 1.6rem; }
+  .pg.w3 { grid-template-columns: 1fr 1fr 1fr; }
+  .pg.w1 { grid-template-columns: 1fr; }
+  .pr { display: flex; flex-direction: column; gap: 5px; }
+  .pr.full { grid-column: 1 / -1; }
+  .pl {
+    font-family: var(--mono); font-size: 10px; color: var(--muted);
+    letter-spacing: .04em; display: flex; justify-content: space-between;
+    align-items: center;
+  }
+  .pl span {
+    font-size: 11px; color: var(--text); font-weight: 500;
+    min-width: 28px; text-align: right;
+  }
+  select.ps {
+    width: 100%; background: var(--s2); border: 1px solid var(--line2);
+    color: var(--text); font-family: var(--mono); font-size: 11px;
+    padding: 6px 9px; border-radius: 3px; outline: none; cursor: pointer;
+    transition: border-color .12s; -webkit-appearance: none; appearance: none;
+  }
+  select.ps:focus { border-color: var(--line3); }
+  select.ps option { background: var(--s2); }
+  input[type=range] {
+    width: 100%; -webkit-appearance: none; appearance: none;
+    height: 4px; background: var(--s4);
+    border-radius: 2px; outline: none; cursor: pointer;
+    border: 1px solid var(--line);
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%;
+    background: linear-gradient(145deg, rgba(255,255,255,.75), rgba(200,200,200,.5));
+    border: 1px solid rgba(255,255,255,.2);
+    cursor: pointer; transition: background .1s, box-shadow .1s;
+    box-shadow: 0 1px 3px rgba(0,0,0,.5);
+  }
+  input[type=range]:hover::-webkit-slider-thumb {
+    background: linear-gradient(145deg, rgba(255,255,255,.95), rgba(220,220,220,.7));
+    box-shadow: 0 0 5px rgba(255,255,255,.25), 0 1px 3px rgba(0,0,0,.5);
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: rgba(255,255,255,.62); border: 1px solid rgba(255,255,255,.2);
+    cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; }
+  .pempty { font-family: var(--mono); font-size: 11px; color: var(--dim); padding: .5rem 0; }
+
+  .params-panel {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    gap: 1rem;
+    align-items: stretch;
+  }
+  .params-art {
+    min-height: 210px;
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 5px;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.04), transparent 34%),
+      #171717;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: .8rem;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.05), inset 0 -18px 35px rgba(0,0,0,.24);
+  }
+  .params-art svg { width: min(190px, 100%); height: 124px; overflow: visible; }
+  .qt-asset-img {
+    width: 100%;
+    max-width: 228px;
+    max-height: 188px;
+    object-fit: contain;
+    display: block;
+    filter: drop-shadow(0 10px 18px rgba(0,0,0,.55));
+  }
+  .qt-asset-amp {
+    max-width: 242px;
+    max-height: 128px;
+  }
+  .qt-asset-eq {
+    max-width: 238px;
+    max-height: 150px;
+  }
+  .qt-asset-cab {
+    max-width: 190px;
+  }
+  .params-art-name {
+    margin-top: .45rem;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.78);
+    text-align: center;
+  }
+  .params-controls {
+    min-width: 0;
+    padding: .2rem .2rem .2rem .35rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .knob-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 1.15rem;
+    align-items: flex-end;
+  }
+  .knob-unit {
+    width: 62px;
+    min-height: 86px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+  .knob-wrap {
+    width: 58px;
+    height: 58px;
+    position: relative;
+  }
+  .knob-svg {
+    width: 58px;
+    height: 58px;
+    display: block;
+    filter: drop-shadow(0 3px 4px rgba(0,0,0,.55));
+  }
+  .knob-input {
+    position: absolute;
+    inset: 0;
+    width: 58px !important;
+    height: 58px !important;
+    opacity: 0;
+    cursor: ew-resize;
+  }
+  .knob-value {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text);
+    line-height: 1;
+    min-height: 10px;
+  }
+  .knob-label {
+    font-family: var(--mono);
+    font-size: 8px;
+    color: var(--muted);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    text-align: center;
+    line-height: 1.1;
+  }
+  .select-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 160px;
+  }
+  .select-stack label {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+  .params-note {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--dim);
+    margin-top: .4rem;
+  }
 
   /* PRESET ROW */
-  .preset-row{
-    display:flex;align-items:center;gap:.8rem;padding:.9rem 1rem;
-    background:var(--surface);border:1px solid var(--line);border-top:none;
-    border-radius:0 0 4px 4px;margin-bottom:1.4rem
+  .preset-row {
+    display: flex; align-items: center; gap: .8rem; padding: .9rem 1rem;
+    background: var(--surface); border: 1px solid var(--line2); border-top: none;
+    border-radius: 0 0 6px 6px; margin-bottom: 1.6rem;
   }
-  .pname-wrap{flex:1;display:flex;flex-direction:column;gap:3px}
-  .pname-hint{font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:.07em}
-  .pname-input{
-    width:100%;background:var(--s2);border:1px solid var(--line);color:var(--text);
-    font-family:var(--mono);font-size:13px;padding:6px 10px;border-radius:3px;
-    outline:none;transition:border-color .12s
+  .pname-wrap { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+  .pname-hint { font-family: var(--mono); font-size: 9px; color: var(--dim); letter-spacing: .07em; }
+  .pname-input {
+    width: 100%; background: var(--s2); border: 1px solid var(--line2); color: var(--text);
+    font-family: var(--mono); font-size: 13px; padding: 6px 10px; border-radius: 3px;
+    outline: none; transition: border-color .12s;
   }
-  .pname-input:focus{border-color:var(--line2)}
-  .add-btn{
-    font-family:var(--mono);font-size:11px;letter-spacing:.08em;padding:8px 18px;
-    background:none;border:1px solid var(--line2);color:var(--text);border-radius:3px;
-    cursor:pointer;transition:all .15s;white-space:nowrap
+  .pname-input:focus { border-color: var(--line3); }
+  .add-btn {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .08em; padding: 9px 20px;
+    background: var(--on-bg); border: 1px solid var(--on-border); color: var(--on);
+    border-radius: 3px; cursor: pointer; transition: all .15s; white-space: nowrap;
   }
-  .add-btn:hover{background:var(--hint);border-color:rgba(255,255,255,.28)}
+  .add-btn:hover { background: rgba(90,200,70,.15); box-shadow: 0 0 8px rgba(100,220,80,.2); }
 
   /* PACK */
-  .pack{background:var(--surface);border:1px solid var(--line);border-radius:4px;overflow:hidden}
-  .pack-head{
-    display:flex;align-items:center;padding:.75rem 1rem;
-    border-bottom:1px solid var(--line);background:var(--s2)
+  .pack {
+    background: var(--surface); border: 1px solid var(--line2);
+    border-radius: 6px; overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,.3);
   }
-  .pack-title{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);flex:1}
-  .pack-count{font-family:var(--mono);font-size:10px;color:var(--dim)}
-  .pack-list{min-height:52px}
-  .pack-empty{font-family:var(--mono);font-size:11px;color:var(--dim);padding:1.4rem 1rem}
-  .pack-item{
-    display:flex;align-items:center;gap:.75rem;padding:.7rem 1rem;
-    border-bottom:1px solid var(--line);transition:background .1s
+  .pack-head {
+    display: flex; align-items: center; padding: .7rem 1rem;
+    border-bottom: 1px solid var(--line); background: var(--s2);
   }
-  .pack-item:last-child{border-bottom:none}
-  .pack-item:hover{background:var(--hint)}
-  .pi-name{font-family:var(--mono);font-size:12px;color:var(--text);flex:1}
-  .pi-scenes{display:flex;gap:3px;align-items:center}
-  .pi-dot{width:6px;height:6px;border-radius:50%;background:var(--on)}
-  .pi-btn{
-    font-family:var(--mono);font-size:9px;letter-spacing:.08em;padding:3px 9px;
-    background:none;border:1px solid var(--line);color:var(--muted);border-radius:2px;
-    cursor:pointer;transition:all .12s
+  .pack-title {
+    font-family: var(--mono); font-size: 9px; letter-spacing: .2em;
+    text-transform: uppercase; color: var(--muted); flex: 1;
   }
-  .pi-btn:hover{color:var(--text);border-color:var(--line2)}
-  .pi-btn.del:hover{color:rgba(220,80,80,.9);border-color:rgba(220,80,80,.3)}
-  .pack-foot{
-    display:flex;align-items:center;justify-content:flex-end;gap:.8rem;
-    padding:.75rem 1rem;border-top:1px solid var(--line);background:var(--s2)
+  .pack-count { font-family: var(--mono); font-size: 10px; color: var(--dim); }
+  .pack-list { min-height: 52px; }
+  .pack-empty { font-family: var(--mono); font-size: 11px; color: var(--dim); padding: 1.4rem 1rem; }
+  .pack-item {
+    display: flex; align-items: center; gap: .75rem; padding: .65rem 1rem;
+    border-bottom: 1px solid var(--line); transition: background .1s;
   }
-  .exp-btn{
-    font-family:var(--mono);font-size:11px;letter-spacing:.1em;padding:7px 18px;
-    background:none;border:1px solid var(--line2);color:var(--text);border-radius:3px;
-    cursor:pointer;transition:all .15s
+  .pack-item:last-child { border-bottom: none; }
+  .pack-item:hover { background: var(--hint); }
+  .pi-name { font-family: var(--mono); font-size: 12px; color: var(--text); flex: 1; }
+  .pi-scenes { display: flex; gap: 3px; align-items: center; }
+  .pi-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--on); }
+  .pi-btn {
+    font-family: var(--mono); font-size: 9px; letter-spacing: .08em; padding: 3px 9px;
+    background: none; border: 1px solid var(--line); color: var(--muted); border-radius: 2px;
+    cursor: pointer; transition: all .12s;
   }
-  .exp-btn:hover{background:var(--hint)}
-  .exp-btn:disabled{opacity:.3;cursor:default}
-  .pack-status{font-family:var(--mono);font-size:10px;color:var(--on);opacity:0;transition:opacity .3s}
-  .pack-status.show{opacity:1}
+  .pi-btn:hover { color: var(--text); border-color: var(--line2); }
+  .pi-btn.del:hover { color: rgba(220,80,80,.9); border-color: rgba(220,80,80,.3); }
+  .pack-foot {
+    display: flex; align-items: center; justify-content: flex-end; gap: .8rem;
+    padding: .7rem 1rem; border-top: 1px solid var(--line); background: var(--s2);
+  }
+  .exp-btn {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .1em; padding: 7px 18px;
+    background: none; border: 1px solid var(--line2); color: var(--text); border-radius: 3px;
+    cursor: pointer; transition: all .15s;
+  }
+  .exp-btn:hover { background: var(--hint); }
+  .exp-btn:disabled { opacity: .3; cursor: default; }
+  .pack-status { font-family: var(--mono); font-size: 10px; color: var(--on); opacity: 0; transition: opacity .3s; }
+  .pack-status.show { opacity: 1; }
 
-  footer{
-    margin-top:3rem;padding-top:1.1rem;border-top:1px solid var(--line);
-    font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.06em
+  footer {
+    margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--line);
+    font-family: var(--mono); font-size: 10px; color: var(--dim); letter-spacing: .06em;
   }
 
-  @media(max-width:580px){
-    .pg{grid-template-columns:1fr}
-    .pg.w3{grid-template-columns:1fr 1fr}
-    .preset-row{flex-direction:column;align-items:stretch}
-    .import-bar{flex-wrap:wrap}
-    .chain-block{min-width:44px;padding:7px 7px}
-    .block-label{font-size:8px}
+  @media (max-width: 580px) {
+    .pg { grid-template-columns: 1fr; }
+    .pg.w3 { grid-template-columns: 1fr 1fr; }
+    .preset-row { flex-direction: column; align-items: stretch; }
+    .import-bar { flex-wrap: wrap; }
+    .qt-workspace { grid-template-columns: 1fr; }
+    .qt-sidebar { display: none; }
+    .qt-titlebar { padding: 0 .55rem; }
+    .qt-brand { min-width: 0; font-size: 10px; }
+    .qt-device { display: none; }
+    :root { --block-w: 64px; --block-h: 88px; }
+    .block-label { font-size: 7px; }
+    .block-icon-area svg { width: 20px; height: 20px; }
+    .scene-btn { padding: .65rem 1rem; font-size: 12px; }
+    .params-panel { grid-template-columns: 1fr; }
+    .params-art { min-height: 150px; }
+    .params-art svg { height: 110px; }
+    .knob-unit { width: 56px; }
   }
 </style>
 </head>
-<body>
+<body class="qt-replica">
 <div class="page">
 
   <header>
@@ -253,17 +699,48 @@
 
   <!-- BUILDER -->
   <div class="builder">
-    <div class="scene-row">
-      <span class="scene-label">Scene</span>
-      <button class="scene-btn active" onclick="switchScene(0,this)">A</button>
-      <button class="scene-btn" onclick="switchScene(1,this)">B</button>
-      <button class="scene-btn" onclick="switchScene(2,this)">C</button>
-      <button class="scene-copy" onclick="copyScenes()">Copy A → B C</button>
+    <div class="qt-titlebar">
+      <div class="qt-window-dots"><span></span><span></span><span></span></div>
+      <div class="qt-brand">NUX QuickTone</div>
+      <div class="qt-device"><span class="qt-device-led"></span><span>MG-30 · Patch 01A · USB Ready</span></div>
+      <div class="qt-toolbar-actions">
+        <button class="qt-tool-btn" onclick="document.getElementById('file-in').click()">Import</button>
+        <button class="qt-tool-btn" onclick="checkFirmware()">Firmware</button>
+      </div>
     </div>
-    <div class="chain-wrap">
-      <div class="chain-strip" id="chain-strip"></div>
+    <div class="qt-workspace">
+      <aside class="qt-sidebar">
+        <div class="qt-side-head">Preset Library</div>
+        <div class="qt-bank">
+          <div class="qt-patch active"><span class="qt-patch-num">01A</span><span class="qt-patch-name">EG-CLN-SOUL_v1</span></div>
+          <div class="qt-patch"><span class="qt-patch-num">01B</span><span class="qt-patch-name">EDGE DELAY</span></div>
+          <div class="qt-patch"><span class="qt-patch-num">01C</span><span class="qt-patch-name">BLUE DRIVE</span></div>
+          <div class="qt-patch"><span class="qt-patch-num">02A</span><span class="qt-patch-name">AMBIENT VERB</span></div>
+          <div class="qt-patch"><span class="qt-patch-num">02B</span><span class="qt-patch-name">FUNK COMP</span></div>
+          <div class="qt-patch"><span class="qt-patch-num">02C</span><span class="qt-patch-name">BASS SVT</span></div>
+          <div class="qt-patch"><span class="qt-patch-num">03A</span><span class="qt-patch-name">ACOUSTIC IR</span></div>
+          <div class="qt-patch"><span class="qt-patch-num">03B</span><span class="qt-patch-name">LEAD STACK</span></div>
+        </div>
+        <div class="qt-side-foot">
+          PATCH<br>
+          IMPORT · EXPORT<br>
+          FIRMWARE · SETTINGS
+        </div>
+      </aside>
+      <main class="qt-main">
+        <div class="scene-row">
+          <span class="scene-label">Scene</span>
+          <button class="scene-btn active" onclick="switchScene(0,this)">A</button>
+          <button class="scene-btn" onclick="switchScene(1,this)">B</button>
+          <button class="scene-btn" onclick="switchScene(2,this)">C</button>
+          <button class="scene-copy" onclick="copyScenes()">Copy A → B C</button>
+        </div>
+        <div class="chain-wrap">
+          <div class="chain-strip" id="chain-strip"></div>
+        </div>
+        <div class="params-panel" id="params-panel"></div>
+      </main>
     </div>
-    <div class="params-panel" id="params-panel"></div>
   </div>
 
   <!-- PRESET NAME + ADD -->
@@ -431,19 +908,54 @@ const FW_BASELINE = {
 // Slot IDs match QuickTone internal ordering for binary export
 // ═══════════════════════════════════════════════════════════
 const CHAIN = [
-  { id:'wah',   label:'WAH',   slot:0,  toggleable:true  },
-  { id:'comp',  label:'COMP',  slot:1,  toggleable:true  },
-  { id:'gate',  label:'GATE',  slot:5,  toggleable:true  },
-  { id:'efx',   label:'EFX',   slot:2,  toggleable:true  },
-  { id:'amp',   label:'AMP',   slot:3,  toggleable:false },  // always on
-  { id:'ir',    label:'IR',    slot:9,  toggleable:false },  // always on
-  { id:'eq',    label:'EQ',    slot:4,  toggleable:true  },
-  { id:'sr',    label:'S/R',   slot:10, toggleable:true  },  // send/return loop
-  { id:'mod',   label:'MOD',   slot:6,  toggleable:true  },
-  { id:'delay', label:'DELAY', slot:7,  toggleable:true  },
-  { id:'reverb',label:'REVERB',slot:8,  toggleable:true  },
-  { id:'vol',   label:'VOL',   slot:11, toggleable:false },  // always on
+  { id:'wah',    label:'WAH',   slot:0,  toggleable:true,  color:'#b07820' },
+  { id:'comp',   label:'COMP',  slot:1,  toggleable:true,  color:'#909020' },
+  { id:'gate',   label:'GATE',  slot:5,  toggleable:true,  color:'#4a5850' },
+  { id:'efx',    label:'EFX',   slot:2,  toggleable:true,  color:'#b83028' },
+  { id:'amp',    label:'AMP',   slot:3,  toggleable:false, color:'#2050b8' },
+  { id:'ir',     label:'CAB',   slot:9,  toggleable:false, color:'#583888' },
+  { id:'eq',     label:'EQ',    slot:4,  toggleable:true,  color:'#187880' },
+  { id:'sr',     label:'S/R',   slot:10, toggleable:true,  color:'#305830' },
+  { id:'mod',    label:'MOD',   slot:6,  toggleable:true,  color:'#6828a8' },
+  { id:'delay',  label:'DELAY', slot:7,  toggleable:true,  color:'#1060a8' },
+  { id:'reverb', label:'REVERB',slot:8,  toggleable:true,  color:'#102868' },
+  { id:'vol',    label:'VOL',   slot:11, toggleable:false, color:'#383838' },
 ];
+
+// ═══════════════════════════════════════════════════════════
+// BLOCK ICONS — inline SVG per category
+// ═══════════════════════════════════════════════════════════
+const BLOCK_ICONS = {
+  wah:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 19 Q8 4 14 8 Q18 11 21 19"/><ellipse cx="12" cy="20" rx="4" ry="1.5" fill="currentColor" opacity=".3"/></svg>`,
+  comp:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,14 6,14 8,7 10,17 12,11 14,14 22,14"/></svg>`,
+  gate:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="2,17 7,17 7,8 12,8 12,17 22,17"/></svg>`,
+  efx:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,16 5,16 7,9 9,17 11,7 13,15 15,11 17,16 22,16"/></svg>`,
+  amp:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="1.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>`,
+  ir:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="4" width="20" height="15" rx="1.5"/><circle cx="8" cy="11" r="3"/><circle cx="16" cy="11" r="3"/><line x1="2" y1="17" x2="22" y2="17"/></svg>`,
+  eq:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="18" x2="5" y2="9"/><line x1="10" y1="18" x2="10" y2="6"/><line x1="15" y1="18" x2="15" y2="11"/><line x1="20" y1="18" x2="20" y2="14"/><line x1="3" y1="12" x2="7" y2="12"/><line x1="8" y1="9" x2="12" y2="9"/><line x1="13" y1="14" x2="17" y2="14"/><line x1="18" y1="16" x2="22" y2="16"/></svg>`,
+  sr:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 4 L21 8 L17 12"/><path d="M21 8 H9 Q3 8 3 14 Q3 20 9 20 H15"/></svg>`,
+  mod:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12 C4.5 5 7.5 5 9.5 12 C11.5 19 14.5 19 16.5 12 C18.5 5 21 5 22 12"/></svg>`,
+  delay:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><polyline points="12,8 12,12 15.5,14"/><path d="M19 5.5 Q23 12 19 18.5" stroke-opacity=".35"/></svg>`,
+  reverb: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="2.5" fill="currentColor" opacity=".75"/><circle cx="12" cy="12" r="5.5" stroke-opacity=".65"/><circle cx="12" cy="12" r="9" stroke-opacity=".32"/></svg>`,
+  vol:    `<svg viewBox="0 0 24 24"><polygon points="3,9 3,15 8,15 14,20 14,4 8,9" fill="currentColor" opacity=".85"/><path d="M17 9 Q20 12 17 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M20 6.5 Q23.5 12 20 17.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity=".4"/></svg>`,
+};
+
+// Returns the current model/preset name for a block (for display inside the block tile)
+function blockModelName(id, sc) {
+  if (!FW) return '';
+  const d = sc[id];
+  switch (id) {
+    case 'wah':    return FW.wah?.[d.type]?.name || '';
+    case 'comp':   return FW.comp?.[d.type]?.name || '';
+    case 'efx':    return FW.efx?.[d.type]?.name || '';
+    case 'amp':    return FW.amps?.[d.model]?.name || '';
+    case 'ir':     return [...(FW.ir_guitar||[]),...(FW.ir_bass||[])][d.cab]?.name || '';
+    case 'mod':    return FW.mod?.[d.type]?.name || '';
+    case 'delay':  return FW.delay?.[d.type]?.name || '';
+    case 'reverb': return FW.reverb?.[d.type]?.name || '';
+    default:       return '';
+  }
+}
 
 // ═══════════════════════════════════════════════════════════
 // STATE
@@ -476,6 +988,12 @@ let pack         = [];
 async function loadFirmware() {
   const badge = document.getElementById('fw-badge');
   const label = document.getElementById('fw-label');
+  FW = FW_BASELINE;
+  badge.className = 'fw-badge checking';
+  badge.textContent = 'Loading…';
+  label.textContent = 'Loading firmware data…';
+  document.getElementById('fw-footer').textContent = 'FW ' + FW.version + ' (embedded)';
+  render();
   badge.className = 'fw-badge checking';
   badge.textContent = 'Loading…';
   try {
@@ -547,7 +1065,13 @@ function renderChain() {
     el.title = b.toggleable
       ? (isOn ? 'On — click to configure, dblclick to toggle off' : 'Off — click to configure, dblclick to enable')
       : 'Click to configure';
-    el.innerHTML = `<div class="block-label">${b.label}</div><div class="block-dot"></div>`;
+    const modelName = blockModelName(b.id, scenes[currentScene]);
+    const tileColor = FW ? modelVisualStyle(b.id, sc).face : b.color;
+    const asset = quickToneAsset(b.id, sc);
+    const icon = asset
+      ? `<img class="block-thumb" src="${asset}" alt="">`
+      : (BLOCK_ICONS[b.id] || '');
+    el.innerHTML = `<div class="block-icon-area" style="--blk-color:${tileColor}">${icon}</div><div class="block-footer">${modelName?`<div class="block-model">${modelName}</div>`:''}<div class="block-label">${b.label}</div><div class="block-led"></div></div>`;
     el.addEventListener('click', () => { selectedId = b.id; renderChain(); renderParams(); });
     if (b.toggleable) {
       el.addEventListener('dblclick', e => { e.preventDefault(); toggleBlock(b.id); });
@@ -559,6 +1083,187 @@ function renderChain() {
       strip.appendChild(a);
     }
   });
+}
+
+function quickToneAsset(id, d) {
+  const base = 'assets/quicktone/';
+  if (id === 'wah') return base + 'wah-touch.png';
+  if (id === 'comp') return base + 'comp-rose.png';
+  if (id === 'gate') return base + (d.on ? 'gate-smart.png' : 'gate-noise.png');
+  if (id === 'efx') {
+    if (d.type === 5) return base + 'efx-blu-driver.png';
+    if (d.type === 4 || d.type === 8) return base + 'efx-turbo-od.png';
+    return base + 'efx-dist-plus.png';
+  }
+  if (id === 'amp') {
+    const idx = Math.max(0, Math.min(26, Number(d.model) || 0));
+    const ampAssetMap = [
+      17, 18, 9, 1, 12, 3, 7, 8, 24, 6, 25, 23, 20, 11,
+      14, 26, 5, 13, 19, 10, 16, 22, 0, 2, 4, 15, 21
+    ];
+    const assetIdx = ampAssetMap[idx] ?? idx;
+    return base + 'amps/amp-' + String(assetIdx).padStart(2, '0') + '.png';
+  }
+  if (id === 'ir') return base + 'cab-sv410.png';
+  if (id === 'eq') return base + 'eq-ten-band.png';
+  if (id === 'mod') return base + 'mod-tremolo.png';
+  if (id === 'delay') return base + 'delay-digital.png';
+  if (id === 'reverb') return base + 'reverb-harmonist.png';
+  return '';
+}
+
+function modelVisualStyle(id, d) {
+  const modelName = blockModelName(id, scenes[currentScene]) || id;
+  const s = modelName.toLowerCase();
+  if (id === 'wah') return { kind:'wah', face:'#b98228', trim:'#1c1510', accent:'#e1bd64', shape:'wah' };
+  if (id === 'comp') return s.includes('studio')
+    ? { kind:'rack', face:'#d8c65a', trim:'#262513', accent:'#fff3a4', shape:'rack' }
+    : { kind:'stomp', face:s.includes('keeley') ? '#2f78b8' : '#d3c342', trim:'#181818', accent:'#f2f0c5', shape:'compact' };
+  if (id === 'gate') return { kind:'stomp', face:'#4e5f57', trim:'#151a18', accent:'#89b8a2', shape:'compact' };
+  if (id === 'efx') {
+    if (s.includes('scream') || s.includes('red dirt')) return { kind:'stomp', face:'#23865e', trim:'#151a17', accent:'#d7f5d6', shape:'tube' };
+    if (s.includes('blues')) return { kind:'stomp', face:'#2a68b1', trim:'#101923', accent:'#9cc4ff', shape:'boss' };
+    if (s.includes('muff') || s.includes('fuzz')) return { kind:'stomp', face:'#d8d0b0', trim:'#271f19', accent:'#b63b30', shape:'wide' };
+    if (s.includes('rat') || s.includes('dist one')) return { kind:'stomp', face:'#303033', trim:'#101010', accent:'#f24f38', shape:'flat' };
+    if (s.includes('morning')) return { kind:'stomp', face:'#74b9d6', trim:'#14303a', accent:'#fff2ad', shape:'boutique' };
+    return { kind:'stomp', face:'#b9302d', trim:'#1c1111', accent:'#f0c0ae', shape:'compact' };
+  }
+  if (id === 'amp') {
+    if (s.includes('twin') || s.includes('deluxe') || s.includes('princeton')) return { kind:'amp', face:'#eee7d2', trim:'#202020', grill:'#251f1c', accent:'#caa45f', shape:'combo' };
+    if (s.includes('jc')) return { kind:'amp', face:'#d8d8d8', trim:'#171717', grill:'#1f2630', accent:'#72a4ff', shape:'combo' };
+    if (s.includes('ac')) return { kind:'amp', face:'#ceb57a', trim:'#261b12', grill:'#4a3322', accent:'#b84c28', shape:'combo' };
+    if (s.includes('plexi') || s.includes('jcm') || s.includes('jvm')) return { kind:'amp', face:'#caa15b', trim:'#171717', grill:'#2b241c', accent:'#f4e2a1', shape:'head' };
+    if (s.includes('recto') || s.includes('mark')) return { kind:'amp', face:'#b6b9bc', trim:'#151515', grill:'#202326', accent:'#ff4d36', shape:'head' };
+    if (s.includes('orange') || s.includes('rockerverb')) return { kind:'amp', face:'#e5682a', trim:'#21130c', grill:'#332014', accent:'#ffe2b0', shape:'head' };
+    if (s.includes('svt') || s.includes('b-15')) return { kind:'amp', face:'#353b40', trim:'#101010', grill:'#1b1f22', accent:'#5fd0ff', shape:'bass' };
+    return { kind:'amp', face:'#315faf', trim:'#10151f', grill:'#222934', accent:'#b9d8ff', shape:'head' };
+  }
+  if (id === 'ir') return { kind:'cab', face:'#3e2b62', trim:'#15101d', grill:'#231b2d', accent:'#b89cff', shape:'cab' };
+  if (id === 'eq') return { kind:'rack', face:'#187880', trim:'#101819', accent:'#87eff5', shape:'eq' };
+  if (id === 'sr') return { kind:'rack', face:'#315f36', trim:'#101710', accent:'#8ee694', shape:'loop' };
+  if (id === 'mod') return { kind:'stomp', face:'#6130a8', trim:'#171120', accent:'#d6bbff', shape:'wide' };
+  if (id === 'delay') return { kind:'stomp', face:'#1267a8', trim:'#101722', accent:'#a7ddff', shape:'wide' };
+  if (id === 'reverb') return { kind:'stomp', face:'#26327e', trim:'#101326', accent:'#b9c7ff', shape:'wide' };
+  return { kind:'utility', face:'#3c3c3c', trim:'#171717', accent:'#d0d0d0', shape:'vol' };
+}
+
+function getBlockSVG(id, sc) {
+  const d = sc[id];
+  const asset = quickToneAsset(id, d);
+  if (asset) {
+    return `<img class="qt-asset-img qt-asset-${id}" src="${asset}" alt="${esc(blockModelName(id, sc) || id)}">`;
+  }
+  const v = modelVisualStyle(id, d);
+  const name = esc(blockModelName(id, sc) || CHAIN.find(b => b.id === id).label);
+  const face = v.face, trim = v.trim, accent = v.accent, grill = v.grill || '#222';
+  const screw = `<circle cx="20" cy="18" r="2" fill="rgba(255,255,255,.35)"/><circle cx="180" cy="18" r="2" fill="rgba(255,255,255,.35)"/><circle cx="20" cy="112" r="2" fill="rgba(0,0,0,.35)"/><circle cx="180" cy="112" r="2" fill="rgba(0,0,0,.35)"/>`;
+
+  if (v.kind === 'amp') {
+    const head = v.shape === 'head' || v.shape === 'bass';
+    return `<svg viewBox="0 0 200 130" role="img" aria-label="${name}">
+      <defs><linearGradient id="ampg-${id}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="rgba(255,255,255,.24)"/><stop offset=".35" stop-color="${face}"/><stop offset="1" stop-color="rgba(0,0,0,.38)"/></linearGradient></defs>
+      <rect x="10" y="${head?20:12}" width="180" height="${head?52:106}" rx="7" fill="${trim}"/>
+      <rect x="18" y="${head?28:20}" width="164" height="${head?36:38}" rx="3" fill="url(#ampg-${id})"/>
+      <g fill="${trim}">${[0,1,2,3,4,5].map((_,i)=>`<circle cx="${54+i*18}" cy="${head?46:39}" r="4"/>`).join('')}</g>
+      <rect x="28" y="${head?38:31}" width="32" height="8" rx="1" fill="${accent}" opacity=".8"/>
+      <text x="100" y="${head?50:43}" text-anchor="middle" font-family="monospace" font-size="8" fill="${trim}" opacity=".7">${name.slice(0,18)}</text>
+      ${head ? `<rect x="22" y="82" width="156" height="36" rx="4" fill="${grill}"/><path d="M28 88H172M28 96H172M28 104H172M28 112H172" stroke="rgba(255,255,255,.12)" stroke-width="1"/>` : `<rect x="18" y="62" width="164" height="48" rx="3" fill="${grill}"/><circle cx="72" cy="86" r="18" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="3"/><circle cx="128" cy="86" r="18" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="3"/>`}
+      ${screw}
+    </svg>`;
+  }
+
+  if (v.kind === 'cab') {
+    return `<svg viewBox="0 0 200 130" role="img" aria-label="${name}">
+      <rect x="24" y="18" width="152" height="96" rx="7" fill="${trim}"/>
+      <rect x="34" y="28" width="132" height="76" rx="3" fill="${grill}"/>
+      <path d="M40 36H160M40 46H160M40 56H160M40 66H160M40 76H160M40 86H160M40 96H160" stroke="rgba(255,255,255,.13)" stroke-width="1"/>
+      <circle cx="76" cy="66" r="23" fill="none" stroke="${accent}" stroke-opacity=".35" stroke-width="4"/>
+      <circle cx="124" cy="66" r="23" fill="none" stroke="${accent}" stroke-opacity=".35" stroke-width="4"/>
+      <rect x="73" y="108" width="54" height="7" rx="2" fill="${face}"/>
+      ${screw}
+    </svg>`;
+  }
+
+  if (v.kind === 'rack') {
+    return `<svg viewBox="0 0 200 130" role="img" aria-label="${name}">
+      <rect x="16" y="36" width="168" height="58" rx="5" fill="${trim}"/>
+      <rect x="26" y="45" width="148" height="40" rx="3" fill="${face}"/>
+      <text x="44" y="68" font-family="monospace" font-size="10" fill="${accent}" opacity=".9">${name.slice(0,13)}</text>
+      ${[0,1,2,3,4].map((_,i)=>`<line x1="${112+i*9}" y1="79" x2="${112+i*9}" y2="${61+i%3*4}" stroke="${accent}" stroke-width="3" stroke-linecap="round"/>`).join('')}
+      <circle cx="164" cy="65" r="5" fill="${accent}"/>
+      ${screw}
+    </svg>`;
+  }
+
+  if (v.kind === 'wah') {
+    return `<svg viewBox="0 0 200 130" role="img" aria-label="${name}">
+      <path d="M62 112L88 20H142L164 112Z" fill="${trim}"/>
+      <path d="M76 102L98 31H133L151 102Z" fill="${face}"/>
+      <path d="M92 44H137M88 58H141M84 72H145M80 86H149" stroke="rgba(255,255,255,.22)" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="112" cy="110" r="7" fill="${accent}"/>
+    </svg>`;
+  }
+
+  if (v.kind === 'utility') {
+    return `<svg viewBox="0 0 200 130" role="img" aria-label="${name}">
+      <rect x="44" y="24" width="112" height="86" rx="8" fill="${trim}"/>
+      <circle cx="100" cy="65" r="31" fill="${face}" stroke="rgba(255,255,255,.18)" stroke-width="2"/>
+      <path d="M100 36V66L120 78" stroke="${accent}" stroke-width="5" stroke-linecap="round"/>
+      ${screw}
+    </svg>`;
+  }
+
+  const w = v.shape === 'wide' ? 128 : 98;
+  const x = (200 - w) / 2;
+  const pedalRx = v.shape === 'boss' ? 14 : 6;
+  const foot = v.shape === 'boss'
+    ? `<rect x="${x+10}" y="78" width="${w-20}" height="24" rx="5" fill="${trim}" opacity=".9"/><path d="M${x+16} 86H${x+w-16}M${x+16} 94H${x+w-16}" stroke="rgba(255,255,255,.12)"/>`
+    : `<circle cx="100" cy="92" r="11" fill="${trim}" stroke="rgba(255,255,255,.18)" stroke-width="2"/>`;
+  return `<svg viewBox="0 0 200 130" role="img" aria-label="${name}">
+    <defs><linearGradient id="pedg-${id}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="rgba(255,255,255,.24)"/><stop offset=".25" stop-color="${face}"/><stop offset="1" stop-color="rgba(0,0,0,.28)"/></linearGradient></defs>
+    <rect x="${x}" y="18" width="${w}" height="94" rx="${pedalRx}" fill="${trim}"/>
+    <rect x="${x+8}" y="26" width="${w-16}" height="78" rx="${Math.max(3,pedalRx-5)}" fill="url(#pedg-${id})"/>
+    <text x="100" y="48" text-anchor="middle" font-family="monospace" font-size="10" font-weight="700" fill="${trim}" opacity=".78">${name.slice(0,16)}</text>
+    ${[0,1,2].map((_,i)=>`<circle cx="${100+(i-1)*26}" cy="64" r="8" fill="${trim}"/><line x1="${100+(i-1)*26}" y1="64" x2="${100+(i-1)*26}" y2="57" stroke="${accent}" stroke-width="2" stroke-linecap="round"/>`).join('')}
+    ${foot}
+    <circle cx="${x+w-17}" cy="35" r="4" fill="${accent}" filter="drop-shadow(0 0 4px ${accent})"/>
+    ${screw}
+  </svg>`;
+}
+
+function _knobAngle(norm) {
+  const deg = -225 + norm * 270;
+  const rad = deg * Math.PI / 180;
+  const cx = 27, cy = 27, r = 18;
+  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+}
+
+function _knobSVG(id, norm) {
+  const p = _knobAngle(norm);
+  const ticks = [-225, -90, 45].map(deg => {
+    const r = deg * Math.PI / 180;
+    const x1 = 27 + 23 * Math.cos(r), y1 = 27 + 23 * Math.sin(r);
+    const x2 = 27 + 26 * Math.cos(r), y2 = 27 + 26 * Math.sin(r);
+    return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="rgba(255,255,255,.25)" stroke-width="1.5"/>`;
+  }).join('');
+  const arcPath = `M ${(27 + 20 * Math.cos(-225*Math.PI/180)).toFixed(2)} ${(27 + 20 * Math.sin(-225*Math.PI/180)).toFixed(2)} A 20 20 0 1 1 ${(27 + 20 * Math.cos(45*Math.PI/180)).toFixed(2)} ${(27 + 20 * Math.sin(45*Math.PI/180)).toFixed(2)}`;
+  return `<svg id="${id}" class="knob-svg" viewBox="0 0 54 54" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="27" cy="27" r="20" fill="#2a2a2a" stroke="rgba(255,255,255,.12)" stroke-width="1.5"/>
+    <path d="${arcPath}" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="2" stroke-linecap="round"/>
+    ${ticks}
+    <line id="${id}-ind" x1="27" y1="27" x2="${p.x.toFixed(2)}" y2="${p.y.toFixed(2)}" stroke="var(--led-on)" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="27" cy="27" r="12" fill="#1e1e1e"/>
+  </svg>`;
+}
+
+function updateKnob(key, v, min, max) {
+  const ind = document.getElementById('knob-' + key + '-ind');
+  if (!ind) return;
+  const p = _knobAngle((v - min) / (max - min));
+  ind.setAttribute('x2', p.x.toFixed(2));
+  ind.setAttribute('y2', p.y.toFixed(2));
+  const val = document.getElementById('kv-' + key);
+  if (val) val.textContent = v;
 }
 
 function renderParams() {
@@ -578,57 +1283,57 @@ function renderParams() {
         ${isOn ? '● On' : '○ Off'}</button>` : ''}
     </div>`;
 
-  const slider = (key, label, min, max, step=1, extraClass='') => {
-    const v = d[key];
-    return `<div class="pr${extraClass?' '+extraClass:''}">
-      <label class="pl">${label}<span id="pv-${key}">${v}</span></label>
-      <input type="range" min="${min}" max="${max}" step="${step}" value="${v}"
-        oninput="sp('${selectedId}','${key}',+this.value,'pv-${key}')">
+  const knob = (key, label, min, max, step=1) => {
+    const v = d[key] !== undefined ? d[key] : min;
+    const norm = (v - min) / (max - min);
+    return `<div class="knob-unit">
+      <div class="knob-wrap">
+        ${_knobSVG('knob-'+key, norm)}
+        <input type="range" class="knob-input" min="${min}" max="${max}" step="${step}" value="${v}"
+          oninput="sp('${selectedId}','${key}',+this.value);updateKnob('${key}',+this.value,${min},${max})">
+      </div>
+      <div class="knob-value" id="kv-${key}">${v}</div>
+      <div class="knob-label">${label}</div>
     </div>`;
   };
 
-  const sel = (key, label, list, extraClass='') => {
+  const sel = (key, label, list) => {
     const opts = list.map(x =>
       `<option value="${x.id}" ${d[key]===x.id?'selected':''}>${x.name}${x.ref?' — '+x.ref:''}</option>`
     ).join('');
-    return `<div class="pr${extraClass?' '+extraClass:''}">
-      <label class="pl">${label}</label>
-      <select class="ps" onchange="sp('${selectedId}','${key}',+this.value)">${opts}</select>
+    return `<div class="select-stack">
+      <label>${label}</label>
+      <select class="ps" onchange="sp('${selectedId}','${key}',+this.value);render()">${opts}</select>
     </div>`;
   };
 
-  let body = '';
+  const modelName = blockModelName(selectedId, sc) || chain.label;
+  const artCol = `<div class="params-art">${getBlockSVG(selectedId, sc)}<div class="params-art-name">${esc(modelName)}</div></div>`;
+  let controls = '';
 
   switch (selectedId) {
     case 'wah':
-      body = `<div class="pg">
-        ${sel('type','Model',FW.wah,'full')}
-        ${slider('pos','Expression / Sweep',0,100)}
+      controls = `<div style="display:flex;flex-direction:column;gap:.8rem">
+        ${sel('type','Model',FW.wah)}
+        <div class="knob-row">${knob('pos','Sweep',0,100)}</div>
       </div>`;
       break;
 
     case 'comp':
-      body = `<div class="pg">
-        ${sel('type','Model',FW.comp,'full')}
-        ${slider('sustain','Sustain',0,100)}
-        ${slider('attack','Attack',0,100)}
-        ${slider('level','Level',0,100)}
+      controls = `<div style="display:flex;flex-direction:column;gap:.8rem">
+        ${sel('type','Model',FW.comp)}
+        <div class="knob-row">${knob('sustain','Sustain',0,100)}${knob('attack','Attack',0,100)}${knob('level','Level',0,100)}</div>
       </div>`;
       break;
 
     case 'gate':
-      body = `<div class="pg">
-        ${slider('threshold','Threshold',0,100)}
-        ${slider('release','Release',0,100)}
-      </div>`;
+      controls = `<div class="knob-row">${knob('threshold','Thresh',0,100)}${knob('release','Release',0,100)}</div>`;
       break;
 
     case 'efx':
-      body = `<div class="pg">
-        ${sel('type','Model',FW.efx,'full')}
-        ${slider('gain','Gain / Drive',0,100)}
-        ${slider('tone','Tone',0,100)}
-        ${slider('level','Level',0,100)}
+      controls = `<div style="display:flex;flex-direction:column;gap:.8rem">
+        ${sel('type','Model',FW.efx)}
+        <div class="knob-row">${knob('gain','Drive',0,100)}${knob('tone','Tone',0,100)}${knob('level','Level',0,100)}</div>
       </div>`;
       break;
 
@@ -646,90 +1351,67 @@ function renderParams() {
           ? `<option disabled>${x.label}</option>`
           : `<option value="${x.id}" ${d.model===x.id?'selected':''}>${x.name} — ${x.ref}</option>`
       ).join('');
-      body = `<div class="pg">
-        <div class="pr full"><label class="pl">Model</label>
-          <select class="ps" onchange="sp('amp','model',+this.value)">${opts}</select>
+      controls = `<div style="display:flex;flex-direction:column;gap:.8rem">
+        <div class="select-stack">
+          <label>Model</label>
+          <select class="ps" onchange="sp('amp','model',+this.value);render()">${opts}</select>
         </div>
-        ${slider('gain','Gain',0,100)}
-        ${slider('bass','Bass',0,100)}
-        ${slider('mid','Mid',0,100)}
-        ${slider('treble','Treble',0,100)}
-        ${slider('presence','Presence',0,100)}
-        ${slider('volume','Master Vol',0,100)}
+        <div class="knob-row">${knob('gain','Gain',0,100)}${knob('bass','Bass',0,100)}${knob('mid','Mid',0,100)}${knob('treble','Treble',0,100)}${knob('presence','Pres',0,100)}${knob('volume','Master',0,100)}</div>
       </div>`;
       break;
     }
 
     case 'ir': {
       const cabList = [...FW.ir_guitar, ...(FW.ir_bass||[])];
-      body = `<div class="pg">
-        ${sel('cab','Cabinet',cabList,'full')}
-        ${sel('mic','Mic',FW.ir_mics)}
-        ${slider('mic_pos','Mic Position',0,100)}
-      </div>
-      <div style="margin-top:.7rem;font-family:var(--mono);font-size:10px;color:var(--dim)">
-        Custom IRs (slots 9–128) can be loaded in QuickTone directly.
+      controls = `<div style="display:flex;flex-direction:column;gap:.8rem">
+        ${sel('cab','Cabinet',cabList)}
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end">
+          ${sel('mic','Mic',FW.ir_mics)}
+          ${knob('mic_pos','Mic Pos',0,100)}
+        </div>
+        <div class="params-note">Custom IRs (slots 9-128) can be loaded in QuickTone directly.</div>
       </div>`;
       break;
     }
 
     case 'eq':
-      body = `<div class="pg w3">
-        ${slider('low','Low',0,100)}
-        ${slider('lowmid','Low Mid',0,100)}
-        ${slider('highmid','High Mid',0,100)}
-        ${slider('high','High',0,100)}
-        ${slider('level','Level',0,100)}
-      </div>`;
+      controls = `<div class="knob-row">${knob('low','Low',0,100)}${knob('lowmid','Lo Mid',0,100)}${knob('highmid','Hi Mid',0,100)}${knob('high','High',0,100)}${knob('level','Level',0,100)}</div>`;
       break;
 
     case 'sr':
-      body = `<div class="pg">
-        ${slider('send','Send Level',0,100)}
-        ${slider('return','Return Level',0,100)}
-      </div>
-      <div style="margin-top:.7rem;font-family:var(--mono);font-size:10px;color:var(--dim)">
-        Insert point for external gear. Enable to activate the effects loop.
-      </div>`;
+      controls = `<div class="knob-row">${knob('send','Send',0,100)}${knob('return','Return',0,100)}</div><div class="params-note">Insert point for external gear.</div>`;
       break;
 
     case 'mod':
-      body = `<div class="pg">
-        ${sel('type','Type',FW.mod,'full')}
-        ${slider('rate','Rate',0,100)}
-        ${slider('depth','Depth',0,100)}
-        ${slider('mix','Mix',0,100)}
+      controls = `<div style="display:flex;flex-direction:column;gap:.8rem">
+        ${sel('type','Type',FW.mod)}
+        <div class="knob-row">${knob('rate','Rate',0,100)}${knob('depth','Depth',0,100)}${knob('mix','Mix',0,100)}</div>
       </div>`;
       break;
 
     case 'delay':
-      body = `<div class="pg">
-        ${sel('type','Type',FW.delay,'full')}
-        ${slider('time','Time (ms)',10,2000,10)}
-        ${slider('feedback','Feedback',0,100)}
-        ${slider('mix','Mix',0,100)}
+      controls = `<div style="display:flex;flex-direction:column;gap:.8rem">
+        ${sel('type','Type',FW.delay)}
+        <div class="knob-row">${knob('time','Time',10,2000,10)}${knob('feedback','Fdbk',0,100)}${knob('mix','Mix',0,100)}</div>
       </div>`;
       break;
 
     case 'reverb':
-      body = `<div class="pg">
-        ${sel('type','Type',FW.reverb,'full')}
-        ${slider('decay','Decay',0,100)}
-        ${slider('mix','Mix',0,100)}
+      controls = `<div style="display:flex;flex-direction:column;gap:.8rem">
+        ${sel('type','Type',FW.reverb)}
+        <div class="knob-row">${knob('decay','Decay',0,100)}${knob('mix','Mix',0,100)}</div>
       </div>`;
       break;
 
     case 'vol':
-      body = `<div class="pg w1">
-        ${slider('volume','Output Volume',0,100)}
-      </div>`;
+      controls = `<div class="knob-row">${knob('volume','Output',0,100)}</div>`;
       break;
 
     default:
-      body = `<div class="pempty">Select a block to configure.</div>`;
+      controls = `<div class="pempty">Select a block to configure.</div>`;
   }
 
-  panel.innerHTML = head() + body;
+  panel.innerHTML = artCol + `<div class="params-controls">${head()}${controls}</div>`;
 }
 
 // ═══════════════════════════════════════════════════════════
