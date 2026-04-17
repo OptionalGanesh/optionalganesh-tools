@@ -142,24 +142,82 @@
   .scene-copy:hover { color: var(--text); }
 
   /* CHAIN STRIP */
-  .chain-wrap{padding:1.1rem 1rem .7rem;overflow-x:auto;border-bottom:1px solid var(--line)}
-  .chain-strip{display:flex;align-items:stretch;gap:0;min-width:max-content}
-  .chain-block{
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    gap:5px;padding:9px 10px;border:1px solid var(--line);border-radius:3px;
-    cursor:pointer;transition:all .13s;background:var(--s2);user-select:none;min-width:52px
-  }
-  .chain-block:hover{border-color:var(--line2);background:var(--s3)}
-  .chain-block.selected{border-color:var(--sel-border);background:var(--sel-bg)}
-  .chain-block.active{border-color:var(--on-border);background:var(--on-bg)}
-  .chain-block.active.selected{border-color:rgba(190,255,170,.5);background:rgba(130,210,90,.14)}
-  .chain-block.bypass{opacity:.4}
-  .block-label{font-family:var(--mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
-  .chain-block.active .block-label{color:var(--on)}
-  .chain-block.selected .block-label{color:var(--text)}
-  .block-dot{width:5px;height:5px;border-radius:50%;background:var(--dim);transition:background .12s;flex-shrink:0}
-  .chain-block.active .block-dot{background:var(--on)}
-  .chain-arrow{font-family:var(--mono);font-size:11px;color:var(--dim);padding:0 4px;display:flex;align-items:center;flex-shrink:0}
+.chain-wrap {
+  padding: 1.4rem 1.2rem 1.2rem; overflow-x: auto; border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  background-image: repeating-linear-gradient(
+    90deg, transparent, transparent 3px, rgba(255,255,255,0.015) 3px, rgba(255,255,255,0.015) 4px
+  );
+}
+.chain-strip { display: flex; align-items: center; gap: 0; min-width: max-content; }
+
+.chain-block {
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+  gap: 0; padding: 10px 8px 8px;
+  width: var(--block-w); height: var(--block-h);
+  border: 1px solid var(--line2);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color .12s, box-shadow .12s, background .12s;
+  background: linear-gradient(160deg, var(--s3) 0%, var(--s2) 100%);
+  user-select: none; position: relative; flex-shrink: 0;
+}
+.chain-block:hover { border-color: var(--line3); background: linear-gradient(160deg, var(--s4) 0%, var(--s3) 100%); }
+.chain-block.selected {
+  border-color: var(--sel-border);
+  box-shadow: var(--sel-glow);
+  background: linear-gradient(160deg, var(--s4) 0%, var(--s3) 100%);
+}
+.chain-block.active {
+  border-color: var(--on-border);
+  box-shadow: var(--on-glow);
+  background: linear-gradient(160deg, rgba(90,200,70,0.07) 0%, var(--s2) 100%);
+}
+.chain-block.active.selected {
+  border-color: rgba(140,255,120,.55);
+  box-shadow: var(--on-glow), var(--sel-glow);
+}
+.chain-block.bypass { opacity: .38; }
+
+/* LED indicator at top of block */
+.block-led {
+  position: absolute; top: 9px; left: 50%; transform: translateX(-50%);
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--s4);
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: background .12s, box-shadow .12s;
+  flex-shrink: 0;
+}
+.chain-block.active .block-led {
+  background: var(--led-on);
+  box-shadow: 0 0 5px var(--led-on-glow), 0 0 10px rgba(100,220,80,0.3);
+  border-color: rgba(180,255,160,0.5);
+}
+
+/* Block label */
+.block-label {
+  font-family: var(--mono); font-size: 8px; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--dim); white-space: nowrap;
+  margin-top: 2px;
+}
+.chain-block.active .block-label { color: var(--on); }
+.chain-block.selected .block-label { color: var(--text); }
+
+/* Block type indicator line (colored stripe at bottom) */
+.block-type-bar {
+  position: absolute; bottom: 0; left: 8px; right: 8px; height: 2px;
+  border-radius: 0 0 2px 2px; background: var(--line);
+  transition: background .12s;
+}
+.chain-block.active .block-type-bar { background: var(--on); opacity: .5; }
+.chain-block.selected:not(.active) .block-type-bar { background: rgba(255,255,255,.3); }
+
+/* Arrow connector between blocks */
+.chain-arrow {
+  font-family: var(--mono); font-size: 10px; color: var(--dim);
+  padding: 0 5px; display: flex; align-items: center; flex-shrink: 0;
+  opacity: .5;
+}
 
   /* PARAMS PANEL */
   .params-panel{padding:1.1rem 1rem 1rem;min-height:120px;background:var(--bg)}
@@ -598,7 +656,7 @@ function renderChain() {
     el.title = b.toggleable
       ? (isOn ? 'On — click to configure, dblclick to toggle off' : 'Off — click to configure, dblclick to enable')
       : 'Click to configure';
-    el.innerHTML = `<div class="block-label">${b.label}</div><div class="block-dot"></div>`;
+    el.innerHTML = `<div class="block-led"></div><div class="block-label">${b.label}</div><div class="block-type-bar"></div>`;
     el.addEventListener('click', () => { selectedId = b.id; renderChain(); renderParams(); });
     if (b.toggleable) {
       el.addEventListener('dblclick', e => { e.preventDefault(); toggleBlock(b.id); });
