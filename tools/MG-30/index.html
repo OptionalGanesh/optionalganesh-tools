@@ -122,11 +122,11 @@
   }
 
   .qt-titlebar {
-    height: 38px;
+    min-height: 38px;
     display: flex;
     align-items: center;
     gap: .8rem;
-    padding: 0 .9rem;
+    padding: .35rem .9rem;
     background: linear-gradient(180deg, #2a2a2a, #1a1a1a);
     border-bottom: 1px solid rgba(0,0,0,.75);
     box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
@@ -166,6 +166,8 @@
   .qt-toolbar-actions {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
     gap: .35rem;
     margin-left: .5rem;
   }
@@ -184,6 +186,11 @@
     color: var(--text);
     border-color: rgba(255,255,255,.22);
     background: #2d2d2d;
+  }
+  .qt-tool-btn.primary {
+    color: var(--on);
+    border-color: var(--on-border);
+    background: var(--on-bg);
   }
   .qt-workspace {
     display: grid;
@@ -649,6 +656,46 @@
   .pack-status { font-family: var(--mono); font-size: 10px; color: var(--on); opacity: 0; transition: opacity .3s; }
   .pack-status.show { opacity: 1; }
 
+  .utility-modal {
+    position: fixed;
+    inset: 0;
+    display: none;
+    place-items: center;
+    padding: 1rem;
+    background: rgba(0,0,0,.55);
+    z-index: 20;
+  }
+  .utility-modal.show { display: grid; }
+  .utility-card {
+    width: min(520px, 100%);
+    background: var(--surface);
+    border: 1px solid var(--line2);
+    border-radius: 6px;
+    box-shadow: 0 18px 60px rgba(0,0,0,.55);
+  }
+  .utility-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: .75rem .9rem;
+    border-bottom: 1px solid var(--line);
+    background: var(--s2);
+  }
+  .utility-title {
+    font-family: var(--mono); font-size: 10px; letter-spacing: .16em;
+    text-transform: uppercase; color: var(--text);
+  }
+  .utility-body {
+    padding: 1rem;
+    font-family: var(--mono);
+    font-size: 11px;
+    line-height: 1.7;
+    color: var(--muted);
+  }
+  .utility-close {
+    font-family: var(--mono); font-size: 11px;
+    background: none; border: 1px solid var(--line); color: var(--muted);
+    border-radius: 2px; cursor: pointer; padding: 3px 8px;
+  }
+
   footer {
     margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--line);
     font-family: var(--mono); font-size: 10px; color: var(--dim); letter-spacing: .06em;
@@ -706,7 +753,14 @@
       <div class="qt-brand">NUX QuickTone</div>
       <div class="qt-device"><span class="qt-device-led"></span><span>MG-30 · Patch 01A · USB Ready</span></div>
       <div class="qt-toolbar-actions">
-        <button class="qt-tool-btn" onclick="document.getElementById('file-in').click()">Import</button>
+        <button class="qt-tool-btn" onclick="resetCurrentPatch()">New</button>
+        <button class="qt-tool-btn" onclick="document.getElementById('file-in').click()">Open</button>
+        <button class="qt-tool-btn primary" onclick="addToPack()">Save</button>
+        <button class="qt-tool-btn" onclick="exportCurrentPatch()">Export</button>
+        <button class="qt-tool-btn" onclick="exportPack()">Pack</button>
+        <button class="qt-tool-btn" onclick="backupSession()">Backup</button>
+        <button class="qt-tool-btn" onclick="showUtility('ir')">IR</button>
+        <button class="qt-tool-btn" onclick="showUtility('usb')">USB</button>
         <button class="qt-tool-btn" onclick="checkFirmware()">Firmware</button>
       </div>
     </div>
@@ -754,6 +808,16 @@
   <footer>optionalganesh.com — MG-30 Pack Builder · signal chain based on NUX MG-30 firmware · <span id="fw-footer">—</span></footer>
 </div>
 
+<div class="utility-modal" id="utility-modal" onclick="if(event.target===this)closeUtility()">
+  <div class="utility-card">
+    <div class="utility-head">
+      <span class="utility-title" id="utility-title">QuickTone</span>
+      <button class="utility-close" onclick="closeUtility()">Close</button>
+    </div>
+    <div class="utility-body" id="utility-body"></div>
+  </div>
+</div>
+
 <script>
 'use strict';
 // ═══════════════════════════════════════════════════════════
@@ -763,13 +827,13 @@
 //   update tools/MG-30/firmware.json in the repo.
 // ═══════════════════════════════════════════════════════════
 
-const FW_URL = 'https://raw.githubusercontent.com/OptionalGanesh/optionalganesh-tools/main/tools/MG-30/firmware.json';
+const FW_URL = 'firmware.json';
 
 let FW = null; // populated after load
 
 const FW_BASELINE = {
-  version:'5.0', date:'2025-01',
-  notes:'V5 — Pro Scene support.',
+  version:'GEN2', date:'2026-04',
+  notes:'GEN2/V5 model list with Pro Scene and expanded EFX/EQ coverage.',
   wah:[
     {id:0,name:'Clyde',ref:'Fulltone Clyde Wah'},
     {id:1,name:'Cry BB',ref:'Dunlop Cry Baby'},
@@ -796,7 +860,12 @@ const FW_BASELINE = {
     {id:10,name:'Muff Fuzz',ref:'EHX Big Muff'},
     {id:11,name:'Katana Bst',ref:'Boss Katana Boost'},
     {id:12,name:'Red Fuzz',ref:'Red Fuzz'},
-    {id:13,name:'Touch Wah',ref:'Envelope Filter'}
+    {id:13,name:'Touch Wah',ref:'Envelope Filter'},
+    {id:14,name:'Full-OD HP',ref:'GEN2 full-range overdrive'},
+    {id:15,name:'Horseman',ref:'Klon-style overdrive'},
+    {id:16,name:'Nob ODR',ref:'Nobels ODR-style overdrive'},
+    {id:17,name:'Riv Blueflog',ref:'Riviera Blueflog combo drive'},
+    {id:18,name:'Turbo OD',ref:'NUX Turbo Overdrive'}
   ],
   amps:[
     {id:0,name:'JC Clean',ref:'Roland JC-120',type:'guitar'},
@@ -866,7 +935,14 @@ const FW_BASELINE = {
     {id:9,name:'U-Vibe',ref:'Uni-Vibe'},
     {id:10,name:'Tremolo',ref:'Tremolo'},
     {id:11,name:'Rotary',ref:'Rotary Speaker'},
-    {id:12,name:'Harmonist',ref:'Pitch Harmony'}
+    {id:12,name:'Harmonist',ref:'Pitch Harmony'},
+    {id:13,name:'Mono Octave',ref:'GEN2 octave effect'}
+  ],
+  eq:[
+    {id:0,name:'6-Band',ref:'Graphic EQ'},
+    {id:1,name:'Align',ref:'Quick tone-shaping EQ'},
+    {id:2,name:'10-Band',ref:'Fine graphic EQ'},
+    {id:3,name:'Para',ref:'Parametric EQ'}
   ],
   delay:[
     {id:0,name:'Analog',ref:'Boss DM-2'},
@@ -937,6 +1013,7 @@ function blockModelName(id, sc) {
     case 'mod':    return FW.mod?.[d.type]?.name || '';
     case 'delay':  return FW.delay?.[d.type]?.name || '';
     case 'reverb': return FW.reverb?.[d.type]?.name || '';
+    case 'eq':     return FW.eq?.[d.type]?.name || '10-Band';
     default:       return '';
   }
 }
@@ -952,7 +1029,7 @@ function defaultScene() {
     efx:   { on:false, type:4, gain:40, tone:55, level:75 },
     amp:   { on:true,  model:1, gain:45, bass:55, mid:50, treble:55, presence:45, volume:85 },
     ir:    { on:true,  cab:3, mic:0, mic_pos:50, custom:false },
-    eq:    { on:false, low:50, lowmid:50, highmid:50, high:50, level:50 },
+    eq:    { on:false, type:2, low:50, lowmid:50, highmid:50, high:50, level:50 },
     sr:    { on:false, send:75, return:75 },
     mod:   { on:false, type:0, rate:30, depth:25, mix:30 },
     delay: { on:false, type:1, time:500, feedback:25, mix:20 },
@@ -1004,7 +1081,7 @@ async function checkFirmware() {
   const label = document.getElementById('fw-label');
   badge.className = 'fw-badge checking';
   badge.textContent = 'Checking…';
-  label.textContent = 'Fetching latest firmware data from repository…';
+  label.textContent = 'Fetching firmware data from the page bundle…';
   try {
     const r = await fetch(FW_URL + '?t=' + Date.now(), { cache:'no-store' });
     if (!r.ok) throw new Error('network');
@@ -1086,7 +1163,9 @@ function quickToneAsset(id, d) {
       'efx/distortion.png', 'efx/turbo-od.png', 'efx/blu-driver.png',
       'efx/stomp-green.png', 'efx/eat.png', 'efx/dirt-drive.png',
       'efx/crunch.png', 'efx/muff.png', 'efx/red-drive.png',
-      'efx/red-drive.png', 'efx/touch-wah.png'
+      'efx/red-drive.png', 'efx/touch-wah.png', 'efx/dirt-drive.png',
+      'efx/stomp-green.png', 'efx/stomp-green.png', 'efx/blu-driver.png',
+      'efx/turbo-od.png'
     ];
     return base + (efxMap[d.type] || 'efx/dist-plus.png');
   }
@@ -1107,7 +1186,10 @@ function quickToneAsset(id, d) {
     ];
     return base + (cabMap[d.cab] || 'cabs/amp-212.png');
   }
-  if (id === 'eq') return base + 'utility/eq-ten-band-full.png';
+  if (id === 'eq') {
+    const eqMap = ['utility/range-sliders-a.png', 'utility/range-sliders-b.png', 'utility/eq-ten-band-full.png', 'eq-ten-band.png'];
+    return base + (eqMap[d.type] || 'utility/eq-ten-band-full.png');
+  }
   if (id === 'sr') return base + 'utility/range-sliders-a.png';
   if (id === 'mod') {
     const modMap = [
@@ -1115,7 +1197,7 @@ function quickToneAsset(id, d) {
       'mod/vibrato.png', 'mod/detune.png', 'mod/flanger.png',
       'mod/phase-90.png', 'mod/phase-90.png', 'mod/detune.png',
       'mod/phase-90.png', 'mod/tremolo.png', 'mod/rotary.png',
-      'mod/harmonist.png'
+      'mod/harmonist.png', 'mod/harmonist.png'
     ];
     return base + (modMap[d.type] || 'mod/tremolo.png');
   }
@@ -1401,7 +1483,10 @@ function renderParams() {
     }
 
     case 'eq':
-      controls = `<div class="knob-row">${knob('low','Low',0,100)}${knob('lowmid','Lo Mid',0,100)}${knob('highmid','Hi Mid',0,100)}${knob('high','High',0,100)}${knob('level','Level',0,100)}</div>`;
+      controls = `<div style="display:flex;flex-direction:column;gap:.8rem">
+        ${sel('type','Type',FW.eq || FW_BASELINE.eq)}
+        <div class="knob-row">${knob('low','Low',0,100)}${knob('lowmid','Lo Mid',0,100)}${knob('highmid','Hi Mid',0,100)}${knob('high','High',0,100)}${knob('level','Level',0,100)}</div>
+      </div>`;
       break;
 
     case 'sr':
@@ -1463,6 +1548,54 @@ function copyScenes() {
   scenes[2] = JSON.parse(JSON.stringify(scenes[0]));
   flash('Scene A copied to B and C');
 }
+function resetCurrentPatch() {
+  scenes = [defaultScene(), defaultScene(), defaultScene()];
+  currentScene = 0;
+  selectedId = 'amp';
+  document.getElementById('pname').value = 'EG-CLN-SOUL_v1';
+  document.querySelectorAll('.scene-btn').forEach((b,i) => b.classList.toggle('active', i===0));
+  render();
+  flash('New patch started');
+}
+function exportCurrentPatch() {
+  const name = document.getElementById('pname').value.trim() || 'preset';
+  downloadBytes(buildPatchFile(scenes, name), san(name)+'.mg30patch');
+  flash(`Exported "${name}"`);
+}
+function backupSession() {
+  const enc = new TextEncoder();
+  const name = 'MG30_Backup_' + new Date().toISOString().slice(0,10);
+  downloadBytes(enc.encode(JSON.stringify({
+    format: 'optionalganesh-mg30-backup',
+    exportedAt: new Date().toISOString(),
+    currentPreset: document.getElementById('pname').value.trim() || 'preset',
+    currentScenes: scenes,
+    pack: packManifest()
+  }, null, 2)), name + '.json');
+  flash('Backup exported');
+}
+function showUtility(kind) {
+  const modal = document.getElementById('utility-modal');
+  const title = document.getElementById('utility-title');
+  const body = document.getElementById('utility-body');
+  const cabCount = (FW?.ir_guitar?.length || 0) + (FW?.ir_bass?.length || 0);
+  const content = {
+    ir: {
+      title: 'IR Loader',
+      body: `Built-in cabinet slots: ${cabCount}. Mic models: ${FW?.ir_mics?.length || 0}. Custom IR loader slots are preserved in the exported manifest; load third-party IR WAV files on the hardware through QuickTone.`
+    },
+    usb: {
+      title: 'USB Routing',
+      body: 'QuickTone routing modes include Normal, Loopback, Reamp, and Dry Out. This builder keeps the patch data focused on the MG-30 scene/chain values and records the session state in backups.'
+    }
+  }[kind] || { title:'QuickTone', body:'Utility ready.' };
+  title.textContent = content.title;
+  body.textContent = content.body;
+  modal.classList.add('show');
+}
+function closeUtility() {
+  document.getElementById('utility-modal').classList.remove('show');
+}
 
 // ═══════════════════════════════════════════════════════════
 // PACK
@@ -1513,7 +1646,7 @@ function renderPack() {
     </div>`).join('');
 }
 function exportPack() {
-  if (!pack.length) return;
+  if (!pack.length) { flash('Add a preset before exporting a pack'); return; }
   const enc = new TextEncoder();
   const files = pack.map(item => ({
     name: san(item.name)+'.mg30patch',
@@ -1596,9 +1729,9 @@ function parseSceneBytes(buf, off, idx) {
   sc.amp.volume   = cl(b(0x1b)); sc.amp.presence= cl(b(0x23));
   sc.comp.on      = b(0x28)!==0; sc.comp.sustain= cl(b(0x29)); sc.comp.attack=cl(b(0x2b));
   sc.gate.on      = b(0x36)!==0; sc.gate.threshold=cl(b(0x37)); sc.gate.release=cl(b(0x3b));
-  sc.efx.on       = b(0x3d)!==0; sc.efx.type=cl(b(0x3e),0,13); sc.efx.gain=cl(b(0x3f));
+  sc.efx.on       = b(0x3d)!==0; sc.efx.type=cl(b(0x3e),0,(FW?.efx?.length||14)-1); sc.efx.gain=cl(b(0x3f));
   sc.efx.tone     = cl(b(0x40)); sc.efx.level=cl(b(0x41));
-  sc.mod.on       = b(0x42)!==0; sc.mod.type=cl(b(0x43),0,12); sc.mod.rate=cl(b(0x44)); sc.mod.depth=cl(b(0x45));
+  sc.mod.on       = b(0x42)!==0; sc.mod.type=cl(b(0x43),0,(FW?.mod?.length||13)-1); sc.mod.rate=cl(b(0x44)); sc.mod.depth=cl(b(0x45));
   sc.delay.on     = b(0x4a)!==0; sc.delay.type=cl(b(0x4b),0,7);
   sc.delay.time   = ((b(0x4c)<<8)|b(0x4d))||500;
   sc.delay.feedback=cl(b(0x4e)); sc.delay.mix=cl(b(0x4f));
@@ -1632,9 +1765,9 @@ function buildSceneBytes(sc) {
   block[0x2f]=cl(q.on?q.highmid:50); block[0x30]=cl(q.on?q.high:50);
   block[0x31]=0x00; block[0x32]=0x32; block[0x33]=0x32; block[0x34]=0x32;
   block[0x36]=g.on?0x3b:0x00; block[0x37]=cl(g.threshold); block[0x3b]=cl(g.release);
-  block[0x3d]=e.on?0x01:0x00; block[0x3e]=cl(e.type,0,13);
+  block[0x3d]=e.on?0x01:0x00; block[0x3e]=cl(e.type,0,(FW?.efx?.length||14)-1);
   block[0x3f]=cl(e.gain); block[0x40]=cl(e.tone); block[0x41]=cl(e.level);
-  block[0x42]=m.on?0x12:0x00; block[0x43]=cl(m.type,0,12);
+  block[0x42]=m.on?0x12:0x00; block[0x43]=cl(m.type,0,(FW?.mod?.length||13)-1);
   block[0x44]=cl(m.rate); block[0x45]=cl(m.depth);
   block[0x4a]=d.on?0x04:0x00; block[0x4b]=cl(d.type,0,7);
   const dt=Math.max(10,Math.min(2000,d.time));

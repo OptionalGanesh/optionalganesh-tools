@@ -1,7 +1,7 @@
 {
-  "version": "5.0",
-  "date": "2025-01",
-  "notes": "V5 firmware — Pro Scene support added. All amp and effect models current as of firmware 5.0.",
+  "version": "GEN2",
+  "date": "2026-04",
+  "notes": "GEN2/V5 model list with Pro Scene, GEN2 EFX additions, Mono Octave, and EQ model coverage.",
 
   "wah": [
     { "id": 0, "name": "Clyde",       "ref": "Fulltone Clyde Wah" },
@@ -31,7 +31,12 @@
     { "id": 10, "name": "Muff Fuzz",   "ref": "Electro-Harmonix Big Muff" },
     { "id": 11, "name": "Katana Bst",  "ref": "Boss Katana Boost" },
     { "id": 12, "name": "Red Fuzz",    "ref": "Red Fuzz" },
-    { "id": 13, "name": "Touch Wah",   "ref": "Auto-wah / Envelope Filter" }
+    { "id": 13, "name": "Touch Wah",   "ref": "Auto-wah / Envelope Filter" },
+    { "id": 14, "name": "Full-OD HP",  "ref": "GEN2 full-range overdrive" },
+    { "id": 15, "name": "Horseman",    "ref": "Klon-style overdrive" },
+    { "id": 16, "name": "Nob ODR",     "ref": "Nobels ODR-style overdrive" },
+    { "id": 17, "name": "Riv Blueflog","ref": "Riviera Blueflog combo drive" },
+    { "id": 18, "name": "Turbo OD",    "ref": "NUX Turbo Overdrive" }
   ],
 
   "amps": [
@@ -106,7 +111,15 @@
     { "id": 9,  "name": "U-Vibe",     "ref": "Uni-Vibe" },
     { "id": 10, "name": "Tremolo",    "ref": "Tremolo" },
     { "id": 11, "name": "Rotary",     "ref": "Rotary Speaker" },
-    { "id": 12, "name": "Harmonist",  "ref": "Pitch Harmony / Correction" }
+    { "id": 12, "name": "Harmonist",  "ref": "Pitch Harmony / Correction" },
+    { "id": 13, "name": "Mono Octave", "ref": "GEN2 octave effect" }
+  ],
+
+  "eq": [
+    { "id": 0, "name": "6-Band",  "ref": "Graphic EQ" },
+    { "id": 1, "name": "Align",   "ref": "Quick tone-shaping EQ" },
+    { "id": 2, "name": "10-Band", "ref": "Fine graphic EQ" },
+    { "id": 3, "name": "Para",    "ref": "Parametric EQ" }
   ],
 
   "delay": [
