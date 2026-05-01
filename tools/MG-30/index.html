@@ -3,819 +3,599 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MG-30 Pack Builder — Optional Ganesh</title>
+<title>MG-30 Tone Planner — Optional Ganesh</title>
 <style>
   :root {
-  /* Hardware surface palette */
-  --bg: #141414;
-  --surface: #1c1c1c;
-  --s2: #242424;
-  --s3: #2c2c2c;
-  --s4: #323232;
-  --panel: #1a1a1a; /* used by .params-panel, .chain-wrap */
-
-  /* Borders */
-  --line: rgba(255,255,255,0.07);
-  --line2: rgba(255,255,255,0.14);
-  --line3: rgba(255,255,255,0.22);
-
-  /* Text */
-  --text: rgba(255,255,255,0.90);
-  --muted: rgba(255,255,255,0.50);
-  --dim: rgba(255,255,255,0.28);
-  --hint: rgba(255,255,255,0.06);
-
-  /* LED / Active states */
-  --led-on: #7dff6b;
-  --led-on-glow: rgba(125,255,107,0.55);
-  --on: rgba(125,255,107,0.88);
-  --on-bg: rgba(90,200,70,0.09);
-  --on-border: rgba(100,220,80,0.32);
-  --on-glow: 0 0 7px rgba(100,220,80,0.45), 0 0 18px rgba(100,220,80,0.15);
-
-  /* Selected state */
-  --sel-border: rgba(255,255,255,0.55);
-  --sel-bg: rgba(255,255,255,0.07);
-  --sel-glow: 0 0 0 1px rgba(255,255,255,0.18);
-
-  /* Firmware badges */
-  --fw-ok: rgba(100,210,100,0.8);
-  --fw-warn: rgba(220,180,60,0.8);
-
-  /* Type */
-  --mono: "SF Mono","Fira Code",Consolas,monospace;
-  --sans: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-
-  /* Stompbox block size */
-  --block-w: 80px; /* used by .chain-block */
-  --block-h: 106px; /* used by .chain-block */
-}
-  *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; }
-  body {
-    min-height: 100vh;
-    background:
-      radial-gradient(ellipse at 20% 0%, rgba(255,255,255,0.025) 0%, transparent 50%),
-      var(--bg);
+    --bg:#0c100e; --surface:#171d19; --s2:#202722; --s3:#2a332d;
+    --line:rgba(222,239,231,0.12); --line2:rgba(222,239,231,0.22);
+    --text:#eef7f1; --muted:#a9b9b0; --dim:#718178; --hint:rgba(222,239,231,0.07);
+    --on:#237a52; --on-bg:#e7f5ed; --on-border:rgba(35,122,82,0.25);
+    --sel-border:rgba(31,90,130,0.36); --sel-bg:#edf6fb;
+    --accent:#45b4ff; --accent-bg:rgba(69,180,255,.12); --accent-border:rgba(69,180,255,.28);
+    --warm:#ff8d63; --warm-bg:rgba(255,141,99,.12); --warm-border:rgba(255,141,99,.26);
+    --hardware:#202622; --hardware-2:#111513; --hardware-3:#343b36;
+    --lcd:#102636; --lcd-2:#06131c; --lcd-line:rgba(121,217,255,.20);
+    --lcd-text:#d9f5ff; --lcd-muted:#8ab3c3; --led:#29e28b;
+    --fw-ok:#237a52; --fw-warn:#9b6a18;
+    --mono:"SF Mono","Fira Code",Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   }
-  .page { max-width: 1180px; margin: 0 auto; padding: .85rem 1rem 4rem; }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px}
+  body{min-height:100vh;background:
+    radial-gradient(circle at 50% -15%,rgba(69,180,255,.18),transparent 34%),
+    radial-gradient(circle at 18% 10%,rgba(41,226,139,.11),transparent 28%),
+    radial-gradient(circle at 90% 20%,rgba(255,141,99,.12),transparent 28%),
+    linear-gradient(180deg,#171d19 0%,#0c100e 42%,#090c0a 100%),
+    var(--bg)}
+  .page{max-width:1120px;margin:0 auto;padding:2rem 1.25rem 5rem}
 
   /* HEADER */
-  header { margin-bottom: 1.6rem; }
-  body.qt-replica header,
-  body.qt-replica .fw-bar,
-  body.qt-replica .import-bar {
-    display: none;
+  header{
+    position:relative;margin-bottom:1.25rem;padding:1.35rem 1.45rem 1.45rem;
+    border:1px solid rgba(121,217,255,.22);
+    background:
+      linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px),
+      radial-gradient(circle at 12% 15%,rgba(69,180,255,.24),transparent 35%),
+      linear-gradient(180deg,#183243,#081722);
+    background-size:100% 18px,18px 100%,auto,auto;
+    border-radius:14px;overflow:hidden;
+    box-shadow:0 24px 70px rgba(0,0,0,.34), inset 0 0 0 1px rgba(255,255,255,.04), inset 0 -30px 80px rgba(0,0,0,.30)
   }
-  .logo { font-size: 10px; font-family: var(--mono); letter-spacing: .18em; color: var(--dim); margin-bottom: .8rem; }
-  .logo a { color: var(--dim); text-decoration: none; }
-  .logo a:hover { color: var(--muted); }
-  h1 { font-size: clamp(1.4rem,3.5vw,2rem); font-weight: 700; letter-spacing: -.03em; line-height: 1.1; }
-  h1 span { color: rgba(255,255,255,.75); font-weight: 400; }
-  .subtitle { margin-top: .4rem; font-family: var(--mono); font-size: 10px; color: var(--dim); letter-spacing: .04em; }
+  header::after{
+    content:'GEN2 · SCENE A/B/C · QUICKTONE COMPANION';position:absolute;right:1.2rem;top:1.1rem;
+    font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:rgba(217,245,255,.44)
+  }
+  .logo{font-size:11px;font-family:var(--mono);letter-spacing:.15em;color:var(--lcd-muted);margin-bottom:.8rem;text-transform:uppercase}
+  .logo a{color:var(--lcd-muted);text-decoration:none}.logo a:hover{color:var(--lcd-text)}
+  h1{font-size:clamp(2rem,5vw,4.2rem);font-weight:760;letter-spacing:0;line-height:.98;color:#f2fbff;max-width:760px;text-shadow:0 0 24px rgba(69,180,255,.22)}
+  h1 span{color:#72d6ff}
+  .subtitle{margin-top:.85rem;font-size:16px;color:#b8d2dc;line-height:1.45;max-width:720px}
+  .hero-actions{display:flex;flex-wrap:wrap;gap:.7rem;margin-top:1.35rem}
+  .hero-btn,
+  .add-btn,
+  .exp-btn,
+  .fw-btn,
+  .import-btn,
+  .pi-btn,
+  .scene-copy{
+    position:relative;overflow:hidden;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.62),
+      inset 0 -3px 0 rgba(0,0,0,.22),
+      0 8px 18px rgba(0,0,0,.22);
+  }
+  .hero-btn::after,
+  .add-btn::after,
+  .exp-btn::after,
+  .fw-btn::after,
+  .import-btn::after,
+  .pi-btn::after,
+  .scene-copy::after{
+    content:'';position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(180deg,rgba(255,255,255,.22),transparent 42%,rgba(0,0,0,.10));
+    opacity:.75
+  }
+  .hero-btn:active,
+  .add-btn:active,
+  .exp-btn:active,
+  .fw-btn:active,
+  .import-btn:active,
+  .pi-btn:active,
+  .scene-copy:active{
+    transform:translateY(2px);
+    box-shadow:inset 0 2px 5px rgba(0,0,0,.30),0 2px 6px rgba(0,0,0,.22)
+  }
+  .hero-btn{
+    font-family:var(--sans);font-weight:700;font-size:13px;letter-spacing:0;
+    padding:10px 15px;border-radius:6px;border:1px solid var(--line2);color:#18231e;
+    background:linear-gradient(180deg,#f8fffb,#dfe8e3);cursor:pointer;transition:all .14s;text-decoration:none;
+  }
+  .hero-btn.primary{color:#05120b;background:linear-gradient(180deg,#65f2a5,#23b874);border-color:rgba(101,242,165,.55)}
+  .hero-btn:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(0,0,0,.28)}
+  .positioning{display:none}
+  .user-prompt{
+    display:flex;align-items:center;justify-content:space-between;gap:1rem;margin:1rem 0;
+    padding:.85rem 1rem;border:1px solid rgba(41,226,139,.22);border-radius:12px;
+    background:linear-gradient(180deg,rgba(41,226,139,.12),rgba(41,226,139,.05));
+    color:#d7ffe7;font-size:13px;line-height:1.45
+  }
+  .user-prompt strong{display:block;color:#f3fff8;font-size:14px;margin-bottom:.15rem}
+  .user-prompt span{color:#aee6c6}
+  .micro-led{width:8px;height:8px;border-radius:50%;background:var(--led);box-shadow:0 0 12px rgba(41,226,139,.9);flex:0 0 auto}
+  .position-card{
+    background:linear-gradient(180deg,#242c27,#151a17);border:1px solid rgba(255,255,255,.10);
+    padding:1rem;border-radius:12px;min-height:104px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 12px 28px rgba(0,0,0,.18)
+  }
+  .position-kicker{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--warm);margin-bottom:.45rem}
+  .position-card strong{display:block;font-size:15px;font-weight:760;color:#f5fff8;margin-bottom:.35rem}
+  .position-card p{font-size:13px;line-height:1.5;color:#aebfb5}
+  .trust-note{
+    display:none;
+    border:1px solid var(--warm-border);background:linear-gradient(180deg,rgba(255,141,99,.15),rgba(255,141,99,.08));
+    color:#ffd3c3;font-size:13px;line-height:1.55;padding:.85rem 1rem;
+    border-radius:10px;margin-bottom:1rem;box-shadow:inset 0 1px 0 rgba(255,255,255,.07)
+  }
 
   /* FIRMWARE BAR */
-  .fw-bar {
-    display: flex; align-items: center; gap: .6rem; padding: .55rem .9rem;
-    background: var(--surface); border: 1px solid var(--line); border-radius: 3px;
-    margin-bottom: .8rem; font-family: var(--mono); font-size: 10px;
+  .system-drawer{
+    display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:.75rem;margin-bottom:1rem
   }
-  .fw-badge {
-    padding: 2px 7px; border-radius: 2px; letter-spacing: .1em; text-transform: uppercase;
-    border: 1px solid var(--on-border); color: var(--on); background: var(--on-bg);
-    font-size: 9px;
+  .fw-bar{
+    display:flex;align-items:center;gap:.7rem;padding:.6rem 1rem;
+    background:linear-gradient(180deg,#202823,#151a17);border:1px solid rgba(255,255,255,.10);border-radius:10px;
+    font-family:var(--mono);font-size:10px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.08)
   }
-  .fw-badge.checking { color: var(--muted); border-color: var(--line); background: none; }
-  .fw-badge.update { color: var(--fw-warn); border-color: rgba(220,180,60,.3); background: rgba(220,180,60,.07); }
-  .fw-label { color: var(--muted); flex: 1; }
-  .fw-btn {
-    font-family: var(--mono); font-size: 9px; letter-spacing: .1em; padding: 3px 9px;
-    background: none; border: 1px solid var(--line); color: var(--dim);
-    border-radius: 2px; cursor: pointer; transition: all .12s;
+  .fw-badge{
+    padding:2px 8px;border-radius:2px;letter-spacing:.1em;text-transform:uppercase;
+    border:1px solid var(--on-border);color:var(--on);background:var(--on-bg);
   }
-  .fw-btn:hover { color: var(--text); border-color: var(--line2); }
+  .fw-badge.checking{color:var(--muted);border-color:var(--line);background:rgba(255,255,255,.05)}
+  .fw-badge.update{color:var(--fw-warn);border-color:rgba(220,180,60,.3);background:rgba(220,180,60,.08)}
+  .fw-label{color:#b5c9be;flex:1}
+  .fw-btn{
+    font-family:var(--mono);font-size:9px;letter-spacing:.1em;padding:3px 10px;
+    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#d6e7de;
+    border-radius:8px;cursor:pointer;transition:all .12s
+  }
+  .fw-btn:hover{color:#fff;border-color:rgba(255,255,255,.32)}
 
   /* IMPORT */
-  .import-bar {
-    display: flex; align-items: center; gap: .6rem; padding: .6rem .9rem;
-    background: var(--surface); border: 1px solid var(--line); border-radius: 3px;
-    margin-bottom: 1.4rem;
+  .import-bar{
+    display:flex;align-items:center;gap:.7rem;padding:.65rem 1rem;
+    background:linear-gradient(180deg,#202823,#151a17);border:1px solid rgba(255,255,255,.10);border-radius:10px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.08)
   }
-  .import-label { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; color: var(--muted); text-transform: uppercase; flex: 1; }
-  .import-hint { font-family: var(--mono); font-size: 10px; color: var(--dim); }
-  .import-btn {
-    font-family: var(--mono); font-size: 10px; letter-spacing: .08em; padding: 5px 13px;
-    background: none; border: 1px solid var(--line2); color: var(--text); border-radius: 2px;
-    cursor: pointer; transition: all .12s; white-space: nowrap;
+  .import-label{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:#d6e7de;text-transform:uppercase;flex:1}
+  .import-hint{font-family:var(--mono);font-size:10px;color:#819389}
+  .import-btn{
+    font-family:var(--mono);font-size:10px;letter-spacing:.1em;padding:5px 14px;
+    background:rgba(255,255,255,.06);border:1px solid rgba(121,217,255,.25);color:#ccefff;border-radius:8px;
+    cursor:pointer;transition:all .15s;white-space:nowrap
   }
-  .import-btn:hover { background: var(--hint); }
-  #file-in { display: none; }
+  .import-btn:hover{background:rgba(121,217,255,.12)}
+  #file-in{display:none}
 
   /* BUILDER */
-  .builder {
-    background: var(--surface);
-    border: 1px solid var(--line2);
-    border-radius: 4px;
-    margin-bottom: 0;
-    overflow: hidden;
-    box-shadow: 0 2px 20px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.04);
+  .builder{
+    position:relative;background:linear-gradient(180deg,var(--hardware-3),var(--hardware));
+    border:1px solid rgba(0,0,0,.38);border-radius:14px;margin-bottom:0;
+    overflow:hidden;box-shadow:0 24px 70px rgba(23,31,27,.28), inset 0 1px 0 rgba(255,255,255,.14);
+    padding:14px
   }
-
-  .qt-titlebar {
-    min-height: 38px;
-    display: flex;
-    align-items: center;
-    gap: .8rem;
-    padding: .35rem .9rem;
-    background: linear-gradient(180deg, #2a2a2a, #1a1a1a);
-    border-bottom: 1px solid rgba(0,0,0,.75);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+  .builder::before{
+    content:'';position:absolute;inset:0;pointer-events:none;
+    background:
+      radial-gradient(circle at 18% 12%,rgba(255,255,255,.08),transparent 18%),
+      linear-gradient(90deg,rgba(255,255,255,.04),transparent 22%,transparent 78%,rgba(0,0,0,.18));
+    mix-blend-mode:screen;opacity:.8
   }
-  .qt-window-dots { display: flex; gap: 6px; flex-shrink: 0; }
-  .qt-window-dots span {
-    width: 10px; height: 10px; border-radius: 50%;
-    background: #555; border: 1px solid rgba(0,0,0,.45);
+  .hardware-top{
+    position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;
+    padding:0 .25rem .8rem;color:rgba(255,255,255,.72);font-family:var(--mono);letter-spacing:.12em;
+    text-transform:uppercase;font-size:10px
   }
-  .qt-window-dots span:nth-child(1) { background: #cf5751; }
-  .qt-window-dots span:nth-child(2) { background: #d3aa43; }
-  .qt-window-dots span:nth-child(3) { background: #52a95c; }
-  .qt-brand {
-    font-family: var(--mono);
-    font-size: 12px;
-    letter-spacing: .12em;
-    color: rgba(255,255,255,.74);
-    text-transform: uppercase;
-    min-width: 138px;
-  }
-  .qt-device {
-    display: flex;
-    align-items: center;
-    gap: .45rem;
-    margin-left: auto;
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--muted);
-  }
-  .qt-device-led {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--led-on);
-    box-shadow: 0 0 6px var(--led-on-glow);
-  }
-  .qt-toolbar-actions {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: .35rem;
-    margin-left: .5rem;
-  }
-  .qt-tool-btn {
-    font-family: var(--mono);
-    font-size: 9px;
-    letter-spacing: .08em;
-    color: rgba(255,255,255,.66);
-    background: #242424;
-    border: 1px solid rgba(255,255,255,.12);
-    border-radius: 2px;
-    padding: 4px 9px;
-    cursor: pointer;
-  }
-  .qt-tool-btn:hover {
-    color: var(--text);
-    border-color: rgba(255,255,255,.22);
-    background: #2d2d2d;
-  }
-  .qt-tool-btn.primary {
-    color: var(--on);
-    border-color: var(--on-border);
-    background: var(--on-bg);
-  }
-  .qt-workspace {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    min-height: 456px;
-  }
-  .qt-sidebar {
-    background: #151515;
-    border-right: 1px solid rgba(255,255,255,.08);
-    display: flex;
-    flex-direction: column;
-  }
-  .qt-side-head {
-    height: 34px;
-    display: flex;
-    align-items: center;
-    padding: 0 .8rem;
-    border-bottom: 1px solid rgba(255,255,255,.07);
-    font-family: var(--mono);
-    font-size: 9px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: .15em;
-  }
-  .qt-bank {
-    padding: .55rem;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-  }
-  .qt-patch {
-    display: grid;
-    grid-template-columns: 28px minmax(0, 1fr);
-    gap: .45rem;
-    align-items: center;
-    min-height: 28px;
-    padding: 4px 6px;
-    border: 1px solid transparent;
-    border-radius: 3px;
-    font-family: var(--mono);
-    font-size: 10px;
-    color: rgba(255,255,255,.48);
-  }
-  .qt-patch.active {
-    color: var(--text);
-    border-color: rgba(125,255,107,.28);
-    background: rgba(125,255,107,.07);
-  }
-  .qt-patch-num { color: var(--dim); }
-  .qt-patch-name {
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-  .qt-side-foot {
-    margin-top: auto;
-    border-top: 1px solid rgba(255,255,255,.07);
-    padding: .65rem .75rem;
-    font-family: var(--mono);
-    font-size: 9px;
-    color: var(--dim);
-    line-height: 1.55;
-  }
-  .qt-main {
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    background: #171717;
-  }
+  .hardware-brand{font-size:15px;font-weight:800;letter-spacing:.08em;color:#fff}
+  .hardware-status{display:flex;align-items:center;gap:.45rem;color:rgba(255,255,255,.58)}
+  .hardware-led{width:8px;height:8px;border-radius:50%;background:var(--led);box-shadow:0 0 0 3px rgba(41,226,139,.12),0 0 14px rgba(41,226,139,.8)}
 
   /* SCENE TABS */
-  .scene-row {
-    display: flex; align-items: stretch; gap: 0;
-    background: #202020; border-bottom: 1px solid var(--line); padding: 0;
+  .scene-row{
+    position:relative;z-index:1;display:flex;align-items:center;gap:.45rem;border:1px solid rgba(255,255,255,.08);
+    border-bottom:none;background:linear-gradient(180deg,#202823,#151a17);padding:.85rem 1rem;
+    border-radius:10px 10px 0 0
   }
-  .scene-label {
-    font-family: var(--mono); font-size: 9px; letter-spacing: .18em; color: var(--dim);
-    text-transform: uppercase; padding: 0 1rem; display: flex; align-items: center;
-    border-right: 1px solid var(--line); flex-shrink: 0;
+  .scene-label{font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:rgba(255,255,255,.48);text-transform:uppercase;margin-right:.8rem}
+  .scene-btn{
+    font-family:var(--sans);font-size:13px;font-weight:760;letter-spacing:0;padding:.45rem .75rem;
+    background:linear-gradient(180deg,#eef4f2,#cfd9d5);border:1px solid rgba(255,255,255,.20);
+    border-radius:999px;color:#27312d;cursor:pointer;transition:all .12s;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 2px 4px rgba(0,0,0,.25)
   }
-  .scene-btn {
-    font-family: var(--mono); font-size: 13px; font-weight: 600; letter-spacing: .12em;
-    padding: .75rem 1.5rem; background: none; border: none; border-right: 1px solid var(--line);
-    color: var(--dim); cursor: pointer; transition: color .1s, background .1s;
-    position: relative;
+  .scene-btn.active{color:#06130d;background:linear-gradient(180deg,#66f2a5,#23b874);border-color:rgba(101,242,165,.75);box-shadow:0 0 18px rgba(41,226,139,.35),inset 0 1px 0 rgba(255,255,255,.75)}
+  .scene-btn:hover:not(.active){color:#111;background:linear-gradient(180deg,#fff,#dfe8e4)}
+  .scene-copy{
+    margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:.1em;
+    color:rgba(255,255,255,.74);background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:8px;
+    padding:5px 10px;cursor:pointer;transition:all .12s
   }
-  .scene-btn::after {
-    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
-    background: transparent; transition: background .1s;
-  }
-  .scene-btn.active {
-    color: var(--text); background: var(--sel-bg);
-  }
-  .scene-btn.active::after { background: var(--led-on); }
-  .scene-btn:hover:not(.active) { color: var(--muted); }
-  .scene-copy {
-    margin-left: auto; font-family: var(--mono); font-size: 9px; letter-spacing: .1em;
-    color: var(--dim); background: none; border: none; border-left: 1px solid var(--line);
-    padding: 0 1rem; cursor: pointer; transition: color .12s; white-space: nowrap;
-  }
-  .scene-copy:hover { color: var(--text); }
+  .scene-copy:hover{color:#fff;border-color:rgba(255,255,255,.28)}
 
   /* CHAIN STRIP */
-.chain-wrap {
-  padding: 1.15rem 1rem 1rem; overflow-x: auto; border-bottom: 1px solid var(--line);
-  background: var(--panel);
-  background-image: repeating-linear-gradient(
-    90deg, transparent, transparent 3px, rgba(255,255,255,0.015) 3px, rgba(255,255,255,0.015) 4px
-  );
-}
-.chain-strip { display: flex; align-items: center; gap: 0; min-width: max-content; }
-
-.chain-block {
-  display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start;
-  gap: 0; padding: 0;
-  width: var(--block-w); height: var(--block-h);
-  border: 1px solid var(--line2);
-  border-radius: 6px;
-  cursor: pointer;
-  transition: border-color .12s, box-shadow .12s;
-  background: var(--s2);
-  user-select: none; position: relative; flex-shrink: 0; overflow: hidden;
-}
-.chain-block:hover { border-color: var(--line3); }
-.chain-block.selected { border-color: var(--sel-border); box-shadow: var(--sel-glow); }
-.chain-block.active { border-color: var(--on-border); box-shadow: var(--on-glow); }
-.chain-block.active.selected { border-color: rgba(140,255,120,.55); box-shadow: var(--on-glow), var(--sel-glow); }
-.chain-block.bypass { opacity: .38; }
-
-/* Colored icon area — top portion of block */
-.block-icon-area {
-  flex: 1; min-height: 0;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--blk-color, rgba(255,255,255,0.06));
-  opacity: .45;
-  transition: opacity .12s;
-}
-.chain-block.active .block-icon-area { opacity: 1; }
-.chain-block.selected .block-icon-area { opacity: .85; }
-.chain-block.active.selected .block-icon-area { opacity: 1; }
-.block-icon-area svg { width: 26px; height: 26px; color: rgba(255,255,255,0.92); flex-shrink: 0; }
-.block-thumb {
-  width: 46px;
-  height: 48px;
-  object-fit: contain;
-  filter: drop-shadow(0 2px 2px rgba(0,0,0,.55));
-}
-
-/* Bottom info strip */
-.block-footer {
-  flex-shrink: 0;
-  display: flex; flex-direction: column; align-items: center; gap: 2px;
-  padding: 4px 3px 5px;
-  background: var(--s2);
-  border-top: 1px solid rgba(0,0,0,.35);
-}
-
-/* Model name (e.g. "Twin Reverb", "T Scream") */
-.block-model {
-  font-family: var(--mono); font-size: 7px; color: var(--dim);
-  text-align: center; white-space: nowrap;
-  overflow: hidden; text-overflow: ellipsis; max-width: 74px;
-  letter-spacing: .02em;
-}
-.chain-block.active .block-model { color: var(--muted); }
-.chain-block.selected .block-model { color: rgba(255,255,255,.75); }
-
-/* Block label */
-.block-label {
-  font-family: var(--mono); font-size: 8px; letter-spacing: .13em;
-  text-transform: uppercase; color: var(--dim); white-space: nowrap;
-}
-.chain-block.active .block-label { color: var(--on); }
-.chain-block.selected .block-label { color: var(--text); }
-
-/* LED indicator — now inside .block-footer */
-.block-led {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--s4);
-  border: 1px solid rgba(255,255,255,0.1);
-  transition: background .12s, box-shadow .12s;
-  flex-shrink: 0;
-}
-.chain-block.active .block-led {
-  background: var(--led-on);
-  box-shadow: 0 0 5px var(--led-on-glow), 0 0 9px rgba(100,220,80,0.28);
-  border-color: rgba(180,255,160,0.5);
-}
-
-/* Arrow connector between blocks */
-.chain-arrow {
-  font-family: var(--mono); font-size: 10px; color: var(--dim);
-  padding: 0 4px; display: flex; align-items: center; flex-shrink: 0;
-  opacity: .4;
-}
+  .chain-wrap{
+    position:relative;z-index:1;padding:1.25rem 1rem 1rem;overflow-x:auto;
+    border:1px solid rgba(121,217,255,.18);border-top:none;border-bottom:none;
+    background:
+      linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px),
+      radial-gradient(circle at 20% 15%,rgba(42,157,220,.35),transparent 34%),
+      linear-gradient(180deg,var(--lcd),var(--lcd-2));
+    background-size:100% 16px,16px 100%,auto,auto;
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.38), inset 0 0 38px rgba(0,0,0,.38)
+  }
+  .chain-strip{display:flex;align-items:stretch;gap:0;min-width:max-content}
+  .chain-block{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:6px;padding:11px 12px;border:1px solid rgba(255,255,255,.18);border-radius:8px;
+    cursor:pointer;transition:all .13s;background:rgba(255,255,255,.06);user-select:none;min-width:58px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 8px 20px rgba(0,0,0,.18)
+  }
+  .chain-block:hover{border-color:rgba(255,255,255,.42);background:rgba(255,255,255,.11);transform:translateY(-1px)}
+  .chain-block.selected{border-color:rgba(121,217,255,.62);background:rgba(121,217,255,.13)}
+  .chain-block.active{border-color:rgba(41,226,139,.44);background:rgba(41,226,139,.10)}
+  .chain-block.active.selected{border-color:rgba(121,217,255,.80);background:rgba(41,226,139,.18)}
+  .chain-block.bypass{opacity:.4}
+  .block-label{font-family:var(--mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--lcd-muted);white-space:nowrap}
+  .chain-block.active .block-label{color:#caffdf}
+  .chain-block.selected .block-label{color:var(--lcd-text)}
+  .block-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.28);transition:background .12s;flex-shrink:0}
+  .chain-block.active .block-dot{background:var(--led);box-shadow:0 0 10px rgba(41,226,139,.9)}
+  .chain-block[data-block="efx"].active{border-color:rgba(255,113,93,.55);background:rgba(255,113,93,.16)}
+  .chain-block[data-block="mod"].active{border-color:rgba(177,121,255,.55);background:rgba(177,121,255,.16)}
+  .chain-block[data-block="delay"].active{border-color:rgba(103,186,255,.55);background:rgba(103,186,255,.16)}
+  .chain-block[data-block="reverb"].active{border-color:rgba(91,139,255,.55);background:rgba(91,139,255,.16)}
+  .chain-block[data-block="amp"].active{border-color:rgba(255,197,95,.60);background:rgba(255,197,95,.16)}
+  .chain-block[data-block="ir"].active{border-color:rgba(114,237,219,.55);background:rgba(114,237,219,.14)}
+  .chain-arrow{font-family:var(--mono);font-size:12px;color:rgba(217,245,255,.42);padding:0 5px;display:flex;align-items:center;flex-shrink:0}
 
   /* PARAMS PANEL */
-  .params-panel {
-    padding: 1rem;
-    min-height: 220px;
-    background: var(--panel);
-    border-top: 1px solid var(--line);
+  .params-panel{
+    position:relative;z-index:1;padding:1.15rem 1rem 1.25rem;min-height:136px;
+    background:linear-gradient(180deg,#f7faf8,#eef3f0);border:1px solid rgba(255,255,255,.08);
+    border-top:1px solid rgba(255,255,255,.12);border-radius:0 0 10px 10px
   }
-  .params-head {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 1rem; padding-bottom: .7rem; border-bottom: 1px solid var(--line);
+  .params-head{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:.9rem
   }
-  .params-block-name {
-    font-family: var(--mono); font-size: 11px; letter-spacing: .18em;
-    text-transform: uppercase; color: var(--text); font-weight: 600;
+  .params-block-name{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#52615a}
+  .params-ref{font-family:var(--mono);font-size:9px;color:var(--dim);margin-left:.6rem}
+  .toggle-btn{
+    font-family:var(--mono);font-size:9px;letter-spacing:.1em;padding:3px 11px;
+    border-radius:999px;cursor:pointer;transition:all .12s;background:#fff;
+    border:1px solid var(--line);color:var(--muted);font-weight:800
   }
-  .params-ref { font-family: var(--mono); font-size: 9px; color: var(--dim); margin-left: .6rem; }
-  .toggle-btn {
-    font-family: var(--mono); font-size: 9px; letter-spacing: .12em; padding: 4px 13px;
-    border-radius: 2px; cursor: pointer; transition: all .12s; background: none;
-    border: 1px solid var(--line2); color: var(--muted); text-transform: uppercase;
+  .toggle-btn.on{color:var(--on);border-color:var(--on-border);background:var(--on-bg)}
+  .toggle-btn:hover{border-color:var(--line2)}
+  .pg{display:grid;grid-template-columns:1fr 1fr;gap:.6rem 1.4rem}
+  .pg.w3{grid-template-columns:1fr 1fr 1fr}
+  .pg.w1{grid-template-columns:1fr}
+  .pr{display:flex;flex-direction:column;gap:4px}
+  .pr.full{grid-column:1/-1}
+  .pl{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.04em;display:flex;justify-content:space-between}
+  .pl span{color:var(--dim)}
+  select.ps{
+    width:100%;background:#fff;border:1px solid var(--line);color:#18231e;
+    font-family:var(--sans);font-size:13px;padding:8px 9px;border-radius:6px;
+    outline:none;cursor:pointer;transition:border-color .12s
   }
-  .toggle-btn.on {
-    color: var(--on); border-color: var(--on-border); background: var(--on-bg);
-    box-shadow: 0 0 6px rgba(100,220,80,0.2);
+  select.ps:focus{border-color:var(--accent-border)}
+  select.ps option{background:#fff}
+  input[type=range]{
+    width:100%;-webkit-appearance:none;height:5px;background:#dfe7e1;
+    border-radius:2px;outline:none;cursor:pointer
   }
-  .toggle-btn:hover { border-color: var(--line3); color: var(--text); }
-  .pg { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem 1.6rem; }
-  .pg.w3 { grid-template-columns: 1fr 1fr 1fr; }
-  .pg.w1 { grid-template-columns: 1fr; }
-  .pr { display: flex; flex-direction: column; gap: 5px; }
-  .pr.full { grid-column: 1 / -1; }
-  .pl {
-    font-family: var(--mono); font-size: 10px; color: var(--muted);
-    letter-spacing: .04em; display: flex; justify-content: space-between;
-    align-items: center;
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:13px;height:13px;border-radius:50%;
+    background:var(--accent);cursor:pointer;transition:background .1s;border:2px solid #fff;
+    box-shadow:0 1px 5px rgba(31,90,130,.35)
   }
-  .pl span {
-    font-size: 11px; color: var(--text); font-weight: 500;
-    min-width: 28px; text-align: right;
-  }
-  select.ps {
-    width: 100%; background: var(--s2); border: 1px solid var(--line2);
-    color: var(--text); font-family: var(--mono); font-size: 11px;
-    padding: 6px 9px; border-radius: 3px; outline: none; cursor: pointer;
-    transition: border-color .12s; -webkit-appearance: none; appearance: none;
-  }
-  select.ps:focus { border-color: var(--line3); }
-  select.ps option { background: var(--s2); }
-  input[type=range] {
-    width: 100%; -webkit-appearance: none; appearance: none;
-    height: 4px; background: var(--s4);
-    border-radius: 2px; outline: none; cursor: pointer;
-    border: 1px solid var(--line);
-  }
-  input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%;
-    background: linear-gradient(145deg, rgba(255,255,255,.75), rgba(200,200,200,.5));
-    border: 1px solid rgba(255,255,255,.2);
-    cursor: pointer; transition: background .1s, box-shadow .1s;
-    box-shadow: 0 1px 3px rgba(0,0,0,.5);
-  }
-  input[type=range]:hover::-webkit-slider-thumb {
-    background: linear-gradient(145deg, rgba(255,255,255,.95), rgba(220,220,220,.7));
-    box-shadow: 0 0 5px rgba(255,255,255,.25), 0 1px 3px rgba(0,0,0,.5);
-  }
-  input[type=range]::-moz-range-thumb {
-    width: 14px; height: 14px; border-radius: 50%;
-    background: rgba(255,255,255,.62); border: 1px solid rgba(255,255,255,.2);
-    cursor: pointer;
-  }
-  input[type=range]::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; }
-  .pempty { font-family: var(--mono); font-size: 11px; color: var(--dim); padding: .5rem 0; }
-
-  .params-panel {
-    display: grid;
-    grid-template-columns: 260px minmax(0, 1fr);
-    gap: 1rem;
-    align-items: stretch;
-  }
-  .params-art {
-    min-height: 210px;
-    border: 1px solid rgba(255,255,255,.1);
-    border-radius: 5px;
-    background:
-      linear-gradient(180deg, rgba(255,255,255,.04), transparent 34%),
-      #171717;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: .8rem;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.05), inset 0 -18px 35px rgba(0,0,0,.24);
-  }
-  .params-art svg { width: min(190px, 100%); height: 124px; overflow: visible; }
-  .qt-asset-img {
-    width: 100%;
-    max-width: 228px;
-    max-height: 188px;
-    object-fit: contain;
-    display: block;
-    filter: drop-shadow(0 10px 18px rgba(0,0,0,.55));
-  }
-  .qt-asset-amp {
-    max-width: 242px;
-    max-height: 128px;
-  }
-  .qt-asset-eq {
-    max-width: 238px;
-    max-height: 150px;
-  }
-  .qt-asset-cab {
-    max-width: 190px;
-  }
-  .params-art-name {
-    margin-top: .45rem;
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-    color: rgba(255,255,255,.78);
-    text-align: center;
-  }
-  .params-controls {
-    min-width: 0;
-    padding: .2rem .2rem .2rem .35rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
-  .knob-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem 1.15rem;
-    align-items: flex-end;
-  }
-  .knob-unit {
-    width: 62px;
-    min-height: 86px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-  }
-  .knob-wrap {
-    width: 58px;
-    height: 58px;
-    position: relative;
-  }
-  .knob-svg {
-    width: 58px;
-    height: 58px;
-    display: block;
-    filter: drop-shadow(0 3px 4px rgba(0,0,0,.55));
-  }
-  .knob-input {
-    position: absolute;
-    inset: 0;
-    width: 58px !important;
-    height: 58px !important;
-    opacity: 0;
-    cursor: ew-resize;
-  }
-  .knob-value {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--text);
-    line-height: 1;
-    min-height: 10px;
-  }
-  .knob-label {
-    font-family: var(--mono);
-    font-size: 8px;
-    color: var(--muted);
-    letter-spacing: .08em;
-    text-transform: uppercase;
-    text-align: center;
-    line-height: 1.1;
-  }
-  .select-stack {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    flex: 1;
-    min-width: 160px;
-  }
-  .select-stack label {
-    font-family: var(--mono);
-    font-size: 9px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: .08em;
-  }
-  .params-note {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--dim);
-    margin-top: .4rem;
-  }
+  input[type=range]:hover::-webkit-slider-thumb{background:#174463}
+  input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:var(--accent);border:2px solid #fff;cursor:pointer}
+  .pempty{font-family:var(--mono);font-size:11px;color:var(--dim);padding:.5rem 0}
 
   /* PRESET ROW */
-  .preset-row {
-    display: flex; align-items: center; gap: .8rem; padding: .9rem 1rem;
-    background: var(--surface); border: 1px solid var(--line2); border-top: none;
-    border-radius: 0 0 6px 6px; margin-bottom: 1.6rem;
+  .preset-row{
+    display:flex;align-items:flex-start;gap:1rem;padding:1rem;
+    background:linear-gradient(180deg,#242c27,#151a17);border:1px solid rgba(255,255,255,.10);
+    border-radius:14px;margin:1rem 0;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 14px 34px rgba(0,0,0,.20)
   }
-  .pname-wrap { flex: 1; display: flex; flex-direction: column; gap: 3px; }
-  .pname-hint { font-family: var(--mono); font-size: 9px; color: var(--dim); letter-spacing: .07em; }
-  .pname-input {
-    width: 100%; background: var(--s2); border: 1px solid var(--line2); color: var(--text);
-    font-family: var(--mono); font-size: 13px; padding: 6px 10px; border-radius: 3px;
-    outline: none; transition: border-color .12s;
+  .pname-wrap{flex:1;display:flex;flex-direction:column;gap:3px}
+  .pname-hint{font-family:var(--mono);font-size:9px;color:#8fa096;letter-spacing:.07em;text-transform:uppercase}
+  .pname-input{
+    width:100%;background:rgba(255,255,255,.94);border:1px solid rgba(255,255,255,.16);color:#18231e;
+    font-family:var(--sans);font-weight:720;font-size:18px;padding:10px 11px;border-radius:6px;
+    outline:none;transition:border-color .12s
   }
-  .pname-input:focus { border-color: var(--line3); }
-  .add-btn {
-    font-family: var(--mono); font-size: 11px; letter-spacing: .08em; padding: 9px 20px;
-    background: var(--on-bg); border: 1px solid var(--on-border); color: var(--on);
-    border-radius: 3px; cursor: pointer; transition: all .15s; white-space: nowrap;
+  .pname-input:focus{border-color:var(--accent-border)}
+  .planning-grid{
+    display:grid;grid-template-columns:1fr 1fr 110px;gap:.6rem;margin-top:.55rem
   }
-  .add-btn:hover { background: rgba(90,200,70,.15); box-shadow: 0 0 8px rgba(100,220,80,.2); }
+  .field-stack{display:flex;flex-direction:column;gap:3px}
+  .field-label{font-family:var(--mono);font-size:9px;color:#8fa096;letter-spacing:.07em;text-transform:uppercase}
+  .text-input,.notes-input{
+    width:100%;background:rgba(255,255,255,.94);border:1px solid rgba(255,255,255,.16);color:#18231e;
+    font-family:var(--sans);font-size:13px;padding:9px 10px;border-radius:6px;outline:none;
+    transition:border-color .12s
+  }
+  .notes-input{min-height:54px;resize:vertical;line-height:1.45;font-family:var(--sans)}
+  .text-input:focus,.notes-input:focus{border-color:var(--accent-border)}
+  .scene-notes{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-top:.55rem
+  }
+  .add-btn{
+    font-family:var(--sans);font-size:13px;font-weight:760;letter-spacing:0;padding:11px 16px;
+    background:linear-gradient(180deg,#f8fffb,#c9d4cf);border:1px solid rgba(255,255,255,.22);color:#18231e;border-radius:10px;
+    cursor:pointer;transition:all .15s;white-space:nowrap;margin-top:21px
+  }
+  .add-btn:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(0,0,0,.28)}
+  .add-btn.primary{border-color:rgba(101,242,165,.48);color:#05120b;background:linear-gradient(180deg,#65f2a5,#23b874)}
+
+  .footswitch-strip{
+    position:relative;z-index:1;display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;
+    padding:1rem .35rem .1rem
+  }
+  .footswitch{
+    min-height:62px;border-radius:12px;background:linear-gradient(180deg,#2d3530,#151a17);
+    border:1px solid rgba(255,255,255,.10);box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 12px 25px rgba(0,0,0,.22);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.25rem;
+    color:rgba(255,255,255,.74);font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase
+  }
+  .footswitch::before{
+    content:'';width:18px;height:18px;border-radius:50%;background:linear-gradient(180deg,#f7f8f6,#9ea8a3);
+    border:1px solid rgba(255,255,255,.55);box-shadow:0 2px 8px rgba(0,0,0,.45), inset 0 1px 0 #fff
+  }
+  .footswitch span{font-family:var(--sans);font-size:12px;letter-spacing:0;color:rgba(255,255,255,.48)}
 
   /* PACK */
-  .pack {
-    background: var(--surface); border: 1px solid var(--line2);
-    border-radius: 6px; overflow: hidden;
-    box-shadow: 0 2px 12px rgba(0,0,0,.3);
+  .pack{
+    background:linear-gradient(180deg,#242c27,#151a17);border:1px solid rgba(255,255,255,.10);
+    border-radius:14px;overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 14px 34px rgba(0,0,0,.20)
   }
-  .pack-head {
-    display: flex; align-items: center; padding: .7rem 1rem;
-    border-bottom: 1px solid var(--line); background: var(--s2);
+  .pack-head{
+    display:flex;align-items:center;padding:.75rem 1rem;
+    border-bottom:1px solid rgba(255,255,255,.10);background:linear-gradient(180deg,#202823,#151a17)
   }
-  .pack-title {
-    font-family: var(--mono); font-size: 9px; letter-spacing: .2em;
-    text-transform: uppercase; color: var(--muted); flex: 1;
+  .pack-title{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#d6e7de;flex:1}
+  .pack-count{font-family:var(--mono);font-size:10px;color:#8fa096}
+  .pack-list{min-height:52px}
+  .pack-empty{font-family:var(--mono);font-size:11px;color:#8fa096;padding:1.4rem 1rem}
+  .pack-item{
+    display:flex;align-items:center;gap:.75rem;padding:.7rem 1rem;
+    border-bottom:1px solid rgba(255,255,255,.10);transition:background .1s;background:rgba(255,255,255,.04)
   }
-  .pack-count { font-family: var(--mono); font-size: 10px; color: var(--dim); }
-  .pack-list { min-height: 52px; }
-  .pack-empty { font-family: var(--mono); font-size: 11px; color: var(--dim); padding: 1.4rem 1rem; }
-  .pack-item {
-    display: flex; align-items: center; gap: .75rem; padding: .65rem 1rem;
-    border-bottom: 1px solid var(--line); transition: background .1s;
+  .pack-item:last-child{border-bottom:none}
+  .pack-item:hover{background:rgba(255,255,255,.07)}
+  .pi-name{font-family:var(--mono);font-size:12px;color:#f5fff8;flex:1}
+  .pi-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .pi-meta{font-size:11px;color:#aebfb5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pi-scenes{display:flex;gap:3px;align-items:center}
+  .pi-dot{width:6px;height:6px;border-radius:50%;background:var(--on)}
+  .pi-btn{
+    font-family:var(--mono);font-size:9px;letter-spacing:.08em;padding:3px 9px;
+    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#d6e7de;border-radius:8px;
+    cursor:pointer;transition:all .12s
   }
-  .pack-item:last-child { border-bottom: none; }
-  .pack-item:hover { background: var(--hint); }
-  .pi-main { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
-  .pi-name { font-family: var(--mono); font-size: 12px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .pi-summary { font-family: var(--mono); font-size: 9px; color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .pi-scenes { display: flex; gap: 3px; align-items: center; }
-  .pi-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--on); }
-  .pi-btn {
-    font-family: var(--mono); font-size: 9px; letter-spacing: .08em; padding: 3px 9px;
-    background: none; border: 1px solid var(--line); color: var(--muted); border-radius: 2px;
-    cursor: pointer; transition: all .12s;
+  .pi-btn:hover{color:#fff;border-color:rgba(255,255,255,.32)}
+  .pi-btn.del:hover{color:rgba(220,80,80,.9);border-color:rgba(220,80,80,.3)}
+  .pack-foot{
+    display:flex;align-items:center;justify-content:flex-end;gap:.8rem;
+    padding:.8rem 1rem;border-top:1px solid rgba(255,255,255,.10);background:linear-gradient(180deg,#202823,#151a17)
   }
-  .pi-btn:hover { color: var(--text); border-color: var(--line2); }
-  .pi-btn.del:hover { color: rgba(220,80,80,.9); border-color: rgba(220,80,80,.3); }
-  .pack-foot {
-    display: flex; align-items: center; justify-content: flex-end; gap: .8rem;
-    padding: .7rem 1rem; border-top: 1px solid var(--line); background: var(--s2);
+  .exp-btn{
+    font-family:var(--sans);font-size:13px;font-weight:700;letter-spacing:0;padding:9px 13px;
+    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);color:#eef7f1;border-radius:10px;
+    cursor:pointer;transition:all .15s
   }
-  .exp-btn {
-    font-family: var(--mono); font-size: 11px; letter-spacing: .1em; padding: 7px 18px;
-    background: none; border: 1px solid var(--line2); color: var(--text); border-radius: 3px;
-    cursor: pointer; transition: all .15s;
+  .exp-btn:hover{background:rgba(121,217,255,.12);border-color:rgba(121,217,255,.28);color:#d9f5ff}
+  .exp-btn:disabled{opacity:.3;cursor:default}
+  .pack-status{font-family:var(--mono);font-size:10px;color:var(--on);opacity:0;transition:opacity .3s}
+  .pack-status.show{opacity:1}
+  .export-menu{display:flex;flex-wrap:wrap;gap:.45rem}
+  .quiet-btn{opacity:.72}
+  .advanced-panel{
+    margin-top:1rem;border:1px solid rgba(255,255,255,.10);border-radius:14px;
+    background:linear-gradient(180deg,#1b221e,#111613);overflow:hidden
   }
-  .exp-btn:hover { background: var(--hint); }
-  .exp-btn:disabled { opacity: .3; cursor: default; }
-  .pack-status { font-family: var(--mono); font-size: 10px; color: var(--on); opacity: 0; transition: opacity .3s; }
-  .pack-status.show { opacity: 1; }
-
-  .utility-modal {
-    position: fixed;
-    inset: 0;
-    display: none;
-    place-items: center;
-    padding: 1rem;
-    background: rgba(0,0,0,.55);
-    z-index: 20;
+  .advanced-panel summary{
+    list-style:none;cursor:pointer;padding:.85rem 1rem;font-family:var(--mono);font-size:10px;
+    letter-spacing:.16em;text-transform:uppercase;color:#aebfb5;display:flex;align-items:center;justify-content:space-between
   }
-  .utility-modal.show { display: grid; }
-  .utility-card {
-    width: min(520px, 100%);
-    background: var(--surface);
-    border: 1px solid var(--line2);
-    border-radius: 6px;
-    box-shadow: 0 18px 60px rgba(0,0,0,.55);
-  }
-  .utility-head {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: .75rem .9rem;
-    border-bottom: 1px solid var(--line);
-    background: var(--s2);
-  }
-  .utility-title {
-    font-family: var(--mono); font-size: 10px; letter-spacing: .16em;
-    text-transform: uppercase; color: var(--text);
-  }
-  .utility-body {
-    padding: 1rem;
-    font-family: var(--mono);
-    font-size: 11px;
-    line-height: 1.7;
-    color: var(--muted);
-  }
-  .utility-close {
-    font-family: var(--mono); font-size: 11px;
-    background: none; border: 1px solid var(--line); color: var(--muted);
-    border-radius: 2px; cursor: pointer; padding: 3px 8px;
+  .advanced-panel summary::-webkit-details-marker{display:none}
+  .advanced-panel summary::after{content:'+';font-size:14px;color:var(--led)}
+  .advanced-panel[open] summary::after{content:'-'}
+  .advanced-body{padding:0 1rem 1rem}
+  .advanced-note{
+    color:#91a79b;font-size:12px;line-height:1.5;margin:.2rem 0 .85rem;
+    border-left:2px solid rgba(255,141,99,.45);padding-left:.75rem
   }
 
-  footer {
-    margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--line);
-    font-family: var(--mono); font-size: 10px; color: var(--dim); letter-spacing: .06em;
-  }
+  footer{display:none}
 
-  @media (max-width: 580px) {
-    .pg { grid-template-columns: 1fr; }
-    .pg.w3 { grid-template-columns: 1fr 1fr; }
-    .preset-row { flex-direction: column; align-items: stretch; }
-    .import-bar { flex-wrap: wrap; }
-    .qt-workspace { grid-template-columns: 1fr; }
-    .qt-sidebar { display: none; }
-    .qt-titlebar { padding: 0 .55rem; }
-    .qt-brand { min-width: 0; font-size: 10px; }
-    .qt-device { display: none; }
-    :root { --block-w: 64px; --block-h: 88px; }
-    .block-label { font-size: 7px; }
-    .block-icon-area svg { width: 20px; height: 20px; }
-    .scene-btn { padding: .65rem 1rem; font-size: 12px; }
-    .params-panel { grid-template-columns: 1fr; }
-    .params-art { min-height: 150px; }
-    .params-art svg { height: 110px; }
-    .knob-unit { width: 56px; }
+  @media(max-width:580px){
+    body{overflow-x:hidden}
+    .page{width:100%;padding:1rem .9rem 4rem;overflow:hidden}
+    .page > *{min-width:0}
+    header{padding:1.15rem 1rem}
+    header::after{display:none}
+    h1{font-size:2rem;line-height:1.03;overflow-wrap:anywhere}
+    h1 span{display:block}
+    .subtitle,.position-card p,.trust-note{font-size:15px;overflow-wrap:anywhere}
+    .user-prompt{align-items:flex-start}
+    .hero-actions{flex-direction:column}
+    .hero-btn{width:100%;text-align:center}
+    .pg{grid-template-columns:1fr}
+    .pg.w3{grid-template-columns:1fr 1fr}
+    .preset-row{flex-direction:column;align-items:stretch}
+    .planning-grid,.scene-notes,.positioning,.system-drawer{grid-template-columns:1fr}
+    .fw-bar,.import-bar{flex-direction:column;align-items:stretch}
+    .fw-btn,.import-btn{width:100%}
+    .fw-label,.import-hint{line-height:1.45;white-space:normal;overflow-wrap:anywhere}
+    .scene-row{flex-wrap:wrap}
+    .scene-label{width:100%;margin-bottom:.15rem}
+    .scene-copy{width:100%;margin-left:0;margin-top:.25rem}
+    .builder,.pack,.preset-row{max-width:100%}
+    .builder{padding:10px;border-radius:12px}
+    .hardware-status{display:none}
+    .chain-wrap{max-width:100%;padding:.95rem .85rem;overflow-x:auto}
+    .chain-block{min-width:44px;padding:7px 7px}
+    .block-label{font-size:8px}
+    .params-panel{padding:1rem .85rem}
+    .add-btn{width:100%;margin-top:.35rem}
+    .pack-item{align-items:flex-start;flex-wrap:wrap}
+    .pi-scenes{margin-left:auto}
+    .pack-foot{align-items:stretch;flex-direction:column}
+    .export-menu{flex-direction:column}
+    .exp-btn{width:100%}
   }
 </style>
 </head>
-<body class="qt-replica">
+<body>
 <div class="page">
 
   <header>
     <div class="logo"><a href="/">← Tools</a> / MG-30</div>
-    <h1>MG-30 <span>Pack Builder</span></h1>
-    <div class="subtitle">// Configure chain visually · 3 scenes · export as .mg30patch or ZIP pack</div>
+    <h1>MG-30 <span>Tone Planner</span></h1>
+    <div class="subtitle">Diseña escenas, prueba cadenas y guarda recetas para QuickTone.</div>
+    <div class="hero-actions">
+      <button class="hero-btn primary" onclick="focusBuilder()">Diseñar tono</button>
+      <button class="hero-btn" onclick="addToPack()">Añadir al setlist</button>
+      <button class="hero-btn" onclick="exportToneSheet()">Exportar receta</button>
+    </div>
   </header>
 
-  <!-- FIRMWARE BAR -->
-  <div class="fw-bar">
-    <span class="fw-badge" id="fw-badge">FW —</span>
-    <span class="fw-label" id="fw-label">Loading firmware data…</span>
-    <button class="fw-btn" onclick="checkFirmware()">Check for updates</button>
+  <div class="user-prompt">
+    <div>
+      <strong>Empieza tocando la cadena.</strong>
+      <span>Elige escena, activa bloques y guarda una receta que puedas recrear en QuickTone.</span>
+    </div>
+    <span class="micro-led"></span>
   </div>
 
-  <!-- IMPORT -->
-  <div class="import-bar" ondrop="dropFile(event)" ondragover="event.preventDefault()">
-    <span class="import-label">Import patch</span>
-    <span class="import-hint" id="import-hint">drag .mg30patch here or →</span>
-    <button class="import-btn" onclick="document.getElementById('file-in').click()">Open .mg30patch</button>
-    <input type="file" id="file-in" accept=".mg30patch" onchange="loadFile(this)">
+  <section class="positioning" aria-label="Product promise">
+    <div class="position-card">
+      <div class="position-kicker">Para tocar</div>
+      <strong>Piensa en canciones, no en archivos.</strong>
+      <p>Construye la cadena, nombra escenas A/B/C, apunta notas de directo y elige el slot del MG-30.</p>
+    </div>
+    <div class="position-card">
+      <div class="position-kicker">Para sesiones</div>
+      <strong>Recetas legibles, sin misterio.</strong>
+      <p>Llévate una hoja limpia a ensayo, QuickTone, Discord, clases o tu biblioteca personal de sonidos.</p>
+    </div>
+    <div class="position-card">
+      <div class="position-kicker">Para packs</div>
+      <strong>Arma setlists compartibles.</strong>
+      <p>Agrupa canciones, escenas, parámetros y notas antes de tocar nada en el hardware.</p>
+    </div>
+  </section>
+
+  <div class="trust-note">
+    QuickTone sigue siendo la herramienta final para importar al pedal, cargar IRs, actualizar firmware y gestionar USB.
+    La exportación <code>.mg30patch</code> queda como experimental; aquí lo fuerte es diseñar y guardar recetas fiables.
   </div>
 
   <!-- BUILDER -->
   <div class="builder">
-    <div class="qt-titlebar">
-      <div class="qt-window-dots"><span></span><span></span><span></span></div>
-      <div class="qt-brand">NUX QuickTone</div>
-      <div class="qt-device"><span class="qt-device-led"></span><span>MG-30 · Patch 01A · USB Ready</span></div>
-      <div class="qt-toolbar-actions">
-        <button class="qt-tool-btn" onclick="resetCurrentPatch()">New</button>
-        <button class="qt-tool-btn" onclick="document.getElementById('file-in').click()">Open</button>
-        <button class="qt-tool-btn primary" onclick="addToPack()">Save</button>
-        <button class="qt-tool-btn" onclick="exportCurrentPatch()">Export</button>
-        <button class="qt-tool-btn" onclick="exportPack()">Pack</button>
-        <button class="qt-tool-btn" onclick="backupSession()">Backup</button>
-        <button class="qt-tool-btn" onclick="showUtility('ir')">IR</button>
-        <button class="qt-tool-btn" onclick="showUtility('usb')">USB</button>
-        <button class="qt-tool-btn" onclick="checkFirmware()">Firmware</button>
-      </div>
+    <div class="hardware-top">
+      <span class="hardware-brand">MG-30</span>
+      <span class="hardware-status"><span class="hardware-led"></span> tone planner</span>
     </div>
-    <div class="qt-workspace">
-      <main class="qt-main">
-        <div class="scene-row">
-          <span class="scene-label">Scene</span>
-          <button class="scene-btn active" onclick="switchScene(0,this)">A</button>
-          <button class="scene-btn" onclick="switchScene(1,this)">B</button>
-          <button class="scene-btn" onclick="switchScene(2,this)">C</button>
-          <button class="scene-copy" onclick="copyScenes()">Copy A → B C</button>
-        </div>
-        <div class="chain-wrap">
-          <div class="chain-strip" id="chain-strip"></div>
-        </div>
-        <div class="params-panel" id="params-panel"></div>
-      </main>
+    <div class="scene-row">
+      <span class="scene-label">Escena</span>
+      <button class="scene-btn active" onclick="switchScene(0,this)">A</button>
+      <button class="scene-btn" onclick="switchScene(1,this)">B</button>
+      <button class="scene-btn" onclick="switchScene(2,this)">C</button>
+      <button class="scene-copy" onclick="copyScenes()">Copiar A → B C</button>
+    </div>
+    <div class="chain-wrap">
+      <div class="chain-strip" id="chain-strip"></div>
+    </div>
+    <div class="params-panel" id="params-panel"></div>
+    <div class="footswitch-strip" aria-hidden="true">
+      <div class="footswitch">A <span>Clean</span></div>
+      <div class="footswitch">B <span>Drive</span></div>
+      <div class="footswitch">C <span>Lead</span></div>
     </div>
   </div>
 
   <!-- PRESET NAME + ADD -->
   <div class="preset-row">
     <div class="pname-wrap">
-      <span class="pname-hint">[INST]-[ROLE]-[CHARACTER]_v[N] · e.g. EG-CLN-SOUL_v1</span>
-      <input class="pname-input" id="pname" type="text" value="EG-CLN-SOUL_v1" placeholder="preset name">
+      <span class="pname-hint">Receta del preset</span>
+      <input class="pname-input" id="pname" type="text" value="EG-CLN-SOUL_v1" placeholder="Nombre del preset">
+      <div class="planning-grid">
+        <div class="field-stack">
+          <label class="field-label" for="song-title">Canción / uso</label>
+          <input class="text-input" id="song-title" type="text" value="Clean soul comp" placeholder="Canción, artista, sesión o idea de tono">
+        </div>
+        <div class="field-stack">
+          <label class="field-label" for="guitar-context">Guitarra / pickup / feel</label>
+          <input class="text-input" id="guitar-context" type="text" value="Strat neck pickup · edge clean" placeholder="Instrument, pickup, tuning, gain feel">
+        </div>
+        <div class="field-stack">
+          <label class="field-label" for="target-slot">Slot MG-30</label>
+          <input class="text-input" id="target-slot" type="text" value="03A" placeholder="03A">
+        </div>
+      </div>
+      <div class="scene-notes">
+        <div class="field-stack">
+          <label class="field-label" for="scene-a-note">Escena A</label>
+          <input class="text-input" id="scene-a-note" type="text" value="Clean verse" placeholder="Clean verse">
+        </div>
+        <div class="field-stack">
+          <label class="field-label" for="scene-b-note">Escena B</label>
+          <input class="text-input" id="scene-b-note" type="text" value="Drive chorus" placeholder="Drive chorus">
+        </div>
+        <div class="field-stack">
+          <label class="field-label" for="scene-c-note">Escena C</label>
+          <input class="text-input" id="scene-c-note" type="text" value="Solo lift" placeholder="Solo lift">
+        </div>
+      </div>
+      <div class="field-stack" style="margin-top:.55rem">
+          <label class="field-label" for="performance-notes">Notas para tocar</label>
+        <textarea class="notes-input" id="performance-notes" placeholder="Qué recordar al recrearlo en QuickTone o al tocarlo en directo.">Master del ampli sobre 85, reverb baja, subir el mix del delay en Escena C si la sala está seca.</textarea>
+      </div>
     </div>
-    <button class="add-btn" onclick="addToPack()">+ Add to Pack</button>
+    <button class="add-btn primary" onclick="addToPack()">+ Añadir al setlist</button>
   </div>
 
   <!-- PACK -->
   <div class="pack">
     <div class="pack-head">
-      <span class="pack-title">Pack</span>
+      <span class="pack-title">Setlist / pack de recetas</span>
       <span class="pack-count" id="pack-count">0 presets</span>
     </div>
     <div class="pack-list" id="pack-list">
-      <div class="pack-empty">No presets yet.</div>
+      <div class="pack-empty">Aún no hay presets.</div>
     </div>
     <div class="pack-foot">
       <span class="pack-status" id="pack-status"></span>
-      <button class="exp-btn" id="exp-btn" onclick="exportPack()" disabled>Export Pack →</button>
+      <div class="export-menu">
+        <button class="exp-btn" onclick="exportToneSheet()">Receta</button>
+        <button class="exp-btn" id="exp-btn" onclick="exportPackNotes()" disabled>Exportar pack →</button>
+      </div>
     </div>
   </div>
 
-  <footer>optionalganesh.com — MG-30 Pack Builder · signal chain based on NUX MG-30 firmware · <span id="fw-footer">—</span></footer>
-</div>
+  <details class="advanced-panel">
+    <summary>Avanzado / laboratorio</summary>
+    <div class="advanced-body">
+      <p class="advanced-note">QuickTone sigue siendo la herramienta final para importar al pedal. Estas opciones son para backup, referencia y pruebas internas.</p>
+      <div class="system-drawer">
+        <div class="fw-bar">
+          <span class="fw-badge" id="fw-badge">FW —</span>
+          <span class="fw-label" id="fw-label">Cargando datos de firmware...</span>
+          <button class="fw-btn" onclick="checkFirmware()">Modelos</button>
+        </div>
 
-<div class="utility-modal" id="utility-modal" onclick="if(event.target===this)closeUtility()">
-  <div class="utility-card">
-    <div class="utility-head">
-      <span class="utility-title" id="utility-title">QuickTone</span>
-      <button class="utility-close" onclick="closeUtility()">Close</button>
+        <div class="import-bar" ondrop="dropFile(event)" ondragover="event.preventDefault()">
+          <span class="import-label">Patch ref</span>
+          <span class="import-hint" id="import-hint">arrastra .mg30patch →</span>
+          <button class="import-btn" onclick="document.getElementById('file-in').click()">Leer</button>
+          <input type="file" id="file-in" accept=".mg30patch" onchange="loadFile(this)">
+        </div>
+      </div>
+      <div class="export-menu">
+        <button class="exp-btn" onclick="exportRecipeJson()">Backup JSON</button>
+        <button class="exp-btn quiet-btn" onclick="exportExperimentalPatch()">.mg30patch experimental</button>
+      </div>
     </div>
-    <div class="utility-body" id="utility-body"></div>
-  </div>
+  </details>
+
 </div>
 
 <script>
@@ -827,13 +607,13 @@
 //   update tools/MG-30/firmware.json in the repo.
 // ═══════════════════════════════════════════════════════════
 
-const FW_URL = 'firmware.json';
+const FW_URL = 'https://raw.githubusercontent.com/OptionalGanesh/optionalganesh-tools/main/tools/MG-30/firmware.json';
 
-let FW = null; // populated after load
+let FW = null; // populated after baseline declaration
 
 const FW_BASELINE = {
-  version:'GEN2', date:'2026-04',
-  notes:'GEN2/V5 model list with Pro Scene and expanded EFX/EQ coverage.',
+  version:'5.0', date:'2025-01',
+  notes:'V5 — Pro Scene support.',
   wah:[
     {id:0,name:'Clyde',ref:'Fulltone Clyde Wah'},
     {id:1,name:'Cry BB',ref:'Dunlop Cry Baby'},
@@ -860,12 +640,7 @@ const FW_BASELINE = {
     {id:10,name:'Muff Fuzz',ref:'EHX Big Muff'},
     {id:11,name:'Katana Bst',ref:'Boss Katana Boost'},
     {id:12,name:'Red Fuzz',ref:'Red Fuzz'},
-    {id:13,name:'Touch Wah',ref:'Envelope Filter'},
-    {id:14,name:'Full-OD HP',ref:'GEN2 full-range overdrive'},
-    {id:15,name:'Horseman',ref:'Klon-style overdrive'},
-    {id:16,name:'Nob ODR',ref:'Nobels ODR-style overdrive'},
-    {id:17,name:'Riv Blueflog',ref:'Riviera Blueflog combo drive'},
-    {id:18,name:'Turbo OD',ref:'NUX Turbo Overdrive'}
+    {id:13,name:'Touch Wah',ref:'Envelope Filter'}
   ],
   amps:[
     {id:0,name:'JC Clean',ref:'Roland JC-120',type:'guitar'},
@@ -935,14 +710,7 @@ const FW_BASELINE = {
     {id:9,name:'U-Vibe',ref:'Uni-Vibe'},
     {id:10,name:'Tremolo',ref:'Tremolo'},
     {id:11,name:'Rotary',ref:'Rotary Speaker'},
-    {id:12,name:'Harmonist',ref:'Pitch Harmony'},
-    {id:13,name:'Mono Octave',ref:'GEN2 octave effect'}
-  ],
-  eq:[
-    {id:0,name:'6-Band',ref:'Graphic EQ'},
-    {id:1,name:'Align',ref:'Quick tone-shaping EQ'},
-    {id:2,name:'10-Band',ref:'Fine graphic EQ'},
-    {id:3,name:'Para',ref:'Parametric EQ'}
+    {id:12,name:'Harmonist',ref:'Pitch Harmony'}
   ],
   delay:[
     {id:0,name:'Analog',ref:'Boss DM-2'},
@@ -968,55 +736,19 @@ const FW_BASELINE = {
 // Slot IDs match QuickTone internal ordering for binary export
 // ═══════════════════════════════════════════════════════════
 const CHAIN = [
-  { id:'wah',    label:'WAH',   slot:0,  toggleable:true,  color:'#b07820' },
-  { id:'comp',   label:'COMP',  slot:1,  toggleable:true,  color:'#909020' },
-  { id:'gate',   label:'GATE',  slot:5,  toggleable:true,  color:'#4a5850' },
-  { id:'efx',    label:'EFX',   slot:2,  toggleable:true,  color:'#b83028' },
-  { id:'amp',    label:'AMP',   slot:3,  toggleable:false, color:'#2050b8' },
-  { id:'ir',     label:'CAB',   slot:9,  toggleable:false, color:'#583888' },
-  { id:'eq',     label:'EQ',    slot:4,  toggleable:true,  color:'#187880' },
-  { id:'sr',     label:'S/R',   slot:10, toggleable:true,  color:'#305830' },
-  { id:'mod',    label:'MOD',   slot:6,  toggleable:true,  color:'#6828a8' },
-  { id:'delay',  label:'DELAY', slot:7,  toggleable:true,  color:'#1060a8' },
-  { id:'reverb', label:'REVERB',slot:8,  toggleable:true,  color:'#102868' },
-  { id:'vol',    label:'VOL',   slot:11, toggleable:false, color:'#383838' },
+  { id:'wah',   label:'WAH',   slot:0,  toggleable:true  },
+  { id:'comp',  label:'COMP',  slot:1,  toggleable:true  },
+  { id:'gate',  label:'GATE',  slot:5,  toggleable:true  },
+  { id:'efx',   label:'EFX',   slot:2,  toggleable:true  },
+  { id:'amp',   label:'AMP',   slot:3,  toggleable:false },  // always on
+  { id:'ir',    label:'IR',    slot:9,  toggleable:false },  // always on
+  { id:'eq',    label:'EQ',    slot:4,  toggleable:true  },
+  { id:'sr',    label:'S/R',   slot:10, toggleable:true  },  // send/return loop
+  { id:'mod',   label:'MOD',   slot:6,  toggleable:true  },
+  { id:'delay', label:'DELAY', slot:7,  toggleable:true  },
+  { id:'reverb',label:'REVERB',slot:8,  toggleable:true  },
+  { id:'vol',   label:'VOL',   slot:11, toggleable:false },  // always on
 ];
-
-// ═══════════════════════════════════════════════════════════
-// BLOCK ICONS — inline SVG per category
-// ═══════════════════════════════════════════════════════════
-const BLOCK_ICONS = {
-  wah:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 19 Q8 4 14 8 Q18 11 21 19"/><ellipse cx="12" cy="20" rx="4" ry="1.5" fill="currentColor" opacity=".3"/></svg>`,
-  comp:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,14 6,14 8,7 10,17 12,11 14,14 22,14"/></svg>`,
-  gate:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="2,17 7,17 7,8 12,8 12,17 22,17"/></svg>`,
-  efx:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,16 5,16 7,9 9,17 11,7 13,15 15,11 17,16 22,16"/></svg>`,
-  amp:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="1.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>`,
-  ir:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="4" width="20" height="15" rx="1.5"/><circle cx="8" cy="11" r="3"/><circle cx="16" cy="11" r="3"/><line x1="2" y1="17" x2="22" y2="17"/></svg>`,
-  eq:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="18" x2="5" y2="9"/><line x1="10" y1="18" x2="10" y2="6"/><line x1="15" y1="18" x2="15" y2="11"/><line x1="20" y1="18" x2="20" y2="14"/><line x1="3" y1="12" x2="7" y2="12"/><line x1="8" y1="9" x2="12" y2="9"/><line x1="13" y1="14" x2="17" y2="14"/><line x1="18" y1="16" x2="22" y2="16"/></svg>`,
-  sr:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 4 L21 8 L17 12"/><path d="M21 8 H9 Q3 8 3 14 Q3 20 9 20 H15"/></svg>`,
-  mod:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12 C4.5 5 7.5 5 9.5 12 C11.5 19 14.5 19 16.5 12 C18.5 5 21 5 22 12"/></svg>`,
-  delay:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><polyline points="12,8 12,12 15.5,14"/><path d="M19 5.5 Q23 12 19 18.5" stroke-opacity=".35"/></svg>`,
-  reverb: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="2.5" fill="currentColor" opacity=".75"/><circle cx="12" cy="12" r="5.5" stroke-opacity=".65"/><circle cx="12" cy="12" r="9" stroke-opacity=".32"/></svg>`,
-  vol:    `<svg viewBox="0 0 24 24"><polygon points="3,9 3,15 8,15 14,20 14,4 8,9" fill="currentColor" opacity=".85"/><path d="M17 9 Q20 12 17 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M20 6.5 Q23.5 12 20 17.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity=".4"/></svg>`,
-};
-
-// Returns the current model/preset name for a block (for display inside the block tile)
-function blockModelName(id, sc) {
-  if (!FW) return '';
-  const d = sc[id];
-  switch (id) {
-    case 'wah':    return FW.wah?.[d.type]?.name || '';
-    case 'comp':   return FW.comp?.[d.type]?.name || '';
-    case 'efx':    return FW.efx?.[d.type]?.name || '';
-    case 'amp':    return FW.amps?.[d.model]?.name || '';
-    case 'ir':     return [...(FW.ir_guitar||[]),...(FW.ir_bass||[])][d.cab]?.name || '';
-    case 'mod':    return FW.mod?.[d.type]?.name || '';
-    case 'delay':  return FW.delay?.[d.type]?.name || '';
-    case 'reverb': return FW.reverb?.[d.type]?.name || '';
-    case 'eq':     return FW.eq?.[d.type]?.name || '10-Band';
-    default:       return '';
-  }
-}
 
 // ═══════════════════════════════════════════════════════════
 // STATE
@@ -1029,7 +761,7 @@ function defaultScene() {
     efx:   { on:false, type:4, gain:40, tone:55, level:75 },
     amp:   { on:true,  model:1, gain:45, bass:55, mid:50, treble:55, presence:45, volume:85 },
     ir:    { on:true,  cab:3, mic:0, mic_pos:50, custom:false },
-    eq:    { on:false, type:2, low:50, lowmid:50, highmid:50, high:50, level:50 },
+    eq:    { on:false, low:50, lowmid:50, highmid:50, high:50, level:50 },
     sr:    { on:false, send:75, return:75 },
     mod:   { on:false, type:0, rate:30, depth:25, mix:30 },
     delay: { on:false, type:1, time:500, feedback:25, mix:20 },
@@ -1050,13 +782,11 @@ async function loadFirmware() {
   const badge = document.getElementById('fw-badge');
   const label = document.getElementById('fw-label');
   FW = FW_BASELINE;
-  badge.className = 'fw-badge checking';
-  badge.textContent = 'Loading…';
-  label.textContent = 'Loading firmware data…';
-  document.getElementById('fw-footer').textContent = 'FW ' + FW.version + ' (embedded)';
+  badge.className = 'fw-badge';
+  badge.textContent = 'FW ' + FW.version;
+  label.textContent = 'Modelos base listos. Buscando actualización...';
+  setFwFooter('FW ' + FW.version + ' (base)');
   render();
-  badge.className = 'fw-badge checking';
-  badge.textContent = 'Loading…';
   try {
     const r = await fetch(FW_URL + '?t=' + Date.now(), { cache:'no-store' });
     if (!r.ok) throw new Error('network');
@@ -1064,14 +794,14 @@ async function loadFirmware() {
     FW = data;
     badge.className = 'fw-badge';
     badge.textContent = 'FW ' + FW.version;
-    label.textContent = 'Firmware data loaded · ' + FW.date + ' · ' + (FW.notes || '');
-    document.getElementById('fw-footer').textContent = 'FW ' + FW.version + ' · ' + FW.date;
+    label.textContent = 'Modelos cargados · ' + FW.date + ' · ' + (FW.notes || '');
+    setFwFooter('FW ' + FW.version + ' · ' + FW.date);
   } catch(e) {
     FW = FW_BASELINE;
     badge.className = 'fw-badge';
     badge.textContent = 'FW ' + FW.version;
-    label.textContent = 'Using embedded data (offline) — click "Check for updates" to refresh';
-    document.getElementById('fw-footer').textContent = 'FW ' + FW.version + ' (embedded)';
+    label.textContent = 'Usando modelos incluidos. Pulsa "Actualizar modelos" para refrescar.';
+    setFwFooter('FW ' + FW.version + ' (embedded)');
   }
   render();
 }
@@ -1081,7 +811,7 @@ async function checkFirmware() {
   const label = document.getElementById('fw-label');
   badge.className = 'fw-badge checking';
   badge.textContent = 'Checking…';
-  label.textContent = 'Fetching firmware data from the page bundle…';
+  label.textContent = 'Buscando modelos actualizados...';
   try {
     const r = await fetch(FW_URL + '?t=' + Date.now(), { cache:'no-store' });
     if (!r.ok) throw new Error('network');
@@ -1091,21 +821,26 @@ async function checkFirmware() {
     if (FW.version !== wasVersion) {
       badge.className = 'fw-badge update';
       badge.textContent = 'FW ' + FW.version + ' ↑';
-      label.textContent = 'Updated! ' + FW.date + ' · ' + (FW.notes || '');
-      flash('Firmware data updated to v' + FW.version);
+      label.textContent = 'Actualizado · ' + FW.date + ' · ' + (FW.notes || '');
+      flash('Modelos actualizados a v' + FW.version);
     } else {
       badge.className = 'fw-badge';
       badge.textContent = 'FW ' + FW.version;
-      label.textContent = 'Up to date · ' + FW.date + ' · ' + (FW.notes || '');
-      flash('Already up to date — FW ' + FW.version);
+      label.textContent = 'Todo al día · ' + FW.date + ' · ' + (FW.notes || '');
+      flash('Ya estaba actualizado · FW ' + FW.version);
     }
-    document.getElementById('fw-footer').textContent = 'FW ' + FW.version + ' · ' + FW.date;
+    setFwFooter('FW ' + FW.version + ' · ' + FW.date);
     render();
   } catch(e) {
     badge.className = 'fw-badge checking';
     badge.textContent = 'Offline';
-    label.textContent = 'Could not reach repository — check connection';
+    label.textContent = 'No se pudo conectar al repositorio.';
   }
+}
+
+function setFwFooter(text) {
+  const el = document.getElementById('fw-footer');
+  if (el) el.textContent = text;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1123,16 +858,11 @@ function renderChain() {
     el.className = 'chain-block' +
       (isOn ? ' active' : '') +
       (b.id === selectedId ? ' selected' : '');
+    el.dataset.block = b.id;
     el.title = b.toggleable
-      ? (isOn ? 'On — click to configure, dblclick to toggle off' : 'Off — click to configure, dblclick to enable')
-      : 'Click to configure';
-    const modelName = blockModelName(b.id, scenes[currentScene]);
-    const tileColor = FW ? modelVisualStyle(b.id, sc).face : b.color;
-    const asset = quickToneAsset(b.id, sc);
-    const icon = asset
-      ? `<img class="block-thumb" src="${asset}" alt="">`
-      : (BLOCK_ICONS[b.id] || '');
-    el.innerHTML = `<div class="block-icon-area" style="--blk-color:${tileColor}">${icon}</div><div class="block-footer">${modelName?`<div class="block-model">${modelName}</div>`:''}<div class="block-label">${b.label}</div><div class="block-led"></div></div>`;
+      ? (isOn ? 'Activo. Clic para editar, doble clic para apagar.' : 'Apagado. Clic para editar, doble clic para encender.')
+      : 'Clic para editar.';
+    el.innerHTML = `<div class="block-label">${b.label}</div><div class="block-dot"></div>`;
     el.addEventListener('click', () => { selectedId = b.id; renderChain(); renderParams(); });
     if (b.toggleable) {
       el.addEventListener('dblclick', e => { e.preventDefault(); toggleBlock(b.id); });
@@ -1144,234 +874,6 @@ function renderChain() {
       strip.appendChild(a);
     }
   });
-}
-
-function quickToneAsset(id, d) {
-  const base = 'assets/quicktone/';
-  if (id === 'wah') {
-    const wahMap = ['pedals/wah-touch-full.png', 'utility/exp-pedal.png', 'utility/exp-pedal.png', 'pedals/wah-touch-full.png', 'utility/volume-pedal.png'];
-    return base + (wahMap[d.type] || 'pedals/wah-touch-full.png');
-  }
-  if (id === 'comp') {
-    const compMap = ['comp/rose.png', 'comp/gray.png', 'comp/studio.png'];
-    return base + (compMap[d.type] || 'comp/rose.png');
-  }
-  if (id === 'gate') return base + (d.on ? 'pedals/smart-gate-full.png' : 'pedals/noise-gate-full.png');
-  if (id === 'efx') {
-    const efxMap = [
-      'efx/dist-plus.png', 'efx/stomp-green.png', 'efx/stomp-green.png',
-      'efx/distortion.png', 'efx/turbo-od.png', 'efx/blu-driver.png',
-      'efx/stomp-green.png', 'efx/eat.png', 'efx/dirt-drive.png',
-      'efx/crunch.png', 'efx/muff.png', 'efx/red-drive.png',
-      'efx/red-drive.png', 'efx/touch-wah.png', 'efx/dirt-drive.png',
-      'efx/stomp-green.png', 'efx/stomp-green.png', 'efx/blu-driver.png',
-      'efx/turbo-od.png'
-    ];
-    return base + (efxMap[d.type] || 'efx/dist-plus.png');
-  }
-  if (id === 'amp') {
-    const idx = Math.max(0, Math.min(26, Number(d.model) || 0));
-    const ampAssetMap = [
-      17, 18, 9, 1, 12, 3, 7, 8, 24, 6, 25, 23, 20, 11,
-      14, 26, 5, 13, 19, 10, 16, 22, 0, 2, 4, 15, 21
-    ];
-    const assetIdx = ampAssetMap[idx] ?? idx;
-    return base + 'amps/amp-' + String(assetIdx).padStart(2, '0') + '.png';
-  }
-  if (id === 'ir') {
-    const cabMap = [
-      'cabs/ag-cab.png', 'cabs/amp-212.png', 'cabs/ag-cab.png', 'cabs/amp-212.png',
-      'cabs/amp-212.png', 'cabs/amp-212.png', 'cabs/amp-212.png', 'cabs/amp-212.png',
-      'cabs/ag-cab.png', 'cabs/sv410.png', 'cabs/sv810.png', 'cabs/amp-212.png'
-    ];
-    return base + (cabMap[d.cab] || 'cabs/amp-212.png');
-  }
-  if (id === 'eq') {
-    const eqMap = ['utility/range-sliders-a.png', 'utility/range-sliders-b.png', 'utility/eq-ten-band-full.png', 'eq-ten-band.png'];
-    return base + (eqMap[d.type] || 'utility/eq-ten-band-full.png');
-  }
-  if (id === 'sr') return base + 'utility/range-sliders-a.png';
-  if (id === 'mod') {
-    const modMap = [
-      'mod/ce1.png', 'mod/chorus.png', 'mod/stereo-chorus.png',
-      'mod/vibrato.png', 'mod/detune.png', 'mod/flanger.png',
-      'mod/phase-90.png', 'mod/phase-90.png', 'mod/detune.png',
-      'mod/phase-90.png', 'mod/tremolo.png', 'mod/rotary.png',
-      'mod/harmonist.png', 'mod/harmonist.png'
-    ];
-    return base + (modMap[d.type] || 'mod/tremolo.png');
-  }
-  if (id === 'delay') {
-    const delayMap = [
-      'delay/delay-pink.png', 'delay/digital-delay.png', 'delay/digital-delay-2.png',
-      'delay/tape-echo.png', 'delay/delay-pink.png', 'delay/pan-delay.png',
-      'delay/duotime.png', 'delay/phi-delay.png'
-    ];
-    return base + (delayMap[d.type] || 'delay/digital-delay.png');
-  }
-  if (id === 'reverb') {
-    const reverbMap = [
-      'reverb/room.png', 'reverb/hall.png', 'reverb/plate.png',
-      'reverb/spring.png', 'reverb/shimmer.png'
-    ];
-    return base + (reverbMap[d.type] || 'reverb/room.png');
-  }
-  if (id === 'vol') return base + 'utility/volume-pedal.png';
-  return '';
-}
-
-function modelVisualStyle(id, d) {
-  const modelName = blockModelName(id, scenes[currentScene]) || id;
-  const s = modelName.toLowerCase();
-  if (id === 'wah') return { kind:'wah', face:'#b98228', trim:'#1c1510', accent:'#e1bd64', shape:'wah' };
-  if (id === 'comp') return s.includes('studio')
-    ? { kind:'rack', face:'#d8c65a', trim:'#262513', accent:'#fff3a4', shape:'rack' }
-    : { kind:'stomp', face:s.includes('keeley') ? '#2f78b8' : '#d3c342', trim:'#181818', accent:'#f2f0c5', shape:'compact' };
-  if (id === 'gate') return { kind:'stomp', face:'#4e5f57', trim:'#151a18', accent:'#89b8a2', shape:'compact' };
-  if (id === 'efx') {
-    if (s.includes('scream') || s.includes('red dirt')) return { kind:'stomp', face:'#23865e', trim:'#151a17', accent:'#d7f5d6', shape:'tube' };
-    if (s.includes('blues')) return { kind:'stomp', face:'#2a68b1', trim:'#101923', accent:'#9cc4ff', shape:'boss' };
-    if (s.includes('muff') || s.includes('fuzz')) return { kind:'stomp', face:'#d8d0b0', trim:'#271f19', accent:'#b63b30', shape:'wide' };
-    if (s.includes('rat') || s.includes('dist one')) return { kind:'stomp', face:'#303033', trim:'#101010', accent:'#f24f38', shape:'flat' };
-    if (s.includes('morning')) return { kind:'stomp', face:'#74b9d6', trim:'#14303a', accent:'#fff2ad', shape:'boutique' };
-    return { kind:'stomp', face:'#b9302d', trim:'#1c1111', accent:'#f0c0ae', shape:'compact' };
-  }
-  if (id === 'amp') {
-    if (s.includes('twin') || s.includes('deluxe') || s.includes('princeton')) return { kind:'amp', face:'#eee7d2', trim:'#202020', grill:'#251f1c', accent:'#caa45f', shape:'combo' };
-    if (s.includes('jc')) return { kind:'amp', face:'#d8d8d8', trim:'#171717', grill:'#1f2630', accent:'#72a4ff', shape:'combo' };
-    if (s.includes('ac')) return { kind:'amp', face:'#ceb57a', trim:'#261b12', grill:'#4a3322', accent:'#b84c28', shape:'combo' };
-    if (s.includes('plexi') || s.includes('jcm') || s.includes('jvm')) return { kind:'amp', face:'#caa15b', trim:'#171717', grill:'#2b241c', accent:'#f4e2a1', shape:'head' };
-    if (s.includes('recto') || s.includes('mark')) return { kind:'amp', face:'#b6b9bc', trim:'#151515', grill:'#202326', accent:'#ff4d36', shape:'head' };
-    if (s.includes('orange') || s.includes('rockerverb')) return { kind:'amp', face:'#e5682a', trim:'#21130c', grill:'#332014', accent:'#ffe2b0', shape:'head' };
-    if (s.includes('svt') || s.includes('b-15')) return { kind:'amp', face:'#353b40', trim:'#101010', grill:'#1b1f22', accent:'#5fd0ff', shape:'bass' };
-    return { kind:'amp', face:'#315faf', trim:'#10151f', grill:'#222934', accent:'#b9d8ff', shape:'head' };
-  }
-  if (id === 'ir') return { kind:'cab', face:'#3e2b62', trim:'#15101d', grill:'#231b2d', accent:'#b89cff', shape:'cab' };
-  if (id === 'eq') return { kind:'rack', face:'#187880', trim:'#101819', accent:'#87eff5', shape:'eq' };
-  if (id === 'sr') return { kind:'rack', face:'#315f36', trim:'#101710', accent:'#8ee694', shape:'loop' };
-  if (id === 'mod') return { kind:'stomp', face:'#6130a8', trim:'#171120', accent:'#d6bbff', shape:'wide' };
-  if (id === 'delay') return { kind:'stomp', face:'#1267a8', trim:'#101722', accent:'#a7ddff', shape:'wide' };
-  if (id === 'reverb') return { kind:'stomp', face:'#26327e', trim:'#101326', accent:'#b9c7ff', shape:'wide' };
-  return { kind:'utility', face:'#3c3c3c', trim:'#171717', accent:'#d0d0d0', shape:'vol' };
-}
-
-function getBlockSVG(id, sc) {
-  const d = sc[id];
-  const asset = quickToneAsset(id, d);
-  if (asset) {
-    return `<img class="qt-asset-img qt-asset-${id}" src="${asset}" alt="${esc(blockModelName(id, sc) || id)}">`;
-  }
-  const v = modelVisualStyle(id, d);
-  const name = esc(blockModelName(id, sc) || CHAIN.find(b => b.id === id).label);
-  const face = v.face, trim = v.trim, accent = v.accent, grill = v.grill || '#222';
-  const screw = `<circle cx="20" cy="18" r="2" fill="rgba(255,255,255,.35)"/><circle cx="180" cy="18" r="2" fill="rgba(255,255,255,.35)"/><circle cx="20" cy="112" r="2" fill="rgba(0,0,0,.35)"/><circle cx="180" cy="112" r="2" fill="rgba(0,0,0,.35)"/>`;
-
-  if (v.kind === 'amp') {
-    const head = v.shape === 'head' || v.shape === 'bass';
-    return `<svg viewBox="0 0 200 130" role="img" aria-label="${name}">
-      <defs><linearGradient id="ampg-${id}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="rgba(255,255,255,.24)"/><stop offset=".35" stop-color="${face}"/><stop offset="1" stop-color="rgba(0,0,0,.38)"/></linearGradient></defs>
-      <rect x="10" y="${head?20:12}" width="180" height="${head?52:106}" rx="7" fill="${trim}"/>
-      <rect x="18" y="${head?28:20}" width="164" height="${head?36:38}" rx="3" fill="url(#ampg-${id})"/>
-      <g fill="${trim}">${[0,1,2,3,4,5].map((_,i)=>`<circle cx="${54+i*18}" cy="${head?46:39}" r="4"/>`).join('')}</g>
-      <rect x="28" y="${head?38:31}" width="32" height="8" rx="1" fill="${accent}" opacity=".8"/>
-      <text x="100" y="${head?50:43}" text-anchor="middle" font-family="monospace" font-size="8" fill="${trim}" opacity=".7">${name.slice(0,18)}</text>
-      ${head ? `<rect x="22" y="82" width="156" height="36" rx="4" fill="${grill}"/><path d="M28 88H172M28 96H172M28 104H172M28 112H172" stroke="rgba(255,255,255,.12)" stroke-width="1"/>` : `<rect x="18" y="62" width="164" height="48" rx="3" fill="${grill}"/><circle cx="72" cy="86" r="18" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="3"/><circle cx="128" cy="86" r="18" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="3"/>`}
-      ${screw}
-    </svg>`;
-  }
-
-  if (v.kind === 'cab') {
-    return `<svg viewBox="0 0 200 130" role="img" aria-label="${name}">
-      <rect x="24" y="18" width="152" height="96" rx="7" fill="${trim}"/>
-      <rect x="34" y="28" width="132" height="76" rx="3" fill="${grill}"/>
-      <path d="M40 36H160M40 46H160M40 56H160M40 66H160M40 76H160M40 86H160M40 96H160" stroke="rgba(255,255,255,.13)" stroke-width="1"/>
-      <circle cx="76" cy="66" r="23" fill="none" stroke="${accent}" stroke-opacity=".35" stroke-width="4"/>
-      <circle cx="124" cy="66" r="23" fill="none" stroke="${accent}" stroke-opacity=".35" stroke-width="4"/>
-      <rect x="73" y="108" width="54" height="7" rx="2" fill="${face}"/>
-      ${screw}
-    </svg>`;
-  }
-
-  if (v.kind === 'rack') {
-    return `<svg viewBox="0 0 200 130" role="img" aria-label="${name}">
-      <rect x="16" y="36" width="168" height="58" rx="5" fill="${trim}"/>
-      <rect x="26" y="45" width="148" height="40" rx="3" fill="${face}"/>
-      <text x="44" y="68" font-family="monospace" font-size="10" fill="${accent}" opacity=".9">${name.slice(0,13)}</text>
-      ${[0,1,2,3,4].map((_,i)=>`<line x1="${112+i*9}" y1="79" x2="${112+i*9}" y2="${61+i%3*4}" stroke="${accent}" stroke-width="3" stroke-linecap="round"/>`).join('')}
-      <circle cx="164" cy="65" r="5" fill="${accent}"/>
-      ${screw}
-    </svg>`;
-  }
-
-  if (v.kind === 'wah') {
-    return `<svg viewBox="0 0 200 130" role="img" aria-label="${name}">
-      <path d="M62 112L88 20H142L164 112Z" fill="${trim}"/>
-      <path d="M76 102L98 31H133L151 102Z" fill="${face}"/>
-      <path d="M92 44H137M88 58H141M84 72H145M80 86H149" stroke="rgba(255,255,255,.22)" stroke-width="4" stroke-linecap="round"/>
-      <circle cx="112" cy="110" r="7" fill="${accent}"/>
-    </svg>`;
-  }
-
-  if (v.kind === 'utility') {
-    return `<svg viewBox="0 0 200 130" role="img" aria-label="${name}">
-      <rect x="44" y="24" width="112" height="86" rx="8" fill="${trim}"/>
-      <circle cx="100" cy="65" r="31" fill="${face}" stroke="rgba(255,255,255,.18)" stroke-width="2"/>
-      <path d="M100 36V66L120 78" stroke="${accent}" stroke-width="5" stroke-linecap="round"/>
-      ${screw}
-    </svg>`;
-  }
-
-  const w = v.shape === 'wide' ? 128 : 98;
-  const x = (200 - w) / 2;
-  const pedalRx = v.shape === 'boss' ? 14 : 6;
-  const foot = v.shape === 'boss'
-    ? `<rect x="${x+10}" y="78" width="${w-20}" height="24" rx="5" fill="${trim}" opacity=".9"/><path d="M${x+16} 86H${x+w-16}M${x+16} 94H${x+w-16}" stroke="rgba(255,255,255,.12)"/>`
-    : `<circle cx="100" cy="92" r="11" fill="${trim}" stroke="rgba(255,255,255,.18)" stroke-width="2"/>`;
-  return `<svg viewBox="0 0 200 130" role="img" aria-label="${name}">
-    <defs><linearGradient id="pedg-${id}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="rgba(255,255,255,.24)"/><stop offset=".25" stop-color="${face}"/><stop offset="1" stop-color="rgba(0,0,0,.28)"/></linearGradient></defs>
-    <rect x="${x}" y="18" width="${w}" height="94" rx="${pedalRx}" fill="${trim}"/>
-    <rect x="${x+8}" y="26" width="${w-16}" height="78" rx="${Math.max(3,pedalRx-5)}" fill="url(#pedg-${id})"/>
-    <text x="100" y="48" text-anchor="middle" font-family="monospace" font-size="10" font-weight="700" fill="${trim}" opacity=".78">${name.slice(0,16)}</text>
-    ${[0,1,2].map((_,i)=>`<circle cx="${100+(i-1)*26}" cy="64" r="8" fill="${trim}"/><line x1="${100+(i-1)*26}" y1="64" x2="${100+(i-1)*26}" y2="57" stroke="${accent}" stroke-width="2" stroke-linecap="round"/>`).join('')}
-    ${foot}
-    <circle cx="${x+w-17}" cy="35" r="4" fill="${accent}" filter="drop-shadow(0 0 4px ${accent})"/>
-    ${screw}
-  </svg>`;
-}
-
-function _knobAngle(norm) {
-  const deg = -225 + norm * 270;
-  const rad = deg * Math.PI / 180;
-  const cx = 27, cy = 27, r = 18;
-  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
-}
-
-function _knobSVG(id, norm) {
-  const p = _knobAngle(norm);
-  const ticks = [-225, -90, 45].map(deg => {
-    const r = deg * Math.PI / 180;
-    const x1 = 27 + 23 * Math.cos(r), y1 = 27 + 23 * Math.sin(r);
-    const x2 = 27 + 26 * Math.cos(r), y2 = 27 + 26 * Math.sin(r);
-    return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="rgba(255,255,255,.25)" stroke-width="1.5"/>`;
-  }).join('');
-  const arcPath = `M ${(27 + 20 * Math.cos(-225*Math.PI/180)).toFixed(2)} ${(27 + 20 * Math.sin(-225*Math.PI/180)).toFixed(2)} A 20 20 0 1 1 ${(27 + 20 * Math.cos(45*Math.PI/180)).toFixed(2)} ${(27 + 20 * Math.sin(45*Math.PI/180)).toFixed(2)}`;
-  return `<svg id="${id}" class="knob-svg" viewBox="0 0 54 54" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="27" cy="27" r="20" fill="#2a2a2a" stroke="rgba(255,255,255,.12)" stroke-width="1.5"/>
-    <path d="${arcPath}" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="2" stroke-linecap="round"/>
-    ${ticks}
-    <line id="${id}-ind" x1="27" y1="27" x2="${p.x.toFixed(2)}" y2="${p.y.toFixed(2)}" stroke="var(--led-on)" stroke-width="2.5" stroke-linecap="round"/>
-    <circle cx="27" cy="27" r="12" fill="#1e1e1e"/>
-  </svg>`;
-}
-
-function updateKnob(key, v, min, max) {
-  const ind = document.getElementById('knob-' + key + '-ind');
-  if (!ind) return;
-  const p = _knobAngle((v - min) / (max - min));
-  ind.setAttribute('x2', p.x.toFixed(2));
-  ind.setAttribute('y2', p.y.toFixed(2));
-  const val = document.getElementById('kv-' + key);
-  if (val) val.textContent = v;
 }
 
 function renderParams() {
@@ -1388,60 +890,60 @@ function renderParams() {
         <span class="params-block-name">${chain.label}</span>
       </div>
       ${chain.toggleable ? `<button class="toggle-btn ${isOn?'on':''}" onclick="toggleBlock('${selectedId}')">
-        ${isOn ? '● On' : '○ Off'}</button>` : ''}
+        ${isOn ? '● Activo' : '○ Apagado'}</button>` : ''}
     </div>`;
 
-  const knob = (key, label, min, max, step=1) => {
-    const v = d[key] !== undefined ? d[key] : min;
-    const norm = (v - min) / (max - min);
-    return `<div class="knob-unit">
-      <div class="knob-wrap">
-        ${_knobSVG('knob-'+key, norm)}
-        <input type="range" class="knob-input" min="${min}" max="${max}" step="${step}" value="${v}"
-          oninput="sp('${selectedId}','${key}',+this.value);updateKnob('${key}',+this.value,${min},${max})">
-      </div>
-      <div class="knob-value" id="kv-${key}">${v}</div>
-      <div class="knob-label">${label}</div>
+  const slider = (key, label, min, max, step=1, extraClass='') => {
+    const v = d[key];
+    return `<div class="pr${extraClass?' '+extraClass:''}">
+      <label class="pl">${label}<span id="pv-${key}">${v}</span></label>
+      <input type="range" min="${min}" max="${max}" step="${step}" value="${v}"
+        oninput="sp('${selectedId}','${key}',+this.value,'pv-${key}')">
     </div>`;
   };
 
-  const sel = (key, label, list) => {
+  const sel = (key, label, list, extraClass='') => {
     const opts = list.map(x =>
       `<option value="${x.id}" ${d[key]===x.id?'selected':''}>${x.name}${x.ref?' — '+x.ref:''}</option>`
     ).join('');
-    return `<div class="select-stack">
-      <label>${label}</label>
-      <select class="ps" onchange="sp('${selectedId}','${key}',+this.value);render()">${opts}</select>
+    return `<div class="pr${extraClass?' '+extraClass:''}">
+      <label class="pl">${label}</label>
+      <select class="ps" onchange="sp('${selectedId}','${key}',+this.value)">${opts}</select>
     </div>`;
   };
 
-  const modelName = blockModelName(selectedId, sc) || chain.label;
-  const artCol = `<div class="params-art">${getBlockSVG(selectedId, sc)}<div class="params-art-name">${esc(modelName)}</div></div>`;
-  let controls = '';
+  let body = '';
 
   switch (selectedId) {
     case 'wah':
-      controls = `<div style="display:flex;flex-direction:column;gap:.8rem">
-        ${sel('type','Model',FW.wah)}
-        <div class="knob-row">${knob('pos','Sweep',0,100)}</div>
+      body = `<div class="pg">
+        ${sel('type','Modelo',FW.wah,'full')}
+        ${slider('pos','Expression / Sweep',0,100)}
       </div>`;
       break;
 
     case 'comp':
-      controls = `<div style="display:flex;flex-direction:column;gap:.8rem">
-        ${sel('type','Model',FW.comp)}
-        <div class="knob-row">${knob('sustain','Sustain',0,100)}${knob('attack','Attack',0,100)}${knob('level','Level',0,100)}</div>
+      body = `<div class="pg">
+        ${sel('type','Modelo',FW.comp,'full')}
+        ${slider('sustain','Sustain',0,100)}
+        ${slider('attack','Attack',0,100)}
+        ${slider('level','Nivel',0,100)}
       </div>`;
       break;
 
     case 'gate':
-      controls = `<div class="knob-row">${knob('threshold','Thresh',0,100)}${knob('release','Release',0,100)}</div>`;
+      body = `<div class="pg">
+        ${slider('threshold','Umbral',0,100)}
+        ${slider('release','Release',0,100)}
+      </div>`;
       break;
 
     case 'efx':
-      controls = `<div style="display:flex;flex-direction:column;gap:.8rem">
-        ${sel('type','Model',FW.efx)}
-        <div class="knob-row">${knob('gain','Drive',0,100)}${knob('tone','Tone',0,100)}${knob('level','Level',0,100)}</div>
+      body = `<div class="pg">
+        ${sel('type','Modelo',FW.efx,'full')}
+        ${slider('gain','Ganancia / Drive',0,100)}
+        ${slider('tone','Tono',0,100)}
+        ${slider('level','Nivel',0,100)}
       </div>`;
       break;
 
@@ -1459,70 +961,90 @@ function renderParams() {
           ? `<option disabled>${x.label}</option>`
           : `<option value="${x.id}" ${d.model===x.id?'selected':''}>${x.name} — ${x.ref}</option>`
       ).join('');
-      controls = `<div style="display:flex;flex-direction:column;gap:.8rem">
-        <div class="select-stack">
-          <label>Model</label>
-          <select class="ps" onchange="sp('amp','model',+this.value);render()">${opts}</select>
+      body = `<div class="pg">
+        <div class="pr full"><label class="pl">Modelo</label>
+          <select class="ps" onchange="sp('amp','model',+this.value)">${opts}</select>
         </div>
-        <div class="knob-row">${knob('gain','Gain',0,100)}${knob('bass','Bass',0,100)}${knob('mid','Mid',0,100)}${knob('treble','Treble',0,100)}${knob('presence','Pres',0,100)}${knob('volume','Master',0,100)}</div>
+        ${slider('gain','Ganancia',0,100)}
+        ${slider('bass','Bass',0,100)}
+        ${slider('mid','Mid',0,100)}
+        ${slider('treble','Treble',0,100)}
+        ${slider('presence','Presence',0,100)}
+        ${slider('volume','Volumen master',0,100)}
       </div>`;
       break;
     }
 
     case 'ir': {
       const cabList = [...FW.ir_guitar, ...(FW.ir_bass||[])];
-      controls = `<div style="display:flex;flex-direction:column;gap:.8rem">
-        ${sel('cab','Cabinet',cabList)}
-        <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end">
-          ${sel('mic','Mic',FW.ir_mics)}
-          ${knob('mic_pos','Mic Pos',0,100)}
-        </div>
-        <div class="params-note">Custom IRs (slots 9-128) can be loaded in QuickTone directly.</div>
+      body = `<div class="pg">
+        ${sel('cab','Pantalla / IR',cabList,'full')}
+        ${sel('mic','Micro',FW.ir_mics)}
+        ${slider('mic_pos','Posición micro',0,100)}
+      </div>
+      <div style="margin-top:.7rem;font-family:var(--mono);font-size:10px;color:var(--dim)">
+        Los IRs personalizados se cargan directamente en QuickTone.
       </div>`;
       break;
     }
 
     case 'eq':
-      controls = `<div style="display:flex;flex-direction:column;gap:.8rem">
-        ${sel('type','Type',FW.eq || FW_BASELINE.eq)}
-        <div class="knob-row">${knob('low','Low',0,100)}${knob('lowmid','Lo Mid',0,100)}${knob('highmid','Hi Mid',0,100)}${knob('high','High',0,100)}${knob('level','Level',0,100)}</div>
+      body = `<div class="pg w3">
+        ${slider('low','Low',0,100)}
+        ${slider('lowmid','Low Mid',0,100)}
+        ${slider('highmid','High Mid',0,100)}
+        ${slider('high','High',0,100)}
+        ${slider('level','Nivel',0,100)}
       </div>`;
       break;
 
     case 'sr':
-      controls = `<div class="knob-row">${knob('send','Send',0,100)}${knob('return','Return',0,100)}</div><div class="params-note">Insert point for external gear.</div>`;
+      body = `<div class="pg">
+        ${slider('send','Nivel send',0,100)}
+        ${slider('return','Nivel return',0,100)}
+      </div>
+      <div style="margin-top:.7rem;font-family:var(--mono);font-size:10px;color:var(--dim)">
+        Punto de inserción para equipo externo.
+      </div>`;
       break;
 
     case 'mod':
-      controls = `<div style="display:flex;flex-direction:column;gap:.8rem">
-        ${sel('type','Type',FW.mod)}
-        <div class="knob-row">${knob('rate','Rate',0,100)}${knob('depth','Depth',0,100)}${knob('mix','Mix',0,100)}</div>
+      body = `<div class="pg">
+        ${sel('type','Tipo',FW.mod,'full')}
+        ${slider('rate','Rate',0,100)}
+        ${slider('depth','Depth',0,100)}
+        ${slider('mix','Mix',0,100)}
       </div>`;
       break;
 
     case 'delay':
-      controls = `<div style="display:flex;flex-direction:column;gap:.8rem">
-        ${sel('type','Type',FW.delay)}
-        <div class="knob-row">${knob('time','Time',10,2000,10)}${knob('feedback','Fdbk',0,100)}${knob('mix','Mix',0,100)}</div>
+      body = `<div class="pg">
+        ${sel('type','Tipo',FW.delay,'full')}
+        ${slider('time','Time (ms)',10,2000,10)}
+        ${slider('feedback','Feedback',0,100)}
+        ${slider('mix','Mix',0,100)}
       </div>`;
       break;
 
     case 'reverb':
-      controls = `<div style="display:flex;flex-direction:column;gap:.8rem">
-        ${sel('type','Type',FW.reverb)}
-        <div class="knob-row">${knob('decay','Decay',0,100)}${knob('mix','Mix',0,100)}</div>
+      body = `<div class="pg">
+        ${sel('type','Tipo',FW.reverb,'full')}
+        ${slider('decay','Decay',0,100)}
+        ${slider('mix','Mix',0,100)}
       </div>`;
       break;
 
     case 'vol':
-      controls = `<div class="knob-row">${knob('volume','Output',0,100)}</div>`;
+      body = `<div class="pg w1">
+        ${slider('volume','Volumen salida',0,100)}
+      </div>`;
       break;
 
     default:
-      controls = `<div class="pempty">Select a block to configure.</div>`;
+      body = `<div class="pempty">Selecciona un bloque para editar.</div>`;
   }
 
-  panel.innerHTML = artCol + `<div class="params-controls">${head()}${controls}</div>`;
+  panel.innerHTML = head() + body;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1546,81 +1068,141 @@ function sp(block, key, val, displayId) {
 function copyScenes() {
   scenes[1] = JSON.parse(JSON.stringify(scenes[0]));
   scenes[2] = JSON.parse(JSON.stringify(scenes[0]));
-  flash('Scene A copied to B and C');
+  flash('Escena A copiada a B y C');
 }
-function resetCurrentPatch() {
-  scenes = [defaultScene(), defaultScene(), defaultScene()];
-  currentScene = 0;
-  selectedId = 'amp';
-  document.getElementById('pname').value = 'EG-CLN-SOUL_v1';
-  document.querySelectorAll('.scene-btn').forEach((b,i) => b.classList.toggle('active', i===0));
-  render();
-  flash('New patch started');
-}
-function exportCurrentPatch() {
-  const name = document.getElementById('pname').value.trim() || 'preset';
-  downloadBytes(buildPatchFile(scenes, name), san(name)+'.mg30patch');
-  flash(`Exported "${name}"`);
-}
-function backupSession() {
-  const enc = new TextEncoder();
-  const name = 'MG30_Backup_' + new Date().toISOString().slice(0,10);
-  downloadBytes(enc.encode(JSON.stringify({
-    format: 'optionalganesh-mg30-backup',
-    exportedAt: new Date().toISOString(),
-    currentPreset: document.getElementById('pname').value.trim() || 'preset',
-    currentScenes: scenes,
-    pack: packManifest()
-  }, null, 2)), name + '.json');
-  flash('Backup exported');
-}
-function showUtility(kind) {
-  const modal = document.getElementById('utility-modal');
-  const title = document.getElementById('utility-title');
-  const body = document.getElementById('utility-body');
-  const cabCount = (FW?.ir_guitar?.length || 0) + (FW?.ir_bass?.length || 0);
-  const content = {
-    ir: {
-      title: 'IR Loader',
-      body: `Built-in cabinet slots: ${cabCount}. Mic models: ${FW?.ir_mics?.length || 0}. Custom IR loader slots are preserved in the exported manifest; load third-party IR WAV files on the hardware through QuickTone.`
-    },
-    usb: {
-      title: 'USB Routing',
-      body: 'QuickTone routing modes include Normal, Loopback, Reamp, and Dry Out. This builder keeps the patch data focused on the MG-30 scene/chain values and records the session state in backups.'
-    }
-  }[kind] || { title:'QuickTone', body:'Utility ready.' };
-  title.textContent = content.title;
-  body.textContent = content.body;
-  modal.classList.add('show');
-}
-function closeUtility() {
-  document.getElementById('utility-modal').classList.remove('show');
+function focusBuilder() {
+  document.querySelector('.builder')?.scrollIntoView({ behavior:'smooth', block:'start' });
+  flash('Elige una escena y toca la cadena');
 }
 
 // ═══════════════════════════════════════════════════════════
 // PACK
 // ═══════════════════════════════════════════════════════════
+function recipeMeta() {
+  return {
+    name: document.getElementById('pname').value.trim() || 'preset',
+    song: document.getElementById('song-title').value.trim(),
+    context: document.getElementById('guitar-context').value.trim(),
+    targetSlot: document.getElementById('target-slot').value.trim(),
+    sceneNotes: [
+      document.getElementById('scene-a-note').value.trim() || 'Escena A',
+      document.getElementById('scene-b-note').value.trim() || 'Escena B',
+      document.getElementById('scene-c-note').value.trim() || 'Escena C'
+    ],
+    notes: document.getElementById('performance-notes').value.trim()
+  };
+}
+
+function applyRecipeMeta(meta = {}) {
+  document.getElementById('pname').value = meta.name || 'preset';
+  document.getElementById('song-title').value = meta.song || '';
+  document.getElementById('guitar-context').value = meta.context || '';
+  document.getElementById('target-slot').value = meta.targetSlot || '';
+  document.getElementById('scene-a-note').value = meta.sceneNotes?.[0] || '';
+  document.getElementById('scene-b-note').value = meta.sceneNotes?.[1] || '';
+  document.getElementById('scene-c-note').value = meta.sceneNotes?.[2] || '';
+  document.getElementById('performance-notes').value = meta.notes || '';
+}
+
+function modelName(list, id) {
+  return list?.find(x => x.id === id)?.name || String(id);
+}
+
+function blockRecipe(sc, id) {
+  const data = FW || FW_BASELINE;
+  const d = sc[id];
+  if (!d) return '';
+  const on = CHAIN.find(b => b.id === id)?.toggleable ? (d.on ? 'on' : 'off') : 'on';
+  if (id === 'wah') return `WAH ${on}: ${modelName(data.wah, d.type)} · sweep ${d.pos}`;
+  if (id === 'comp') return `COMP ${on}: ${modelName(data.comp, d.type)} · sustain ${d.sustain} · attack ${d.attack} · level ${d.level}`;
+  if (id === 'gate') return `GATE ${on}: threshold ${d.threshold} · release ${d.release}`;
+  if (id === 'efx') return `EFX ${on}: ${modelName(data.efx, d.type)} · gain ${d.gain} · tone ${d.tone} · level ${d.level}`;
+  if (id === 'amp') return `AMP: ${modelName(data.amps, d.model)} · gain ${d.gain} · bass ${d.bass} · mid ${d.mid} · treble ${d.treble} · presence ${d.presence} · master ${d.volume}`;
+  if (id === 'ir') {
+    const cabs = [...(data.ir_guitar || []), ...(data.ir_bass || [])];
+    return `CAB/IR: ${modelName(cabs, d.cab)} · mic ${modelName(data.ir_mics, d.mic)} · position ${d.mic_pos}`;
+  }
+  if (id === 'eq') return `EQ ${on}: low ${d.low} · low mid ${d.lowmid} · high mid ${d.highmid} · high ${d.high} · level ${d.level}`;
+  if (id === 'sr') return `S/R ${on}: send ${d.send} · return ${d.return}`;
+  if (id === 'mod') return `MOD ${on}: ${modelName(data.mod, d.type)} · rate ${d.rate} · depth ${d.depth} · mix ${d.mix}`;
+  if (id === 'delay') return `DELAY ${on}: ${modelName(data.delay, d.type)} · ${d.time}ms · feedback ${d.feedback} · mix ${d.mix}`;
+  if (id === 'reverb') return `REVERB ${on}: ${modelName(data.reverb, d.type)} · decay ${d.decay} · mix ${d.mix}`;
+  if (id === 'vol') return `VOL: output ${d.volume}`;
+  return '';
+}
+
+function sceneSummary(sc) {
+  const data = FW || FW_BASELINE;
+  return [
+    modelName(data.amps, sc.amp.model),
+    [...(data.ir_guitar || []), ...(data.ir_bass || [])].find(x => x.id === sc.ir.cab)?.name || 'Cab',
+    sc.efx.on ? modelName(data.efx, sc.efx.type) : '',
+    sc.delay.on ? modelName(data.delay, sc.delay.type) : '',
+    sc.reverb.on ? modelName(data.reverb, sc.reverb.type) : ''
+  ].filter(Boolean).join(' / ');
+}
+
+function recipeObject(meta = recipeMeta(), sceneList = scenes) {
+  return {
+    format: 'optionalganesh-mg30-tone-recipe',
+    version: 1,
+    createdAt: new Date().toISOString(),
+    firmware: FW ? { version: FW.version, date: FW.date } : null,
+    meta,
+    chain: CHAIN.map(b => b.label),
+    scenes: sceneList.map((sc, i) => ({
+      label: ['A', 'B', 'C'][i],
+      role: meta.sceneNotes?.[i] || `Escena ${['A', 'B', 'C'][i]}`,
+      summary: sceneSummary(sc),
+      blocks: CHAIN.map(b => blockRecipe(sc, b.id)),
+      raw: sc
+    }))
+  };
+}
+
+function recipeText(recipe) {
+  const m = recipe.meta;
+  const lines = [
+    `MG-30 Receta de tono`,
+    `================`,
+    ``,
+    `Preset: ${m.name}`,
+    `Cancion / uso: ${m.song || '-'}`,
+    `Guitarra / contexto: ${m.context || '-'}`,
+    `Slot MG-30: ${m.targetSlot || '-'}`,
+    `Firmware de referencia: ${recipe.firmware ? `${recipe.firmware.version} · ${recipe.firmware.date}` : '-'}`,
+    ``,
+    `Flujo: recrea estos ajustes en QuickTone y verifica en el hardware antes de usarlo en directo.`,
+    ``
+  ];
+  recipe.scenes.forEach(scene => {
+    lines.push(`Escena ${scene.label}: ${scene.role}`);
+    lines.push(`Resumen: ${scene.summary}`);
+    scene.blocks.forEach(block => lines.push(`- ${block}`));
+    lines.push('');
+  });
+  if (m.notes) lines.push(`Notas para tocar:\n${m.notes}\n`);
+  return lines.join('\n');
+}
+
 function addToPack() {
-  const input = document.getElementById('pname');
-  const name = uniquePackName(input.value.trim() || 'preset');
-  const snapshot = JSON.parse(JSON.stringify(scenes));
-  pack.push({ id: Date.now().toString(36), name, summary: sceneSummary(snapshot[0]), scenes: snapshot });
-  input.value = nextPresetName(name);
+  const meta = recipeMeta();
+  pack.push({ meta, scenes: JSON.parse(JSON.stringify(scenes)) });
   renderPack();
-  flash(`"${name}" added · ${sceneSummary(snapshot[0])}`);
+  flash(`"${meta.name}" añadido al setlist`);
 }
 function removeFromPack(i) { pack.splice(i,1); renderPack(); }
 function loadFromPack(i) {
   scenes = JSON.parse(JSON.stringify(pack[i].scenes));
-  document.getElementById('pname').value = pack[i].name;
+  applyRecipeMeta(pack[i].meta);
   currentScene = 0;
   document.querySelectorAll('.scene-btn').forEach((b,j) => b.classList.toggle('active', j===0));
   render();
-  flash(`"${pack[i].name}" loaded`);
+  flash(`"${pack[i].meta.name}" loaded`);
 }
 function dlSingle(i) {
   const item = pack[i];
-  downloadBytes(buildPatchFile(item.scenes, item.name), san(item.name)+'.mg30patch');
+  downloadBytes(buildPatchFile(item.scenes, item.meta.name), san(item.meta.name)+'.mg30patch');
 }
 function renderPack() {
   const list = document.getElementById('pack-list');
@@ -1628,14 +1210,14 @@ function renderPack() {
   const btn  = document.getElementById('exp-btn');
   cnt.textContent = `${pack.length} preset${pack.length!==1?'s':''}`;
   btn.disabled = pack.length === 0;
-  if (!pack.length) { list.innerHTML='<div class="pack-empty">No presets yet.</div>'; return; }
+  if (!pack.length) { list.innerHTML='<div class="pack-empty">Aún no hay presets.</div>'; return; }
   list.innerHTML = pack.map((item,i) => `
     <div class="pack-item">
       <div class="pi-main">
-        <span class="pi-name">${esc(item.name)}</span>
-        <span class="pi-summary">${esc(item.summary || sceneSummary(item.scenes[0]))}</span>
+        <span class="pi-name">${esc(item.meta.name)}</span>
+        <span class="pi-meta">${esc([item.meta.song, item.meta.targetSlot, item.meta.sceneNotes?.join(' / ')].filter(Boolean).join(' · '))}</span>
       </div>
-      <div class="pi-scenes" title="Scenes A B C">
+      <div class="pi-scenes" title="Escenas A B C">
         <div class="pi-dot" style="opacity:.8"></div>
         <div class="pi-dot" style="opacity:.5"></div>
         <div class="pi-dot" style="opacity:.3"></div>
@@ -1645,56 +1227,41 @@ function renderPack() {
       <button class="pi-btn del" onclick="removeFromPack(${i})">✕</button>
     </div>`).join('');
 }
-function exportPack() {
-  if (!pack.length) { flash('Add a preset before exporting a pack'); return; }
+function exportToneSheet() {
+  const recipe = recipeObject();
   const enc = new TextEncoder();
-  const files = pack.map(item => ({
-    name: san(item.name)+'.mg30patch',
-    data: buildPatchFile(item.scenes, item.name)
+  downloadBytes(enc.encode(recipeText(recipe)), san(recipe.meta.name) + '_tone-sheet.txt');
+  flash('Receta exportada');
+}
+function exportRecipeJson() {
+  const recipe = recipeObject();
+  const enc = new TextEncoder();
+  downloadBytes(enc.encode(JSON.stringify(recipe, null, 2)), san(recipe.meta.name) + '_recipe.json');
+  flash('JSON de receta exportado');
+}
+function exportPackNotes() {
+  if (!pack.length) return;
+  const recipes = pack.map(item => recipeObject(item.meta, item.scenes));
+  const files = recipes.map(recipe => ({
+    name: san(recipe.meta.name) + '_tone-sheet.txt',
+    data: new TextEncoder().encode(recipeText(recipe))
   }));
   files.push({
-    name: 'MG30_Pack_manifest.json',
-    data: enc.encode(JSON.stringify(packManifest(), null, 2))
+    name: 'MG30_Tone_Planner_Pack.json',
+    data: new TextEncoder().encode(JSON.stringify({
+      format: 'optionalganesh-mg30-tone-planner-pack',
+      exportedAt: new Date().toISOString(),
+      count: recipes.length,
+      recipes
+    }, null, 2))
   });
-  downloadBytes(createZip(files), 'MG30_Pack.zip');
-  flash(`Exported ${pack.length} patches`);
+  downloadBytes(createZip(files), 'MG30_Tone_Planner_Pack.zip');
+  flash(`${pack.length} recetas exportadas`);
 }
-function sceneSummary(sc) {
-  const parts = [
-    blockModelName('amp', sc) || 'Amp',
-    blockModelName('ir', sc) || 'Cab'
-  ];
-  ['efx','mod','delay','reverb'].forEach(id => {
-    if (sc[id]?.on) parts.push(blockModelName(id, sc) || id.toUpperCase());
-  });
-  return parts.join(' · ');
-}
-function packManifest() {
-  return {
-    format: 'optionalganesh-mg30-pack',
-    exportedAt: new Date().toISOString(),
-    firmware: FW ? { version: FW.version, date: FW.date } : null,
-    presets: pack.map((item, index) => ({
-      index: index + 1,
-      name: item.name,
-      file: san(item.name)+'.mg30patch',
-      summary: item.summary || sceneSummary(item.scenes[0]),
-      scenes: item.scenes
-    }))
-  };
-}
-function uniquePackName(name) {
-  const used = new Set(pack.map(item => item.name.toLowerCase()));
-  if (!used.has(name.toLowerCase())) return name;
-  let n = 2;
-  while (used.has(`${name}_${n}`.toLowerCase())) n++;
-  return `${name}_${n}`;
-}
-function nextPresetName(name) {
-  const m = name.match(/^(.*?)(?:_v(\d+))?$/);
-  const root = (m && m[1]) ? m[1].replace(/_\d+$/, '') : name;
-  const next = (m && m[2]) ? Number(m[2]) + 1 : 2;
-  return `${root}_v${next}`;
+function exportExperimentalPatch() {
+  const meta = recipeMeta();
+  downloadBytes(buildPatchFile(scenes, meta.name), san(meta.name)+'.mg30patch');
+  flash('.mg30patch experimental exportado');
 }
 function flash(msg) {
   const el = document.getElementById('pack-status');
@@ -1729,9 +1296,9 @@ function parseSceneBytes(buf, off, idx) {
   sc.amp.volume   = cl(b(0x1b)); sc.amp.presence= cl(b(0x23));
   sc.comp.on      = b(0x28)!==0; sc.comp.sustain= cl(b(0x29)); sc.comp.attack=cl(b(0x2b));
   sc.gate.on      = b(0x36)!==0; sc.gate.threshold=cl(b(0x37)); sc.gate.release=cl(b(0x3b));
-  sc.efx.on       = b(0x3d)!==0; sc.efx.type=cl(b(0x3e),0,(FW?.efx?.length||14)-1); sc.efx.gain=cl(b(0x3f));
+  sc.efx.on       = b(0x3d)!==0; sc.efx.type=cl(b(0x3e),0,13); sc.efx.gain=cl(b(0x3f));
   sc.efx.tone     = cl(b(0x40)); sc.efx.level=cl(b(0x41));
-  sc.mod.on       = b(0x42)!==0; sc.mod.type=cl(b(0x43),0,(FW?.mod?.length||13)-1); sc.mod.rate=cl(b(0x44)); sc.mod.depth=cl(b(0x45));
+  sc.mod.on       = b(0x42)!==0; sc.mod.type=cl(b(0x43),0,12); sc.mod.rate=cl(b(0x44)); sc.mod.depth=cl(b(0x45));
   sc.delay.on     = b(0x4a)!==0; sc.delay.type=cl(b(0x4b),0,7);
   sc.delay.time   = ((b(0x4c)<<8)|b(0x4d))||500;
   sc.delay.feedback=cl(b(0x4e)); sc.delay.mix=cl(b(0x4f));
@@ -1765,9 +1332,9 @@ function buildSceneBytes(sc) {
   block[0x2f]=cl(q.on?q.highmid:50); block[0x30]=cl(q.on?q.high:50);
   block[0x31]=0x00; block[0x32]=0x32; block[0x33]=0x32; block[0x34]=0x32;
   block[0x36]=g.on?0x3b:0x00; block[0x37]=cl(g.threshold); block[0x3b]=cl(g.release);
-  block[0x3d]=e.on?0x01:0x00; block[0x3e]=cl(e.type,0,(FW?.efx?.length||14)-1);
+  block[0x3d]=e.on?0x01:0x00; block[0x3e]=cl(e.type,0,13);
   block[0x3f]=cl(e.gain); block[0x40]=cl(e.tone); block[0x41]=cl(e.level);
-  block[0x42]=m.on?0x12:0x00; block[0x43]=cl(m.type,0,(FW?.mod?.length||13)-1);
+  block[0x42]=m.on?0x12:0x00; block[0x43]=cl(m.type,0,12);
   block[0x44]=cl(m.rate); block[0x45]=cl(m.depth);
   block[0x4a]=d.on?0x04:0x00; block[0x4b]=cl(d.type,0,7);
   const dt=Math.max(10,Math.min(2000,d.time));
