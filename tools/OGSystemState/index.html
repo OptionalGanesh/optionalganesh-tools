@@ -6,98 +6,123 @@
 <title>OG System State</title>
 <style>
   :root {
-    --bg: #050505;
-    --bg2: #0c0c0c;
-    --bg3: #111111;
-    --line: rgba(255,255,255,0.08);
-    --line2: rgba(255,255,255,0.14);
-    --text: rgba(255,255,255,0.92);
-    --muted: rgba(255,255,255,0.45);
-    --dim: rgba(255,255,255,0.18);
-    --green: #4ade80;
-    --green-dim: rgba(74,222,128,0.08);
-    --amber: #fbbf24;
-    --amber-dim: rgba(251,191,36,0.08);
-    --red: #f87171;
-    --red-dim: rgba(248,113,113,0.08);
-    --blue: #60a5fa;
-    --blue-dim: rgba(96,165,250,0.08);
+    --bg: #050706;
+    --bg2: #0e130f;
+    --bg3: #151b17;
+    --panel: rgba(14,19,15,0.92);
+    --line: rgba(236,255,244,0.11);
+    --line2: rgba(236,255,244,0.22);
+    --text: rgba(248,250,248,0.94);
+    --muted: rgba(248,250,248,0.68);
+    --dim: rgba(248,250,248,0.42);
+    --green: #6ee7a0;
+    --green-dim: rgba(110,231,160,0.1);
+    --amber: #f5c76a;
+    --amber-dim: rgba(245,199,106,0.1);
+    --red: #ff7d7d;
+    --red-dim: rgba(255,125,125,0.1);
+    --blue: #7aa7ff;
+    --blue-dim: rgba(122,167,255,0.1);
+    --violet: #d4a3ff;
+    --violet-dim: rgba(212,163,255,0.1);
+    --cyan: #38d5c7;
+    --cyan-dim: rgba(56,213,199,0.1);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
     background:
-      radial-gradient(circle at 20% 20%, rgba(255,255,255,0.035), transparent 30%),
-      radial-gradient(circle at 80% 30%, rgba(255,255,255,0.025), transparent 28%),
-      linear-gradient(180deg, #070707 0%, #020202 100%);
+      radial-gradient(circle at 18% -12%, rgba(110,231,160,0.08), transparent 28%),
+      radial-gradient(circle at 90% 2%, rgba(56,213,199,0.055), transparent 30%),
+      linear-gradient(180deg, #080b09 0%, var(--bg) 100%);
     color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    font-size: 14px;
+    font-size: 15px;
+    line-height: 1.5;
     min-height: 100vh;
     padding: 2rem;
-    padding-top: calc(2rem + 8px);
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
   }
 
-  .mono { font-family: "SF Mono", "Fira Code", "Fira Mono", Consolas, monospace; }
+  body > * { max-width: 1240px; margin-left: auto; margin-right: auto; }
+
+  .mono { font-family: "SF Mono", "Fira Code", Consolas, monospace; }
+
+  .top-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: rgba(255,255,255,0.4); font-size: 11px; letter-spacing: 0.2em;
+    text-transform: uppercase; text-decoration: none; margin-bottom: 18px;
+    transition: color 180ms ease;
+  }
+  .top-link:hover { color: rgba(255,255,255,0.78); }
 
   header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    margin-bottom: 2.5rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--line);
+    display: grid; grid-template-columns: minmax(0,1fr) auto;
+    align-items: end; gap: 1rem; margin-bottom: 1rem;
+    padding: 1.2rem 1.35rem; border: 1px solid var(--line); border-radius: 8px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.045), var(--panel));
   }
 
-  .title { font-size: 11px; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
-  .name { font-size: 28px; font-weight: 800; color: var(--text); line-height: 1; }
-  .name span { color: var(--dim); }
+  .title { font-size: 11px; font-weight: 650; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .name { font-size: clamp(34px,5.5vw,68px); font-weight: 850; color: var(--text); line-height: 0.92; }
+  .name span { color: var(--green); }
 
-  .timestamp { text-align: right; }
+  .header-right { text-align: right; }
   .ts-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-bottom: 4px; }
-  .ts-val { font-family: "SF Mono", "Fira Code", "Fira Mono", Consolas, monospace; font-size: 12px; color: var(--muted); }
+  .ts-val { font-family: "SF Mono","Fira Code",Consolas,monospace; font-size: 12px; color: var(--muted); }
+  .live-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--green); margin-top: 6px;
+  }
+  .live-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); animation: pulse 1.5s infinite; }
+  .refresh-countdown { color: var(--dim); margin-left: 4px; }
 
-  .section { margin-bottom: 2rem; }
+  .overview-grid {
+    display: grid; grid-template-columns: 1.2fr repeat(4,1fr);
+    gap: 10px; margin-bottom: 1.7rem;
+  }
+
+  .overview-card {
+    min-height: 94px; background: linear-gradient(180deg, rgba(255,255,255,0.035), var(--panel));
+    border: 1px solid var(--line); border-radius: 8px; padding: 1rem 1.05rem; position: relative; overflow: hidden;
+  }
+  .overview-card::before {
+    content:''; position: absolute; inset: 0;
+    border-top: 2px solid var(--accent, var(--green)); opacity: 0.78; pointer-events: none;
+  }
+  .overview-k { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-bottom: 8px; }
+  .overview-v { font-size: 23px; font-weight: 800; line-height: 1.05; }
+  .overview-sub { font-size: 12px; color: var(--muted); margin-top: 7px; overflow-wrap: anywhere; }
+
+  .section { margin-bottom: 2.35rem; }
   .section-label {
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--dim);
-    margin-bottom: 0.75rem;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 0.9rem; display: flex; align-items: center; gap: 10px;
+    padding-left: 10px; border-left: 2px solid var(--green);
   }
   .section-label::after { content: ''; flex: 1; height: 1px; background: var(--line); }
 
-  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-  .grid2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-
-  @media (max-width: 600px) {
-    .grid3 { grid-template-columns: 1fr; }
-    .grid2 { grid-template-columns: 1fr; }
-    body { padding: 1rem; }
-  }
+  .grid3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+  .grid2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 12px; }
 
   .card {
-    background: var(--bg2);
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    padding: 1rem 1.25rem;
+    background: linear-gradient(180deg, rgba(255,255,255,0.025), var(--panel));
+    border: 1px solid var(--line); border-radius: 8px;
+    padding: 1rem 1.15rem; box-shadow: 0 1px 0 rgba(255,255,255,0.035) inset;
+    transition: border-color 180ms ease, box-shadow 180ms ease;
   }
+  .card:hover { border-color: var(--line2); box-shadow: 0 0 0 1px rgba(255,255,255,0.04) inset; }
+  .overview-card:hover { border-color: var(--line2); }
 
-  .card-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-bottom: 6px; }
-  .card-val { font-size: 16px; font-weight: 700; color: var(--text); }
-  .card-sub { font-size: 11px; color: var(--muted); margin-top: 4px; font-family: "SF Mono", "Fira Code", "Fira Mono", Consolas, monospace; }
+  .card-label { font-size: 10px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--dim); margin-bottom: 6px; }
+  .card-val { font-size: 17px; font-weight: 750; color: var(--text); }
+  .card-sub { font-size: 12px; color: var(--muted); margin-top: 5px; line-height: 1.6; }
 
   .status-dot {
-    display: inline-block;
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    margin-right: 6px;
+    display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px;
     animation: pulse 2s infinite;
   }
   .dot-green { background: var(--green); box-shadow: 0 0 0 2px var(--green-dim); }
@@ -105,314 +130,619 @@
   .dot-red { background: var(--red); box-shadow: 0 0 0 2px var(--red-dim); }
   .dot-gray { background: var(--dim); box-shadow: none; animation: none; }
 
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
   .row-list { list-style: none; }
   .row-list li {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    padding: 8px 0;
-    border-bottom: 1px solid var(--line);
-    gap: 1rem;
+    display: flex; align-items: flex-start; justify-content: space-between;
+    padding: 8px 0; border-bottom: 1px solid var(--line); gap: 1rem;
   }
   .row-list li:last-child { border-bottom: none; }
   .row-key { font-size: 12px; color: var(--muted); flex-shrink: 0; }
-  .row-val-r { font-size: 12px; color: var(--text); text-align: right; font-family: "SF Mono", "Fira Code", "Fira Mono", Consolas, monospace; }
+  .row-val-r { font-size: 12px; color: var(--text); text-align: right; font-family: "SF Mono","Fira Code",Consolas,monospace; }
 
   .badge {
-    display: inline-block;
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 0.05em;
-    padding: 2px 8px;
-    border-radius: 4px;
-    margin: 2px 2px 0 0;
+    display: inline-block; font-size: 10px; font-weight: 500; letter-spacing: 0.05em;
+    padding: 2px 8px; border-radius: 4px; margin: 2px 2px 0 0;
   }
   .badge-green { background: var(--green-dim); color: var(--green); }
   .badge-amber { background: var(--amber-dim); color: var(--amber); }
   .badge-blue { background: var(--blue-dim); color: var(--blue); }
+  .badge-red { background: var(--red-dim); color: var(--red); }
+  .badge-violet { background: var(--violet-dim); color: var(--violet); }
+  .badge-cyan { background: var(--cyan-dim); color: var(--cyan); }
   .badge-gray { background: var(--bg3); color: var(--muted); border: 1px solid var(--line2); }
 
-  .mcp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-  @media (max-width: 600px) { .mcp-grid { grid-template-columns: repeat(2, 1fr); } }
-
-  .mcp-item {
-    background: var(--bg3);
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    padding: 6px 10px;
-    font-size: 11px;
-    font-family: "SF Mono", "Fira Code", "Fira Mono", Consolas, monospace;
-    color: var(--muted);
-    display: flex;
-    align-items: center;
-    gap: 6px;
+  /* Machine cards */
+  .machine-card {
+    background: var(--panel); border: 1px solid rgba(56,213,199,0.18);
+    background: linear-gradient(180deg, rgba(56,213,199,0.045), var(--panel));
+    border-radius: 8px; padding: 1rem 1.25rem;
   }
-  .mcp-item.active { border-color: var(--green-dim); color: var(--text); }
+  .machine-card.stale { border-color: rgba(251,191,36,0.18); background: linear-gradient(180deg, rgba(251,191,36,0.04), var(--panel)); }
+  .machine-card.offline { border-color: rgba(248,113,113,0.18); background: linear-gradient(180deg, rgba(248,113,113,0.04), var(--panel)); }
 
-  .pending-list { list-style: none; }
-  .pending-list li {
-    padding: 10px 12px;
-    border-left: 2px solid var(--amber);
-    background: var(--amber-dim);
-    border-radius: 0 6px 6px 0;
-    margin-bottom: 6px;
-    font-size: 12px;
-    color: var(--text);
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  .svc-dots { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .svc-dot {
+    font-size: 10px; padding: 2px 8px; border-radius: 4px;
+    font-family: "SF Mono","Fira Code",Consolas,monospace;
   }
-  .pending-list li .check { cursor: pointer; font-size: 14px; flex-shrink: 0; }
-  .pending-list li.done {
-    border-left-color: var(--green);
-    background: var(--green-dim);
-    opacity: 0.6;
-  }
-  .pending-list li.done .text { text-decoration: line-through; color: var(--muted); }
+  .svc-ok { background: var(--green-dim); color: var(--green); }
+  .svc-off { background: var(--bg3); color: var(--dim); }
 
-  .notes-area {
-    width: 100%;
-    background: var(--bg2);
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    padding: 12px;
-    color: var(--text);
-    font-family: "SF Mono", "Fira Code", "Fira Mono", Consolas, monospace;
-    font-size: 12px;
-    resize: vertical;
-    min-height: 80px;
-    outline: none;
-  }
-  .notes-area:focus { border-color: var(--line2); }
+  /* Security */
+  .security-card { border-color: rgba(96,165,250,0.2); background: linear-gradient(180deg, rgba(96,165,250,0.06), var(--panel)); }
+  .security-summary { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 12px; }
+  .metric { background: rgba(255,255,255,0.04); border: 1px solid var(--line); border-radius: 6px; padding: 10px; }
+  .metric-k { font-size: 10px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--dim); margin-bottom: 4px; }
+  .metric-v { font-size: 19px; font-weight: 780; color: var(--text); }
+  .metric-sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .recommendations { list-style: none; margin-top: 6px; }
+  .recommendations li { padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--text); }
+  .recommendations li:last-child { border-bottom: none; }
 
-  .btn {
-    background: var(--bg3);
-    border: 1px solid var(--line2);
-    border-radius: 6px;
-    color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    font-size: 12px;
-    font-weight: 500;
-    padding: 8px 16px;
-    cursor: pointer;
-    letter-spacing: 0.05em;
+  /* Pendientes */
+  .pending-controls {
+    display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;
+  }
+  .pending-state-line {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; margin: -2px 0 10px; flex-wrap: wrap;
+    font-family: "SF Mono","Fira Code",Consolas,monospace;
+    font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--dim);
+  }
+  .pending-state-line span:last-child { color: var(--muted); }
+  .save-ok { color: var(--green) !important; }
+  .save-warn { color: var(--amber) !important; }
+  .save-bad { color: var(--red) !important; }
+  .pending-filter {
+    font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 4px 12px; border-radius: 20px; cursor: pointer;
+    background: var(--bg3); border: 1px solid var(--line); color: var(--muted);
     transition: all 0.15s;
   }
-  .btn:hover { background: var(--line); border-color: var(--dim); }
+  .pending-filter.active { background: var(--line); color: var(--text); border-color: var(--line2); }
+
+  .pending-list { list-style: none; }
+  .pending-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 11px 12px; border-radius: 6px; margin-bottom: 6px;
+    border-left: 3px solid var(--amber); background: var(--amber-dim);
+    transition: opacity 0.2s;
+  }
+  .pending-item.priority-high { border-left-color: var(--red); background: var(--red-dim); }
+  .pending-item.priority-low { border-left-color: var(--blue); background: var(--blue-dim); }
+  .pending-item.cat-fix { /* amber is default */ }
+  .pending-item.done {
+    opacity: 0.45; border-left-color: var(--green) !important;
+    background: var(--green-dim) !important;
+  }
+  .pending-item.done .pend-text { text-decoration: line-through; color: var(--muted); }
+
+  .pend-check {
+    cursor: pointer; font-size: 16px; flex-shrink: 0; line-height: 1;
+    color: var(--muted); margin-top: 1px; user-select: none;
+  }
+  .pend-check:hover { color: var(--text); }
+  .pend-body { flex: 1; min-width: 0; }
+  .pend-text { font-size: 13px; color: var(--text); line-height: 1.55; }
+  .pend-meta { margin-top: 4px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .pend-tag {
+    font-size: 10px; padding: 2px 7px; border-radius: 4px;
+    font-family: "SF Mono","Fira Code",Consolas,monospace;
+  }
+  .tag-bot_watch { background: var(--violet-dim); color: var(--violet); }
+  .tag-system_memory { background: var(--green-dim); color: var(--green); }
+  .tag-manual { background: var(--bg3); color: var(--muted); border: 1px solid var(--line); }
+  .tag-fix { background: var(--amber-dim); color: var(--amber); }
+  .tag-improve { background: var(--blue-dim); color: var(--blue); }
+  .tag-feature { background: var(--violet-dim); color: var(--violet); }
+  .tag-high { background: var(--red-dim); color: var(--red); }
+  .tag-medium { background: var(--amber-dim); color: var(--amber); }
+  .tag-low { background: var(--blue-dim); color: var(--blue); }
+  .pend-del { cursor: pointer; color: var(--dim); font-size: 16px; flex-shrink: 0; line-height: 1; margin-top: 1px; }
+  .pend-del:hover { color: var(--red); }
+
+  .add-pending-form {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;
+  }
+  .pending-summary {
+    display: grid; grid-template-columns: repeat(3,1fr); gap: 8px;
+    margin-bottom: 12px;
+  }
+  .pending-summary-box {
+    background: linear-gradient(180deg, rgba(255,255,255,0.025), var(--bg2));
+    border: 1px solid var(--line); border-radius: 8px;
+    padding: 11px 12px;
+  }
+  .pending-summary-k { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); }
+  .pending-summary-v { font-size: 20px; font-weight: 780; margin-top: 3px; color: var(--text); }
+  .pending-summary-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .edit-field {
+    background: var(--bg2); border: 1px solid var(--line); border-radius: 6px;
+    padding: 6px 10px; color: var(--text);
+    font-family: inherit;
+    font-size: 13px; outline: none;
+  }
+  .edit-field:focus { border-color: var(--line2); }
+  select.edit-field { cursor: pointer; }
+
+  .btn {
+    background: var(--bg3); border: 1px solid var(--line2); border-radius: 6px;
+    color: var(--text); font-size: 13px; font-weight: 650; padding: 6px 14px;
+    cursor: pointer; letter-spacing: 0.05em; transition: all 0.15s;
+  }
+  .btn:hover { background: var(--line); }
   .btn-accent { background: var(--text); color: var(--bg); border-color: var(--text); }
   .btn-accent:hover { background: var(--muted); }
 
-  .actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-
-  .edit-field {
-    background: var(--bg2);
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    padding: 6px 10px;
-    color: var(--text);
-    font-family: "SF Mono", "Fira Code", "Fira Mono", Consolas, monospace;
-    font-size: 12px;
-    width: 100%;
-    outline: none;
+  .mcp-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+  .mcp-item {
+    background: var(--bg2); border: 1px solid var(--line); border-radius: 8px;
+    padding: 10px 12px; font-size: 11px; font-family: "SF Mono","Fira Code",Consolas,monospace;
+    color: var(--muted); display: flex; align-items: flex-start; gap: 8px;
+    transition: border-color 160ms ease, background 160ms ease;
   }
-  .edit-field:focus { border-color: var(--line2); }
+  .mcp-item:hover { background: var(--bg3); border-color: var(--line2); }
+  .mcp-item.active { border-color: rgba(74,222,128,0.18); color: var(--text); }
+  .mcp-item.active:hover { border-color: rgba(74,222,128,0.32); }
+  .mcp-item .mcp-name { line-height: 1.2; font-weight: 500; }
+  .mcp-item .mcp-desc { font-size: 11px; color: var(--muted); margin-top: 4px; line-height: 1.55; font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
 
-  .saved-flash {
-    font-size: 11px;
+  /* Bot suggestions */
+  .bot-suggestions { margin-bottom: 16px; border-radius: 10px; overflow: hidden; border: 1px solid rgba(192,132,252,0.2); }
+  .bot-suggestions.empty { border-color: var(--line); }
+  .bot-scan-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px;
+    background: linear-gradient(90deg, rgba(192,132,252,0.12), rgba(192,132,252,0.04));
+    font-size: 10px; font-family: "SF Mono","Fira Code",Consolas,monospace;
+    color: var(--violet); letter-spacing: 0.08em;
+    border-bottom: 1px solid rgba(192,132,252,0.15);
+  }
+  .bot-scan-header::before { content: '▸ '; opacity: 0.6; }
+  .bot-suggestions.empty .bot-scan-header {
     color: var(--green);
-    font-family: "SF Mono", "Fira Code", "Fira Mono", Consolas, monospace;
-    opacity: 0;
-    transition: opacity 0.3s;
+    background: linear-gradient(90deg, rgba(74,222,128,0.08), rgba(74,222,128,0.02));
+    border-bottom: none;
   }
-  .saved-flash.show { opacity: 1; }
+  .bot-suggestion-item {
+    display: grid; grid-template-columns: 64px 1fr 80px;
+    align-items: start; gap: 12px;
+    padding: 10px 14px; background: rgba(192,132,252,0.02);
+    border-bottom: 1px solid rgba(192,132,252,0.07);
+  }
+  .bot-suggestion-item:last-child { border-bottom: none; }
+  .bot-suggestion-item:hover { background: rgba(192,132,252,0.05); }
+  .sug-sev {
+    font-size: 9px; font-family: "SF Mono","Fira Code",Consolas,monospace;
+    letter-spacing: 0.1em; text-transform: uppercase; padding: 3px 7px;
+    border-radius: 4px; white-space: nowrap; text-align: center; margin-top: 1px;
+  }
+  .sug-fix   { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(251,191,36,0.25); }
+  .sug-risk  { background: var(--red-dim);   color: var(--red);   border: 1px solid rgba(248,113,113,0.25); }
+  .sug-watch { background: var(--blue-dim);  color: var(--blue);  border: 1px solid rgba(96,165,250,0.25); }
+  .sug-idea  { background: var(--cyan-dim);  color: var(--cyan);  border: 1px solid rgba(34,211,238,0.25); }
+  .sug-body  { font-size: 12px; color: var(--muted); line-height: 1.6; }
+  .sug-body strong { color: var(--text); font-weight: 500; }
+  .sug-area  { font-size: 9px; color: var(--dim); font-family: "SF Mono","Fira Code",Consolas,monospace;
+               white-space: nowrap; text-align: right; padding-top: 3px; letter-spacing: 0.06em; }
+
+  /* Repo cards */
+  .repo-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; }
+  .repo-card {
+    background: var(--bg2); border: 1px solid var(--line); border-radius: 8px;
+    padding: 12px 14px; transition: border-color 160ms ease;
+  }
+  .repo-card:hover { border-color: var(--line2); }
+  .repo-card-name {
+    font-family: "SF Mono","Fira Code",Consolas,monospace; font-size: 12px;
+    font-weight: 600; color: var(--cyan); margin-bottom: 5px; display: flex;
+    align-items: center; gap: 7px;
+  }
+  .repo-card-desc { font-size: 12px; color: var(--muted); line-height: 1.6; margin-bottom: 8px; }
+  .repo-card-tags { display: flex; gap: 5px; flex-wrap: wrap; }
+
+  /* Svc module rows — stack layout for long descriptions */
+  .svc-row { padding: 9px 0; border-bottom: 1px solid var(--line); }
+  .svc-row:last-child { border-bottom: none; }
+  .svc-row-head { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
+  .svc-row-key { font-size: 13px; color: var(--text); font-weight: 650; }
+  .svc-row-desc { font-size: 12px; color: var(--muted); line-height: 1.6; padding-left: 19px; }
+
+  .error-banner {
+    background: var(--red-dim); border: 1px solid rgba(248,113,113,0.2);
+    border-radius: 6px; padding: 8px 12px; font-size: 11px; color: var(--red);
+    margin-bottom: 8px; display: none;
+  }
 
   footer {
-    margin-top: 3rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--line);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 1rem;
+    margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
   }
   .footer-text { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); }
+
+  #machine-grid { grid-template-columns: repeat(3,minmax(0,1fr)) !important; }
+
+  @media (max-width: 1000px) { .overview-grid { grid-template-columns: repeat(3,1fr); } }
+  @media (max-width: 900px) {
+    header { grid-template-columns: 1fr; align-items: start; }
+    .header-right { text-align: left; }
+    .overview-grid { grid-template-columns: repeat(2,1fr); }
+    #machine-grid { grid-template-columns: 1fr 1fr !important; }
+    .security-summary { grid-template-columns: repeat(2,1fr); }
+    .pending-summary { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    body { padding: 1rem; }
+    .grid3, .grid2 { grid-template-columns: 1fr; }
+    .overview-grid { grid-template-columns: 1fr; }
+    #machine-grid { grid-template-columns: 1fr !important; }
+    .mcp-grid { grid-template-columns: 1fr !important; }
+  }
+
+  /* taste */
+  :focus-visible { outline: 1px solid var(--green); outline-offset: 2px; border-radius: 3px; }
+  .edit-field:focus-visible { outline: none; border-color: var(--line2); }
 </style>
 </head>
 <body>
 
-<a href="/" style="display:inline-flex;align-items:center;gap:6px;color:rgba(255,255,255,0.32);font-size:11px;letter-spacing:0.2em;text-transform:uppercase;text-decoration:none;margin-bottom:28px;transition:color 180ms ease;" onmouseover="this.style.color='rgba(255,255,255,0.65)'" onmouseout="this.style.color='rgba(255,255,255,0.32)'">← Tools</a>
+<a href="/" class="top-link">← Tools</a>
 
 <header>
   <div>
     <div class="title">Optional Ganesh · Full Operational State</div>
     <div class="name">OG<span>/</span>OS</div>
   </div>
-  <div class="timestamp">
+  <div class="header-right">
     <div class="ts-label">última actualización</div>
     <div class="ts-val mono" id="last-updated">—</div>
+    <div class="live-badge">
+      <span class="live-dot"></span> LIVE
+      <span class="refresh-countdown" id="countdown"></span>
+    </div>
   </div>
 </header>
 
-<!-- SERVIDOR -->
+<!-- OVERVIEW -->
+<div class="overview-grid">
+  <div class="overview-card" style="--accent:var(--green)">
+    <div class="overview-k">Pulso general</div>
+    <div class="overview-v" id="ov-security">—</div>
+    <div class="overview-sub" id="ov-security-sub">security sentinel</div>
+  </div>
+  <div class="overview-card" style="--accent:var(--cyan)">
+    <div class="overview-k">Mac Mini</div>
+    <div class="overview-v" id="ov-macmini">—</div>
+    <div class="overview-sub" id="ov-macmini-sub">local</div>
+  </div>
+  <div class="overview-card" style="--accent:var(--violet)">
+    <div class="overview-k">VPS</div>
+    <div class="overview-v" id="ov-vps">—</div>
+    <div class="overview-sub" id="ov-vps-sub">Hetzner</div>
+  </div>
+  <div class="overview-card" style="--accent:var(--amber)">
+    <div class="overview-k">SSH noise</div>
+    <div class="overview-v" id="ov-ssh">—</div>
+    <div class="overview-sub">intentos bloqueados</div>
+  </div>
+  <div class="overview-card" style="--accent:var(--red)">
+    <div class="overview-k">Pendientes</div>
+    <div class="overview-v" id="ov-pending">—</div>
+    <div class="overview-sub" id="ov-pending-sub">por resolver</div>
+  </div>
+</div>
+
+<!-- MACHINES -->
 <div class="section">
-  <div class="section-label">Servidor · Hetzner VPS</div>
+  <div class="section-label">Máquinas — live heartbeats</div>
+  <div id="machine-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+    <div class="machine-card"><div class="card-label">Cargando…</div></div>
+  </div>
+</div>
+
+<!-- SECURITY -->
+<div class="section">
+  <div class="section-label">Security Sentinel · VPS</div>
+  <div class="card security-card">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:14px;flex-wrap:wrap">
+      <div>
+        <div class="card-label">Estado</div>
+        <div class="card-val"><span class="status-dot dot-gray" id="sec-dot"></span><span id="sec-status">cargando…</span></div>
+        <div class="card-sub" id="sec-generated">security.json</div>
+      </div>
+      <div>
+        <span class="badge badge-gray" id="sec-mode">watch</span>
+        <span class="badge badge-blue">UFW</span>
+        <span class="badge badge-blue">fail2ban</span>
+      </div>
+    </div>
+    <div class="security-summary">
+      <div class="metric"><div class="metric-k">SSH noise</div><div class="metric-v" id="sec-failed">—</div><div class="metric-sub">ventana actual</div></div>
+      <div class="metric"><div class="metric-k">Logins OK</div><div class="metric-v" id="sec-accepted">—</div><div class="metric-sub" id="sec-accepted-sub">trusted IPs</div></div>
+      <div class="metric"><div class="metric-k">Puertos UFW</div><div class="metric-v" id="sec-ports">—</div><div class="metric-sub">permitidos</div></div>
+      <div class="metric"><div class="metric-k">Disco</div><div class="metric-v" id="sec-disk">—</div><div class="metric-sub">root filesystem</div></div>
+    </div>
+    <ul class="row-list">
+      <li><span class="row-key">Puertos escuchando</span><span class="row-val-r" id="sec-listeners">—</span></li>
+      <li><span class="row-key">Puertos inesperados</span><span class="row-val-r" id="sec-unexpected">—</span></li>
+      <li><span class="row-key">IP login fuera de trusted</span><span class="row-val-r" id="sec-unknown">—</span></li>
+    </ul>
+    <div style="margin-top:12px">
+      <div class="card-label">Recomendaciones</div>
+      <ul class="recommendations" id="sec-recommendations"><li>Esperando primer reporte.</li></ul>
+    </div>
+  </div>
+</div>
+
+<!-- VPS SERVICES LIVE -->
+<div class="section">
+  <div class="section-label">VPS Services · live</div>
+  <div id="vps-services-grid" class="card">
+    <div style="color:var(--dim);font-size:12px">Cargando…</div>
+  </div>
+</div>
+
+<!-- SECOND EAR -->
+<div class="section">
+  <div class="section-label">Second Ear · Mixing Assistant</div>
   <div class="grid3">
-    <div class="card">
-      <div class="card-label">Estado</div>
-      <div class="card-val"><span class="status-dot dot-green"></span><span id="server-status">active (running)</span></div>
-      <div class="card-sub" id="server-pid">og.service · PID 2233</div>
-      <div style="margin-top:8px"><span class="badge badge-green">systemd</span><span class="badge badge-green">auto-restart</span></div>
-    </div>
-    <div class="card">
-      <div class="card-label">Recursos</div>
-      <div class="card-val" id="server-ram">29.8 MB RAM</div>
-      <div class="card-sub">de 4 GB disponibles</div>
-      <div style="margin-top:8px"><span class="badge badge-green">muy eficiente</span></div>
-    </div>
-    <div class="card">
-      <div class="card-label">Acceso</div>
-      <div class="card-val mono" style="font-size:13px">178.104.77.46</div>
-      <div class="card-sub">SSH · root · Termius</div>
-      <div style="margin-top:8px"><span class="badge badge-blue">Ubuntu 24 · nbg1</span></div>
-    </div>
-  </div>
-</div>
-
-<!-- SISTEMA OG -->
-<div class="section">
-  <div class="section-label">Sistema OG · qué corre</div>
-  <div class="card">
-    <ul class="row-list">
-      <li><span class="row-key"><span class="status-dot dot-green" style="animation:none;opacity:1"></span>Monitor financiero</span><span class="row-val-r">BTC · PAXG · EUR/USD (frankfurter.app)</span></li>
-      <li><span class="row-key"><span class="status-dot dot-green" style="animation:none;opacity:1"></span>Prompts musicales</span><span class="row-val-r">ligados a snapshots del mercado</span></li>
-      <li><span class="row-key"><span class="status-dot dot-green" style="animation:none;opacity:1"></span>Prompts visuales</span><span class="row-val-r">11:00 y 17:00 UTC</span></li>
-      <li><span class="row-key"><span class="status-dot dot-green" style="animation:none;opacity:1"></span>Detección SoundCloud</span><span class="row-val-r">RSS → semilla creativa</span></li>
-      <li><span class="row-key"><span class="status-dot dot-green" style="animation:none;opacity:1"></span>Análisis de audio</span><span class="row-val-r">librosa · descarga → analiza → borra</span></li>
-      <li><span class="row-key"><span class="status-dot dot-green" style="animation:none;opacity:1"></span>Feedback Telegram</span><span class="row-val-r">@optionalganesh_system_bot · /used /skip /status</span></li>
-    </ul>
-  </div>
-</div>
-
-<!-- MÁQUINAS -->
-<div class="section">
-  <div class="section-label">Máquinas locales</div>
-  <div class="grid2">
-    <div class="card">
-      <div class="card-label"><span class="status-dot dot-green"></span>Mac Mini M1 — principal</div>
-      <div class="card-val">Studio</div>
-      <div class="card-sub">16 GB · macOS Tahoe · Ollama Mistral 7B</div>
-      <div style="margin-top:8px">
-        <span class="badge badge-green">Claude Code</span>
-        <span class="badge badge-green">CLAUDE.md global</span>
-        <span class="badge badge-green">Cowork</span>
-        <span class="badge badge-green">Desktop Commander</span>
+    <div class="card" style="border-color:rgba(192,132,252,0.2);background:linear-gradient(180deg,rgba(192,132,252,0.04),var(--panel))">
+      <div class="card-label"><span class="status-dot" id="se-dot" style="background:var(--dim)"></span>Estado · Servicios</div>
+      <ul class="row-list" style="margin-top:6px">
+        <li><span class="row-key">second-ear.service</span><span class="row-val-r">:8788 · plugin engine</span></li>
+        <li><span class="row-key">second-ear-telegram</span><span class="row-val-r">Telegram long-poll</span></li>
+        <li><span class="row-key">Docker</span><span class="row-val-r">Up 7 days</span></li>
+        <li><span class="row-key">Bot</span><span class="row-val-r">@second_ear_bot</span></li>
+        <li><span class="row-key">LLM</span><span class="row-val-r">Groq · Llama 3.3 70B</span></li>
+        <li><span class="row-key">Voice input</span><span class="row-val-r">Groq Whisper</span></li>
+      </ul>
+      <div style="margin-top:10px">
+        <div class="card-label">Qué hace</div>
+        <div class="card-sub" style="margin-top:4px;line-height:1.6">Asistente de mezcla personal. Recibe datos de Logic en tiempo real vía logic_watcher.py, aprende de tus decisiones con /good y /bad, analiza tus masters, y responde preguntas sobre tu arsenal de plugins. No es un bot genérico — conoce tu setup específico.</div>
       </div>
     </div>
-    <div class="card">
-      <div class="card-label"><span class="status-dot dot-amber"></span>MacBook Pro 2017 — secundario</div>
-      <div class="card-val">Portable</div>
-      <div class="card-sub">8 GB · Intel i5 · Ollama Phi-3 Mini</div>
-      <div style="margin-top:8px">
-        <span class="badge badge-green">Claude Code</span>
-        <span class="badge badge-amber">MCPs por verificar</span>
+    <div class="card" style="border-color:rgba(192,132,252,0.2);background:linear-gradient(180deg,rgba(192,132,252,0.04),var(--panel))">
+      <div class="card-label">Comandos activos</div>
+      <ul class="row-list" style="margin-top:6px">
+        <li><span class="row-key mono">/good · /bad</span><span class="row-val-r" style="white-space:normal;text-align:right">Feedback en tiempo real de decisiones de mezcla</span></li>
+        <li><span class="row-key mono">/habits</span><span class="row-val-r" style="white-space:normal;text-align:right">Patrones detectados en tus sesiones</span></li>
+        <li><span class="row-key mono">/deep &lt;plugin&gt;</span><span class="row-val-r" style="white-space:normal;text-align:right">Análisis profundo de un plugin específico</span></li>
+        <li><span class="row-key mono">/mixcheck</span><span class="row-val-r" style="white-space:normal;text-align:right">Revisión del estado actual del proyecto</span></li>
+        <li><span class="row-key mono">/auditmasters</span><span class="row-val-r" style="white-space:normal;text-align:right">Análisis de masters sincronizados</span></li>
+        <li><span class="row-key mono">/direction</span><span class="row-val-r" style="white-space:normal;text-align:right">Dirección creativa basada en historial</span></li>
+        <li><span class="row-key mono">/logicstats</span><span class="row-val-r" style="white-space:normal;text-align:right">Stats del proyecto Logic activo</span></li>
+        <li><span class="row-key mono">/focus · /health</span><span class="row-val-r" style="white-space:normal;text-align:right">Estado del sistema y foco de sesión</span></li>
+      </ul>
+    </div>
+    <div class="card" style="border-color:rgba(192,132,252,0.2);background:linear-gradient(180deg,rgba(192,132,252,0.04),var(--panel))">
+      <div class="card-label">Data flows</div>
+      <ul class="row-list" style="margin-top:6px">
+        <li><span class="row-key">Mac → VPS</span><span class="row-val-r">logic_watcher.py → /logic-sync</span></li>
+        <li><span class="row-key">Mac → VPS</span><span class="row-val-r">/master-sync · arsenal.md</span></li>
+        <li><span class="row-key">Aprendizaje</span><span class="row-val-r">learning.json · acumula sesiones</span></li>
+        <li><span class="row-key">Plugins</span><span class="row-val-r">arsenal sincronizado desde Mac</span></li>
+      </ul>
+      <div style="margin-top:12px">
+        <div class="card-label">Lo que se ha mejorado</div>
+        <div class="card-sub" style="margin-top:4px;line-height:1.6">Integración de Groq Whisper para notas de voz · feedback loop /good·/bad activo · sincronización de masters y arsenales · análisis de audio con librosa en el bot principal.</div>
+      </div>
+      <div style="margin-top:10px">
+        <div class="card-label">Próximos pasos</div>
+        <div class="card-sub" style="margin-top:4px;line-height:1.6">Conectar Oracle Phase 2 validado localmente (ChromaDB + :7777) a Second Ear y decidir arranque permanente · mejorar /direction con contexto del mercado BTC · añadir /snapshot para capturar estado de mezcla en momentos clave.</div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- GITHUB / REPOS -->
+<!-- OG SYSTEM BOT -->
 <div class="section">
-  <div class="section-label">GitHub · Repos</div>
-  <div class="card">
-    <ul class="row-list">
-      <li><span class="row-key">Cuenta</span><span class="row-val-r">github.com/OptionalGanesh</span></li>
-      <li><span class="row-key">claude-skills</span><span class="row-val-r">60 skills · público · fetched en runtime por /skills</span></li>
-      <li><span class="row-key">optionalganesh-tools</span><span class="row-val-r">tools.optionalganesh.com · Cloudflare Pages</span></li>
-      <li><span class="row-key">optional-ganesh-os</span><span class="row-val-r">OS personal · notas, decisiones, proyectos, templates</span></li>
-      <li><span class="row-key">VPS repo</span><span class="row-val-r">system.py + automatización · no clonado en M1</span></li>
-      <li><span class="row-key">SSH Auth</span><span class="row-val-r">gh CLI instalado · authenticated · Homebrew</span></li>
-    </ul>
+  <div class="section-label">OG System Bot · system.py</div>
+  <div class="grid3">
+
+    <div class="card">
+      <div class="card-label" style="margin-bottom:10px">Módulos activos</div>
+      <div class="svc-row">
+        <div class="svc-row-head"><span class="status-dot dot-green" style="animation:none;opacity:1"></span><span class="svc-row-key">Monitor financiero</span></div>
+        <div class="svc-row-desc">BTC · PAXG · EUR/USD cada 60s. Alerta Telegram si BTC cae &gt;2% o PAXG &gt;1%.</div>
+      </div>
+      <div class="svc-row">
+        <div class="svc-row-head"><span class="status-dot dot-green" style="animation:none;opacity:1"></span><span class="svc-row-key">Prompts musicales</span></div>
+        <div class="svc-row-desc">Groq Llama 3.3 70B ligado al estado del mercado. Estilo · mood · BPM · key generados dinámicamente.</div>
+      </div>
+      <div class="svc-row">
+        <div class="svc-row-head"><span class="status-dot dot-green" style="animation:none;opacity:1"></span><span class="svc-row-key">Prompts visuales</span></div>
+        <div class="svc-row-desc">Enviados a las 11:00 y 17:00 UTC. Independientes del ciclo de mercado.</div>
+      </div>
+      <div class="svc-row">
+        <div class="svc-row-head"><span class="status-dot dot-green" style="animation:none;opacity:1"></span><span class="svc-row-key">Detección SoundCloud</span></div>
+        <div class="svc-row-desc">RSS feed cada ~10 min. Nuevo track → semilla creativa automática vía Telegram.</div>
+      </div>
+      <div class="svc-row">
+        <div class="svc-row-head"><span class="status-dot dot-green" style="animation:none;opacity:1"></span><span class="svc-row-key">Análisis de audio</span></div>
+        <div class="svc-row-desc">librosa: descarga → extrae features → analiza → borra. Sin almacenamiento permanente.</div>
+      </div>
+      <div class="svc-row">
+        <div class="svc-row-head"><span class="status-dot dot-amber" style="animation:none;opacity:1"></span><span class="svc-row-key">GhostFrame</span></div>
+        <div class="svc-row-desc">Face detection → glitch/distortion. Anti-deepfake. En desarrollo · parked.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label" style="margin-bottom:10px">Servicios conectados</div>
+      <div class="svc-row">
+        <div class="svc-row-head"><span class="status-dot dot-green" style="animation:none;opacity:1"></span><span class="svc-row-key">Telegram</span></div>
+        <div class="svc-row-desc">@optionalganesh_system_bot · /used /skip /status · webhook :8790</div>
+      </div>
+      <div class="svc-row">
+        <div class="svc-row-head"><span class="status-dot dot-green" style="animation:none;opacity:1"></span><span class="svc-row-key">Cash14</span></div>
+        <div class="svc-row-desc">Lead radar del sprint de ingresos. Flask :5001 · tools/cash14/. Filtra y prioriza contactos.</div>
+      </div>
+      <div class="svc-row">
+        <div class="svc-row-head"><span class="status-dot dot-green" style="animation:none;opacity:1"></span><span class="svc-row-key">Chains</span></div>
+        <div class="svc-row-desc">OG Chain Generator · :5002. Genera cadenas de mastering basadas en tu arsenal de plugins.</div>
+      </div>
+      <div class="svc-row">
+        <div class="svc-row-head"><span class="status-dot dot-green" style="animation:none;opacity:1"></span><span class="svc-row-key">n8n</span></div>
+        <div class="svc-row-desc">Docker · :5678. Orquesta workflows, recibe webhooks, enruta eventos entre servicios.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label" style="margin-bottom:10px">Lo que se ha mejorado</div>
+      <div class="svc-row">
+        <div class="svc-row-head"><span class="status-dot dot-green" style="animation:none;opacity:1"></span><span class="svc-row-key">LLM real</span></div>
+        <div class="svc-row-desc">Prompts antes eran templates puros. Ahora Groq Llama 3.3 70B genera texto contextualizado.</div>
+      </div>
+      <div class="svc-row">
+        <div class="svc-row-head"><span class="status-dot dot-green" style="animation:none;opacity:1"></span><span class="svc-row-key">Cola diferida + retry</span></div>
+        <div class="svc-row-desc">Tareas con fallos se reencolan automáticamente sin perder el evento original.</div>
+      </div>
+      <div class="svc-row">
+        <div class="svc-row-head"><span class="status-dot dot-green" style="animation:none;opacity:1"></span><span class="svc-row-key">Memoria de prompts</span></div>
+        <div class="svc-row-desc">Evita repetir prompts idénticos en sesiones cercanas. Historial persistido en JSON.</div>
+      </div>
+      <div class="svc-row">
+        <div class="svc-row-head"><span class="status-dot dot-green" style="animation:none;opacity:1"></span><span class="svc-row-key">Crash alert</span></div>
+        <div class="svc-row-desc">Si og.service cae y reinicia, envía alerta Telegram con exit code y timestamp.</div>
+      </div>
+      <div class="svc-row" style="border-bottom:none">
+        <div class="svc-row-head"><span class="status-dot dot-amber" style="animation:none;opacity:1"></span><span class="svc-row-key">Próximo paso</span></div>
+        <div class="svc-row-desc">Conectar mercado BTC/PAXG con Second Ear para que /direction tenga contexto económico.</div>
+      </div>
+    </div>
+
   </div>
 </div>
 
-<!-- DOMINIO / INFRA -->
+<!-- LOCAL TOOLS -->
 <div class="section">
-  <div class="section-label">Dominio · Infraestructura</div>
-  <div class="grid2">
+  <div class="section-label">Local · Mac Mini M1</div>
+  <div style="display:flex;flex-direction:column;gap:12px">
     <div class="card">
-      <div class="card-label">Dominio</div>
-      <div class="card-val" style="font-size:14px">optionalganesh.com</div>
-      <div class="card-sub">tools.optionalganesh.com → Cloudflare Pages</div>
-      <div style="margin-top:8px"><span class="badge badge-green">Cloudflare</span><span class="badge badge-green">HTTPS</span></div>
+      <div class="card-label">MCPs activos · Claude Code</div>
+      <div class="mcp-grid" style="margin-top:8px;grid-template-columns:repeat(3,1fr)">
+        <div class="mcp-item active">
+          <span class="status-dot dot-green" style="animation:none;flex-shrink:0;margin-top:3px"></span>
+          <div><div class="mcp-name">Context7</div><div class="mcp-desc">Docs actualizadas de librerías en contexto. Evita alucinaciones de API.</div></div>
+        </div>
+        <div class="mcp-item active">
+          <span class="status-dot dot-green" style="animation:none;flex-shrink:0;margin-top:3px"></span>
+          <div><div class="mcp-name">Sequential Thinking</div><div class="mcp-desc">Razonamiento paso a paso para problemas complejos y decisiones.</div></div>
+        </div>
+        <div class="mcp-item active">
+          <span class="status-dot dot-green" style="animation:none;flex-shrink:0;margin-top:3px"></span>
+          <div><div class="mcp-name">Gmail</div><div class="mcp-desc">Busca hilos, redacta borradores, gestiona etiquetas sin abrir el navegador.</div></div>
+        </div>
+        <div class="mcp-item active">
+          <span class="status-dot dot-green" style="animation:none;flex-shrink:0;margin-top:3px"></span>
+          <div><div class="mcp-name">Google Calendar</div><div class="mcp-desc">Lee y crea eventos, responde invitaciones, sugiere horarios disponibles.</div></div>
+        </div>
+        <div class="mcp-item active">
+          <span class="status-dot dot-green" style="animation:none;flex-shrink:0;margin-top:3px"></span>
+          <div><div class="mcp-name">Figma</div><div class="mcp-desc">Accede a archivos de diseño, variables, componentes y hace screenshots.</div></div>
+        </div>
+        <div class="mcp-item active">
+          <span class="status-dot dot-green" style="animation:none;flex-shrink:0;margin-top:3px"></span>
+          <div><div class="mcp-name">Canva</div><div class="mcp-desc">Crea y edita diseños, genera contenido, exporta desde plantillas y brand kits.</div></div>
+        </div>
+        <div class="mcp-item active">
+          <span class="status-dot dot-green" style="animation:none;flex-shrink:0;margin-top:3px"></span>
+          <div><div class="mcp-name">Desktop Commander</div><div class="mcp-desc">Terminal, gestión de archivos, procesos interactivos. El operador local de shell.</div></div>
+        </div>
+        <div class="mcp-item active">
+          <span class="status-dot dot-green" style="animation:none;flex-shrink:0;margin-top:3px"></span>
+          <div><div class="mcp-name">Apple Notes</div><div class="mcp-desc">Lee y escribe notas. Conecta el conocimiento del Oracle con sesiones de Claude.</div></div>
+        </div>
+        <div class="mcp-item active">
+          <span class="status-dot dot-green" style="animation:none;flex-shrink:0;margin-top:3px"></span>
+          <div><div class="mcp-name">Google Drive</div><div class="mcp-desc">Lee, escribe y busca archivos en Drive. Operaciones de fichero sin cambiar contexto.</div></div>
+        </div>
+        <div class="mcp-item active">
+          <span class="status-dot dot-green" style="animation:none;flex-shrink:0;margin-top:3px"></span>
+          <div><div class="mcp-name">Claude in Chrome</div><div class="mcp-desc">Automatiza el navegador completo: navega, rellena formularios, extrae contenido.</div></div>
+        </div>
+        <div class="mcp-item active">
+          <span class="status-dot dot-green" style="animation:none;flex-shrink:0;margin-top:3px"></span>
+          <div><div class="mcp-name">Control your Mac</div><div class="mcp-desc">Ejecuta AppleScripts via osascript. Automatiza acciones del sistema macOS.</div></div>
+        </div>
+        <div class="mcp-item active">
+          <span class="status-dot dot-green" style="animation:none;flex-shrink:0;margin-top:3px"></span>
+          <div><div class="mcp-name">Scheduled Tasks</div><div class="mcp-desc">Crea agentes Claude recurrentes con cron. Automatización sin triggers manuales.</div></div>
+        </div>
+      </div>
     </div>
     <div class="card">
-      <div class="card-label">Deploy</div>
-      <div class="card-val" style="font-size:14px">Git push → auto-deploy</div>
-      <div class="card-sub">Cloudflare Pages · sin build step</div>
-      <div style="margin-top:8px"><span class="badge badge-green">estático</span><span class="badge badge-blue">HTML / CSS / JS</span></div>
-    </div>
-  </div>
-</div>
-
-<!-- BOTS / AGENTES / AUTOMATIZACIÓN -->
-<div class="section">
-  <div class="section-label">Bots · Agentes · Automatización</div>
-  <div class="card">
-    <ul class="row-list">
-      <li><span class="row-key"><span class="status-dot dot-green" style="animation:none;opacity:1"></span>Telegram Bot</span><span class="row-val-r">@optionalganesh_system_bot · /used /skip /status</span></li>
-      <li><span class="row-key"><span class="status-dot dot-green" style="animation:none;opacity:1"></span>system.py</span><span class="row-val-r">Hetzner VPS · Python · systemd og.service</span></li>
-      <li><span class="row-key"><span class="status-dot dot-amber" style="animation:none;opacity:1"></span>n8n</span><span class="row-val-r">VPS · workflows de automatización · JSON exports</span></li>
-      <li><span class="row-key"><span class="status-dot dot-green" style="animation:none;opacity:1"></span>Claude Code</span><span class="row-val-r">M1 principal · CLAUDE.md global · skills activos</span></li>
-      <li><span class="row-key"><span class="status-dot dot-green" style="animation:none;opacity:1"></span>Ollama</span><span class="row-val-r">M1: Mistral 7B · MBP: Phi-3 Mini</span></li>
-      <li><span class="row-key"><span class="status-dot dot-amber" style="animation:none;opacity:1"></span>GhostFrame</span><span class="row-val-r">face detection → glitch/distortion · en desarrollo</span></li>
-    </ul>
-  </div>
-</div>
-
-<!-- MCPs -->
-<div class="section">
-  <div class="section-label">MCPs activos — Mac Mini M1</div>
-  <div class="card">
-    <div class="mcp-grid">
-      <div class="mcp-item active"><span class="status-dot dot-green" style="animation:none"></span>Context7</div>
-      <div class="mcp-item active"><span class="status-dot dot-green" style="animation:none"></span>Sequential Thinking</div>
-      <div class="mcp-item active"><span class="status-dot dot-green" style="animation:none"></span>Gmail</div>
-      <div class="mcp-item active"><span class="status-dot dot-green" style="animation:none"></span>Google Calendar</div>
-      <div class="mcp-item active"><span class="status-dot dot-green" style="animation:none"></span>Figma</div>
-      <div class="mcp-item active"><span class="status-dot dot-green" style="animation:none"></span>Canva</div>
+      <div class="card-label" style="margin-bottom:10px">Repos · github.com/OptionalGanesh</div>
+      <div class="repo-grid">
+        <div class="repo-card">
+          <div class="repo-card-name"><span class="status-dot dot-green" style="animation:none"></span>optional-ganesh-os</div>
+          <div class="repo-card-desc">OS personal. Contexto, proyectos, decisiones, outreach, Oracle KB y agentes Claude. Fuente de verdad de todo el trabajo activo.</div>
+          <div class="repo-card-tags"><span class="badge badge-green">main os</span><span class="badge badge-gray">privado</span></div>
+        </div>
+        <div class="repo-card">
+          <div class="repo-card-name"><span class="status-dot dot-green" style="animation:none"></span>optionalganesh-tools</div>
+          <div class="repo-card-desc">Sitio de herramientas en Hetzner. HTML/CSS/JS puro, sin frameworks. 6 tools desplegadas. Deploy vía webhook en :9876.</div>
+          <div class="repo-card-tags"><span class="badge badge-cyan">8 tools</span><span class="badge badge-gray">webhook deploy</span></div>
+        </div>
+        <div class="repo-card">
+          <div class="repo-card-name"><span class="status-dot dot-green" style="animation:none"></span>claude-skills</div>
+          <div class="repo-card-desc">60+ skills públicas para Claude Code. Incluye og-mastering-chain, og-suno-prompt, og-tools-site y más.</div>
+          <div class="repo-card-tags"><span class="badge badge-violet">60+ skills</span><span class="badge badge-gray">público</span></div>
+        </div>
+        <div class="repo-card">
+          <div class="repo-card-name"><span class="status-dot dot-green" style="animation:none"></span>~/.claude</div>
+          <div class="repo-card-desc">Config global de Claude Code. Skills locales, agentes OG, keybindings y memoria persistente entre sesiones.</div>
+          <div class="repo-card-tags"><span class="badge badge-violet">agentes OG</span><span class="badge badge-gray">local</span></div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
 <!-- PENDIENTES -->
 <div class="section">
-  <div class="section-label">Pendientes</div>
-  <ul class="pending-list" id="pending-list">
-    <li data-id="0"><span class="check" onclick="toggleDone(0)">○</span><span class="text">Cola de tareas diferidas en servidor — reanudar con créditos o máquina disponible</span></li>
-    <li data-id="1"><span class="check" onclick="toggleDone(1)">○</span><span class="text">Claude API integrada en system.py — prompts generados por IA, no listas fijas</span></li>
-    <li data-id="2"><span class="check" onclick="toggleDone(2)">○</span><span class="text">Verificar MCPs en MacBook Pro</span></li>
-    <li data-id="3"><span class="check" onclick="toggleDone(3)">○</span><span class="text">Acceso Figma slides curso LABASAD — URL /design/ o PDF export</span></li>
-    <li data-id="4"><span class="check" onclick="toggleDone(4)">○</span><span class="text">Curso Gumroad async — packaging del curriculum LABASAD</span></li>
-  </ul>
-  <div class="actions">
-    <input class="edit-field" id="new-task" placeholder="añadir pendiente..." style="flex:1; min-width:200px">
-    <button class="btn" onclick="addTask()">+ añadir</button>
+  <div class="section-label">Acciones · falta / hecho / vigilancia</div>
+  <div class="error-banner" id="pend-error"></div>
+  <div class="pending-state-line">
+    <span id="pending-save-status">sin cambios pendientes</span>
+    <span id="pending-source-status">API pendientes</span>
   </div>
-</div>
 
-<!-- NOTAS -->
-<div class="section">
-  <div class="section-label">Notas de sesión</div>
-  <textarea class="notes-area" id="notes" placeholder="notas, contexto, decisiones recientes..."></textarea>
-  <div class="actions">
-    <button class="btn btn-accent" onclick="saveAll()">guardar estado</button>
-    <span class="saved-flash" id="saved-flash">✓ guardado</span>
+  <!-- Bot watcher summary — pending rows are merged into the list below -->
+  <div class="bot-suggestions" id="bot-suggestions"></div>
+
+  <div class="pending-summary" id="pending-summary">
+    <div class="pending-summary-box"><div class="pending-summary-k">Falta</div><div class="pending-summary-v">—</div><div class="pending-summary-sub">acciones abiertas</div></div>
+    <div class="pending-summary-box"><div class="pending-summary-k">Riesgo</div><div class="pending-summary-v">—</div><div class="pending-summary-sub">alta prioridad</div></div>
+    <div class="pending-summary-box"><div class="pending-summary-k">Hecho</div><div class="pending-summary-v">—</div><div class="pending-summary-sub">memoria persistente</div></div>
+  </div>
+
+  <div class="pending-controls">
+    <button class="pending-filter" data-filter="all" onclick="setFilter('all')">Todo</button>
+    <button class="pending-filter active" data-filter="open" onclick="setFilter('open')">Abiertos</button>
+    <button class="pending-filter" data-filter="fix" onclick="setFilter('fix')">Fix</button>
+    <button class="pending-filter" data-filter="improve" onclick="setFilter('improve')">Mejoras</button>
+    <button class="pending-filter" data-filter="done" onclick="setFilter('done')">Resueltos</button>
+  </div>
+
+  <ul class="pending-list" id="pending-list"></ul>
+
+  <div class="add-pending-form">
+    <input class="edit-field" id="new-task-text" placeholder="nueva tarea / mejora / fix…" style="flex:1;min-width:180px">
+    <select class="edit-field" id="new-task-cat">
+      <option value="improve">mejora</option>
+      <option value="fix">fix</option>
+      <option value="feature">feature</option>
+    </select>
+    <select class="edit-field" id="new-task-priority">
+      <option value="medium">media</option>
+      <option value="high">alta</option>
+      <option value="low">baja</option>
+    </select>
+    <button class="btn btn-accent" onclick="addTask()">+ añadir</button>
   </div>
 </div>
 
@@ -422,100 +752,697 @@
 </footer>
 
 <script>
-const STORAGE_KEY = 'og_system_state_v1';
+const API = '/OGSystemState/api';
+const REFRESH_INTERVAL = 30; // seconds
+let countdown = REFRESH_INTERVAL;
+let currentFilter = 'open';
+let pendingItems = [];
+let botWatchItems = [];
+let botResolved = {};
+const BOT_RESOLVED_KEY = 'og_system_state_botwatch_resolved_v1';
+let pendingOverrides = {};
+let saveStatusTimer = null;
+const PENDING_OVERRIDES_KEY = 'og_system_state_pending_overrides_v1';
+const LEGACY_BOT_WATCH_IDS = [
+  'bot_watch-oracle-second-ear-bridge',
+  'bot_watch-ogstate-conditional-rules'
+];
 
-let state = {
-  lastUpdated: null,
-  notes: '',
-  doneTasks: [],
-  customTasks: []
+const SYSTEM_MEMORY = [
+  {
+    id: 'system-memory-oracle-phase2',
+    text: 'Oracle Phase 2 construido e ingestado: FastAPI + ChromaDB validado con 814 plugins.',
+    priority: 'low',
+    category: 'improve',
+    source: 'system_memory',
+    area: 'oracle',
+    done: true,
+    createdAt: '2026-04-16T14:28:17+00:00',
+    doneAt: '2026-05-21T16:20:00+00:00'
+  },
+  {
+    id: 'system-memory-outreach-automation',
+    text: 'Automatización diaria Cash14 creada: prepara 3 contactos nuevos + 2 follow-ups a las 09:00.',
+    priority: 'low',
+    category: 'improve',
+    source: 'system_memory',
+    area: 'automatización',
+    done: true,
+    createdAt: '2026-05-21T16:24:00+00:00',
+    doneAt: '2026-05-21T16:24:00+00:00'
+  },
+  {
+    id: 'system-memory-oracle-launchagent',
+    text: 'Oracle :7777 quedó daemonizado con LaunchAgent local y modelo gemma3:12b.',
+    priority: 'low',
+    category: 'improve',
+    source: 'system_memory',
+    area: 'oracle',
+    done: true,
+    createdAt: '2026-05-21T16:42:00+00:00',
+    doneAt: '2026-05-21T16:45:00+00:00'
+  },
+  {
+    id: 'system-memory-local-heartbeat-expanded',
+    text: 'Heartbeat local extendido: ahora reporta RAM y disco además de red, load, uptime y Ollama.',
+    priority: 'low',
+    category: 'improve',
+    source: 'system_memory',
+    area: 'heartbeat',
+    done: true,
+    createdAt: '2026-05-21T16:42:00+00:00',
+    doneAt: '2026-05-21T16:42:00+00:00'
+  },
+  {
+    id: 'system-memory-ogstate-live-json',
+    text: 'OGSystemState ya usa feeds JSON live para VPS, máquinas, servicios, security sentinel y pendientes.',
+    priority: 'low',
+    category: 'improve',
+    source: 'system_memory',
+    area: 'tooling',
+    done: true,
+    createdAt: '2026-05-19T08:25:37+00:00',
+    doneAt: '2026-05-21T16:23:00+00:00'
+  },
+  {
+    id: 'system-memory-ogwatcher-live-only',
+    text: 'OG_WATCHER limpiado: las notas estáticas dejan de contar como Falta; solo suben condiciones en vivo.',
+    priority: 'low',
+    category: 'improve',
+    source: 'system_memory',
+    area: 'tooling',
+    done: true,
+    createdAt: '2026-05-22T07:15:00+00:00',
+    doneAt: '2026-05-22T07:15:00+00:00'
+  }
+];
+
+/* ── Utilities ── */
+function fmt(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+function age(iso) {
+  if (!iso) return '—';
+  const s = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
+  if (s < 90) return `${s}s`;
+  const m = Math.round(s / 60);
+  if (m < 90) return `${m}m`;
+  return `${Math.round(m / 60)}h`;
+}
+
+function uptime(sec) {
+  sec = Number(sec || 0);
+  const h = Math.floor(sec / 3600), d = Math.floor(h / 24);
+  if (d > 0) return `${d}d ${h % 24}h`;
+  if (h > 0) return `${h}h`;
+  return `${Math.floor(sec / 60)}m`;
+}
+
+function tsShort(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' });
+}
+
+function nowStr() {
+  return new Date().toLocaleString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+function stableId(source, area, text) {
+  const raw = `${source}:${area}:${text.replace(/<[^>]*>/g, '').toLowerCase()}`;
+  let hash = 0;
+  for (let i = 0; i < raw.length; i++) hash = ((hash << 5) - hash + raw.charCodeAt(i)) | 0;
+  return `${source}-${Math.abs(hash)}`;
+}
+
+function loadBotResolved() {
+  try { botResolved = JSON.parse(localStorage.getItem(BOT_RESOLVED_KEY)) || {}; }
+  catch(e) { botResolved = {}; }
+  LEGACY_BOT_WATCH_IDS.forEach(id => {
+    if (!botResolved[id]) botResolved[id] = { doneAt: '2026-05-22T07:15:00+00:00' };
+  });
+  saveBotResolved();
+}
+
+function saveBotResolved() {
+  try { localStorage.setItem(BOT_RESOLVED_KEY, JSON.stringify(botResolved)); } catch(e) {}
+}
+
+function loadPendingOverrides() {
+  try { pendingOverrides = JSON.parse(localStorage.getItem(PENDING_OVERRIDES_KEY)) || {}; }
+  catch(e) { pendingOverrides = {}; }
+}
+
+function savePendingOverrides() {
+  try { localStorage.setItem(PENDING_OVERRIDES_KEY, JSON.stringify(pendingOverrides)); } catch(e) {}
+}
+
+function rememberPendingOverride(item, extra = {}) {
+  pendingOverrides[item.id] = {
+    id: item.id,
+    text: item.text,
+    priority: item.priority,
+    category: item.category,
+    source: item.source || 'manual',
+    done: Boolean(item.done),
+    createdAt: item.createdAt || new Date().toISOString(),
+    doneAt: item.doneAt || null,
+    updatedAt: new Date().toISOString(),
+    ...extra
+  };
+  savePendingOverrides();
+}
+
+function clearPendingOverride(id) {
+  if (!pendingOverrides[id]) return;
+  delete pendingOverrides[id];
+  savePendingOverrides();
+}
+
+function applyPendingOverrides(items) {
+  const base = items.map(item => ({ ...item, ...(pendingOverrides[item.id] || {}) }));
+  const serverIds = new Set(base.map(item => item.id));
+  const localOnly = Object.values(pendingOverrides)
+    .filter(item => item.localOnly && !item.deleted && !serverIds.has(item.id));
+  return [...base.filter(item => !pendingOverrides[item.id]?.deleted), ...localOnly];
+}
+
+function setSaveStatus(text, tone = 'muted', sticky = false) {
+  const el = document.getElementById('pending-save-status');
+  if (!el) return;
+  el.className = tone === 'ok' ? 'save-ok' : tone === 'warn' ? 'save-warn' : tone === 'bad' ? 'save-bad' : '';
+  el.textContent = text;
+  if (saveStatusTimer) clearTimeout(saveStatusTimer);
+  if (!sticky) {
+    saveStatusTimer = setTimeout(() => {
+      el.className = '';
+      el.textContent = 'sin cambios pendientes';
+    }, 3500);
+  }
+}
+
+function setSourceStatus(text, tone = 'muted') {
+  const el = document.getElementById('pending-source-status');
+  if (!el) return;
+  el.className = tone === 'ok' ? 'save-ok' : tone === 'warn' ? 'save-warn' : tone === 'bad' ? 'save-bad' : '';
+  el.textContent = text;
+}
+
+function mergeBotResolvedFromServer(serverState) {
+  if (!serverState || typeof serverState !== 'object') return;
+  botResolved = { ...botResolved, ...serverState };
+  LEGACY_BOT_WATCH_IDS.forEach(id => {
+    if (!botResolved[id]) botResolved[id] = { doneAt: '2026-05-22T07:15:00+00:00' };
+  });
+  saveBotResolved();
+}
+
+async function persistBotResolved(id, done, doneAt) {
+  try {
+    const url = `${API}/bot-resolved/${encodeURIComponent(id)}`;
+    if (done) {
+      const res = await fetch(url, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ doneAt })
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    } else {
+      const res = await fetch(url, { method: 'DELETE' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    }
+    return true;
+  } catch(e) {
+    return false;
+  }
+}
+
+function stripHtml(s) {
+  const tmp = document.createElement('div');
+  tmp.innerHTML = s || '';
+  return tmp.textContent || tmp.innerText || '';
+}
+
+/* ── Machines ── */
+const MACHINES = [
+  { id: 'mac-mini',    label: 'Mac Mini M1',       role: 'Studio · Principal' },
+  { id: 'macbook-pro', label: 'MacBook Pro M1',      role: 'Portable · Secundario' },
+  { id: 'vps',         label: 'Hetzner VPS',        role: 'Servidor · nbg1' },
+];
+
+function machineCard(def, data) {
+  const noData = !data;
+  const ageS = data ? (Date.now() - new Date(data.generatedAt).getTime()) / 1000 : Infinity;
+  const stale = ageS > 180;
+  const offline = noData || ageS > 900;
+
+  const cls = offline ? 'offline' : stale ? 'stale' : '';
+  const dotCls = offline ? 'dot-red' : stale ? 'dot-amber' : 'dot-green';
+  const statusLabel = offline ? 'sin heartbeat' : stale ? 'stale' : 'online';
+
+  let network = data ? data.network || {} : {};
+  let system = data ? data.system || {} : {};
+  let services = data ? data.services || {} : {};
+  let os = data ? data.os || {} : {};
+  const load = Array.isArray(system.loadAverage) ? system.loadAverage.map(n => n.toFixed(2)).join(' · ') : '—';
+
+  // Build service dots — only show for non-VPS machines (VPS has its own panel)
+  const isVps = def.id === 'vps';
+  const svcHtml = isVps ? '' : Object.entries(services).map(([name, ok]) =>
+    `<span class="svc-dot ${ok ? 'svc-ok' : 'svc-off'}">${name}</span>`
+  ).join('');
+
+  // VPS-specific RAM row
+  const ramRow = (system.ramUsedMB != null)
+    ? `<li><span class="row-key">RAM</span><span class="row-val-r">${system.ramUsedMB} / ${system.ramTotalMB} MB</span></li>`
+    : '';
+  const diskRow = (system.diskUsagePercent != null)
+    ? `<li><span class="row-key">Disco</span><span class="row-val-r">${system.diskUsagePercent}%</span></li>`
+    : '';
+
+  return `
+    <div class="machine-card ${cls}">
+      <div class="card-label"><span class="status-dot ${dotCls}"></span>${def.label}</div>
+      <div class="card-val">${statusLabel}</div>
+      <div class="card-sub">${def.role} · ${data ? `hace ${age(data.generatedAt)}` : 'nunca'}</div>
+      <ul class="row-list" style="margin-top:10px">
+        ${data ? `
+        <li><span class="row-key">IP / red</span><span class="row-val-r">${network.localIp || '—'}</span></li>
+        ${network.vpsSshReachable != null ? `<li><span class="row-key">VPS SSH</span><span class="row-val-r">${network.vpsSshReachable ? 'ok' : 'down'}</span></li>` : ''}
+        <li><span class="row-key">Internet</span><span class="row-val-r">${network.internetReachable ? 'ok' : 'down'}</span></li>
+        <li><span class="row-key">Load</span><span class="row-val-r">${load}</span></li>
+        <li><span class="row-key">Uptime</span><span class="row-val-r">${uptime(system.uptimeSeconds)}</span></li>
+        ${ramRow}${diskRow}
+        ` : '<li><span class="row-key" style="color:var(--dim)">Instalar heartbeat en esta máquina</span></li>'}
+      </ul>
+      ${svcHtml ? `<div class="svc-dots">${svcHtml}</div>` : ''}
+    </div>`;
+}
+
+/* ── VPS Services panel ── */
+const SVC_META = {
+  nginx:        { label: 'nginx',           desc: ':80/:443 · reverse proxy' },
+  ogSystem:     { label: 'og.service',      desc: 'system.py · Telegram + market' },
+  secondEar:    { label: 'second-ear',      desc: ':8788 · plugin engine' },
+  secondEarTg:  { label: 'second-ear-tg',   desc: 'Telegram long-poll' },
+  cash14:       { label: 'cash14',          desc: ':5001 · lead radar' },
+  chains:       { label: 'chains',          desc: ':5002 · chain generator' },
+  n8n:          { label: 'n8n',             desc: ':5678 · Docker workflows' },
+  ogContactApi: { label: 'og-contact-api',  desc: ':5012 · contact form' },
+  ogDeployHook: { label: 'og-deploy-hook',  desc: ':9876 · webhook deploy' },
+  ogPendientes: { label: 'og-pendientes',   desc: ':5003 · pendientes API' },
 };
 
-function load() {
+function renderVpsServices(services) {
+  const grid = document.getElementById('vps-services-grid');
+  if (!grid || !services) return;
+  const entries = Object.entries(SVC_META);
+  const html = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">` +
+    entries.map(([key, meta]) => {
+      const ok = services[key];
+      return `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg3);border:1px solid ${ok ? 'rgba(74,222,128,0.15)' : 'rgba(248,113,113,0.15)'};border-radius:6px">
+        <span class="status-dot ${ok ? 'dot-green' : 'dot-red'}" style="flex-shrink:0"></span>
+        <div>
+          <div style="font-size:11px;font-family:'SF Mono','Fira Code',Consolas,monospace;color:var(--text)">${meta.label}</div>
+          <div style="font-size:10px;color:var(--dim);margin-top:1px">${meta.desc}</div>
+        </div>
+      </div>`;
+    }).join('') + `</div>`;
+  grid.innerHTML = html;
+}
+
+async function loadMachines() {
+  const grid = document.getElementById('machine-grid');
+  const cards = await Promise.all(MACHINES.map(async def => {
+    try {
+      const res = await fetch(`./machines/${def.id}.json`, { cache: 'no-store' });
+      const data = res.ok ? await res.json() : null;
+
+      // Store for bot suggestions
+      if (data) _machineData[def.id] = data;
+
+      // Update overview cards
+      if (def.id === 'mac-mini' && data) {
+        const ageS = (Date.now() - new Date(data.generatedAt).getTime()) / 1000;
+        fmt('ov-macmini', ageS > 900 ? 'offline' : ageS > 180 ? 'stale' : 'online');
+        fmt('ov-macmini-sub', `${data.network?.localIp || '—'} · ${age(data.generatedAt)}`);
+      }
+      if (def.id === 'vps' && data) {
+        const ageS = (Date.now() - new Date(data.generatedAt).getTime()) / 1000;
+        fmt('ov-vps', ageS > 180 ? 'stale' : 'ok');
+        fmt('ov-vps-sub', `load ${(data.system?.loadAverage?.[0] || 0).toFixed(2)} · ${age(data.generatedAt)}`);
+        // Render live services panel
+        renderVpsServices(data.services);
+        // Second Ear status dot
+        const seDot = document.getElementById('se-dot');
+        if (seDot) {
+          const seOk = data.services?.secondEar && data.services?.secondEarTg;
+          seDot.className = `status-dot ${seOk ? 'dot-green' : 'dot-red'}`;
+          seDot.style.background = '';
+        }
+      }
+
+      return machineCard(def, data);
+    } catch(e) {
+      return machineCard(def, null);
+    }
+  }));
+  grid.innerHTML = cards.join('');
+  renderBotSuggestions();
+}
+
+/* ── Security ── */
+async function loadSecurity() {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) state = { ...state, ...JSON.parse(saved) };
-  } catch(e) {}
-  render();
+    const res = await fetch('./security.json', { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const d = await res.json();
+    const s = d.status || {};
+    const recs = Array.isArray(d.recommendations) ? d.recommendations : [];
+    const failed = Number(s.failedSshAttempts || 0);
+    const disk = Number(s.diskUsagePercent || 0);
+    const hasUnknown = (s.unknownAcceptedIps || []).length > 0;
+    const hasUnexpected = (s.unexpectedAllowedPorts || []).length > 0;
+    const alert = hasUnknown || hasUnexpected || disk >= 85;
+    const noisy = failed > 25;
+
+    const dot = document.getElementById('sec-dot');
+    dot.className = `status-dot ${alert ? 'dot-red' : noisy ? 'dot-amber' : 'dot-green'}`;
+    fmt('sec-status', alert ? 'requiere atención' : noisy ? 'estable · ruido alto' : 'estable');
+    fmt('ov-security', alert ? 'atención' : noisy ? 'estable' : 'limpio');
+    fmt('ov-security-sub', alert ? 'revisar sentinel' : 'sin alertas');
+    fmt('sec-generated', d.generatedAt ? `actualizado ${tsShort(d.generatedAt)}` : 'security.json');
+    fmt('sec-failed', String(failed)); fmt('ov-ssh', String(failed));
+    fmt('sec-accepted', String((s.acceptedIps || []).length));
+    fmt('sec-accepted-sub', (s.acceptedIps || []).join(' · ') || 'none');
+    fmt('sec-ports', (s.allowedPorts || []).join(' ') || '—');
+    fmt('sec-disk', disk ? `${disk}%` : '—');
+    fmt('sec-listeners', (s.allInterfaceListeners || []).join(' ') || 'none');
+    fmt('sec-unexpected', (s.unexpectedAllowedPorts || []).join(' ') || 'none');
+    fmt('sec-unknown', (s.unknownAcceptedIps || []).join(' · ') || 'none');
+
+    const mode = document.getElementById('sec-mode');
+    if (mode) { mode.textContent = d.mode || 'watch'; mode.className = `badge ${alert ? 'badge-red' : noisy ? 'badge-amber' : 'badge-green'}`; }
+
+    const list = document.getElementById('sec-recommendations');
+    list.innerHTML = '';
+    (recs.length ? recs : ['No urgent action.']).forEach(t => {
+      const li = document.createElement('li'); li.textContent = t.replace(/^- /, ''); list.appendChild(li);
+    });
+    _secData = d;
+    renderBotSuggestions();
+  } catch(err) {
+    document.getElementById('sec-dot').className = 'status-dot dot-amber';
+    fmt('sec-status', 'sin feed');
+    renderBotSuggestions();
+  }
 }
 
-function save() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
-}
+/* ── Bot Suggestions ── */
+let _machineData = {};
+let _secData = null;
 
-function saveAll() {
-  state.notes = document.getElementById('notes').value;
-  state.lastUpdated = new Date().toISOString();
-  save();
-  updateTimestamp();
-  const flash = document.getElementById('saved-flash');
-  flash.classList.add('show');
-  setTimeout(() => flash.classList.remove('show'), 2000);
-}
+function renderBotSuggestions() {
+  const el = document.getElementById('bot-suggestions');
+  if (!el) return;
 
-function updateTimestamp() {
-  if (!state.lastUpdated) return;
-  const d = new Date(state.lastUpdated);
-  const str = d.toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric' }) + ' · ' + d.toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' });
-  document.getElementById('last-updated').textContent = str;
-  document.getElementById('footer-ts').textContent = str;
-}
+  const suggestions = [];
 
-function toggleDone(id) {
-  const idx = state.doneTasks.indexOf(id);
-  if (idx > -1) state.doneTasks.splice(idx, 1);
-  else state.doneTasks.push(id);
-  save();
+  // From machine data
+  const mm = _machineData['mac-mini'];
+  const mbp = _machineData['macbook-pro'];
+  const vps = _machineData['vps'];
+
+  if (mm) {
+    const ageS = (Date.now() - new Date(mm.generatedAt).getTime()) / 1000;
+    if (ageS > 900) suggestions.push({ sev: 'risk', area: 'heartbeat', text: '<strong>Mac Mini sin heartbeat hace más de 15 min.</strong> El script og-heartbeat.sh no está corriendo o la red local está caída.' });
+    const load1 = mm.system?.loadAverage?.[0];
+    if (load1 > 6) suggestions.push({ sev: 'watch', area: 'rendimiento', text: `<strong>Carga alta en Mac Mini</strong> (${load1.toFixed(2)}). Revisar si Ollama está en un pull activo o si hay un proceso bloqueado.` });
+  }
+
+  if (mbp) {
+    const ageS = (Date.now() - new Date(mbp.generatedAt).getTime()) / 1000;
+    if (ageS > 900) suggestions.push({ sev: 'watch', area: 'heartbeat', text: '<strong>MacBook Pro sin heartbeat hace más de 15 min.</strong> Normal si está apagado o sin conexión.' });
+  } else {
+    suggestions.push({ sev: 'watch', area: 'heartbeat', text: '<strong>MacBook Pro nunca ha enviado heartbeat.</strong> Instalar og-heartbeat.sh en el portátil para tener visibilidad de las dos máquinas.' });
+  }
+
+  if (vps) {
+    const svcs = vps.services || {};
+    if (svcs.secondEar === false)  suggestions.push({ sev: 'risk',  area: 'second-ear', text: '<strong>second-ear.service caído.</strong> El motor de plugins no responde. Reiniciar: <code>systemctl restart second-ear</code>' });
+    if (svcs.secondEarTg === false) suggestions.push({ sev: 'fix',  area: 'second-ear', text: '<strong>second-ear-telegram caído.</strong> El bot de Telegram no está escuchando. Reiniciar el servicio.' });
+    if (svcs.n8n === false)        suggestions.push({ sev: 'watch', area: 'n8n',        text: '<strong>n8n (Docker) caído.</strong> Los workflows de automatización no están activos.' });
+    if (svcs.cash14 === false)     suggestions.push({ sev: 'fix',   area: 'cash14',     text: '<strong>cash14 caído (:5001).</strong> El lead radar del sprint no está disponible.' });
+    const disk = vps.system?.diskUsagePercent;
+    if (disk >= 80) suggestions.push({ sev: 'risk',  area: 'vps-disco', text: `<strong>Disco VPS al ${disk}%.</strong> Limpiar logs, Docker images sin usar, o ampliar volumen antes de llegar al 90%.` });
+    else if (disk >= 65) suggestions.push({ sev: 'watch', area: 'vps-disco', text: `<strong>Disco VPS al ${disk}%.</strong> Vigilar. Limpiar imágenes Docker o logs si sigue subiendo.` });
+  }
+
+  // From security data
+  if (_secData) {
+    const s = _secData.status || {};
+    if ((s.unknownAcceptedIps || []).length > 0) suggestions.push({ sev: 'risk', area: 'seguridad', text: `<strong>Login desde IP no reconocida:</strong> ${s.unknownAcceptedIps.join(', ')}. Revisar si eres tú o revocar acceso.` });
+    if ((s.unexpectedAllowedPorts || []).length > 0) suggestions.push({ sev: 'risk', area: 'seguridad', text: `<strong>Puertos inesperados abiertos:</strong> ${s.unexpectedAllowedPorts.join(', ')}. Cerrar si no son necesarios.` });
+    if (Number(s.failedSshAttempts) > 100) suggestions.push({ sev: 'fix', area: 'seguridad', text: `<strong>${s.failedSshAttempts} intentos SSH bloqueados.</strong> Considerar mover SSH a puerto no estándar o añadir geo-blocking en UFW.` });
+  }
+
+  botWatchItems = suggestions.map(s => {
+    const id = s.key ? `bot_watch-${s.key}` : stableId('bot_watch', s.area, s.text);
+    const doneState = botResolved[id] || null;
+    return {
+      id,
+      text: stripHtml(s.text),
+      html: s.text,
+      priority: s.sev === 'risk' ? 'high' : s.sev === 'watch' ? 'medium' : 'low',
+      category: s.sev === 'idea' ? 'improve' : 'fix',
+      source: 'bot_watch',
+      area: s.area,
+      done: Boolean(doneState),
+      createdAt: new Date().toISOString(),
+      doneAt: doneState?.doneAt || null
+    };
+  });
+
   renderPending();
+
+  const openCount = botWatchItems.filter(i => !i.done).length;
+  const doneCount = botWatchItems.filter(i => i.done).length;
+  el.classList.toggle('empty', openCount === 0);
+  el.innerHTML = `
+    <div class="bot-scan-header">
+      <span>OG_WATCHER · ${openCount} abiertas · ${doneCount} resueltas</span>
+      <span style="color:var(--dim)">${nowStr()}</span>
+    </div>`;
 }
 
-function addTask() {
-  const input = document.getElementById('new-task');
-  const val = input.value.trim();
-  if (!val) return;
-  const id = Date.now();
-  state.customTasks.push({ id, text: val });
-  input.value = '';
-  save();
-  renderPending();
-}
-
-function removeTask(id) {
-  state.customTasks = state.customTasks.filter(t => t.id !== id);
-  save();
+/* ── Pendientes ── */
+function setFilter(f) {
+  currentFilter = f;
+  document.querySelectorAll('.pending-filter').forEach(b => b.classList.toggle('active', b.dataset.filter === f));
   renderPending();
 }
 
 function renderPending() {
   const list = document.getElementById('pending-list');
-  const items = list.querySelectorAll('li[data-id]');
-  items.forEach(li => {
-    const id = parseInt(li.dataset.id);
-    const done = state.doneTasks.includes(id);
-    li.classList.toggle('done', done);
-    li.querySelector('.check').textContent = done ? '●' : '○';
+  const mergedItems = [
+    ...SYSTEM_MEMORY,
+    ...botWatchItems,
+    ...pendingItems.map(item => ({ ...item, source: item.source || 'manual' }))
+  ];
+  const open = mergedItems.filter(i => !i.done);
+  const high = open.filter(i => i.priority === 'high').length;
+  const done = mergedItems.filter(i => i.done);
+
+  fmt('ov-pending', String(open.length));
+  fmt('ov-pending-sub', high > 0 ? `${high} alta prioridad` : 'por resolver');
+  renderPendingSummary(open.length, high, done.length);
+
+  const visible = mergedItems.filter(item => {
+    if (currentFilter === 'open') return !item.done;
+    if (currentFilter === 'done') return item.done;
+    if (currentFilter === 'fix') return item.category === 'fix' && !item.done;
+    if (currentFilter === 'improve') return (item.category === 'improve' || item.category === 'feature') && !item.done;
+    return true;
   });
 
-  // custom tasks
-  list.querySelectorAll('.custom-task').forEach(el => el.remove());
-  state.customTasks.forEach(task => {
+  // Sort: high open first, then medium, then low, then done
+  visible.sort((a, b) => {
+    if (a.done !== b.done) return a.done ? 1 : -1;
+    const order = { high: 0, medium: 1, low: 2 };
+    return (order[a.priority] || 1) - (order[b.priority] || 1);
+  });
+
+  list.innerHTML = '';
+  if (!visible.length) {
+    list.innerHTML = '<li style="color:var(--dim);font-size:12px;padding:10px 0">No hay items en este filtro.</li>';
+    return;
+  }
+
+  visible.forEach(item => {
     const li = document.createElement('li');
-    li.className = 'custom-task';
-    li.dataset.id = task.id;
-    const done = state.doneTasks.includes(task.id);
-    if (done) li.classList.add('done');
-    li.innerHTML = `<span class="check" onclick="toggleDone(${task.id})">${done ? '●' : '○'}</span><span class="text">${task.text}</span><span onclick="removeTask(${task.id})" style="margin-left:auto;cursor:pointer;color:var(--dim);font-size:16px;flex-shrink:0">×</span>`;
+    li.className = `pending-item priority-${item.priority} cat-${item.category}${item.done ? ' done' : ''}`;
+    const sourceLabel = item.source === 'bot_watch' ? 'bot watch' : item.source === 'system_memory' ? 'memoria' : 'manual';
+    li.innerHTML = `
+      <span class="pend-check" title="marcar como ${item.done ? 'pendiente' : 'resuelto'}" onclick="toggleDone('${item.id}')">
+        ${item.done ? '●' : '○'}
+      </span>
+      <div class="pend-body">
+        <div class="pend-text">${escHtml(item.text)}</div>
+        <div class="pend-meta">
+          <span class="pend-tag tag-${item.source || 'manual'}">${sourceLabel}</span>
+          <span class="pend-tag tag-${item.category}">${item.category}</span>
+          <span class="pend-tag tag-${item.priority}">${item.priority}</span>
+          ${item.area ? `<span class="pend-tag" style="color:var(--dim);background:var(--bg3)">${escHtml(item.area)}</span>` : ''}
+          ${item.doneAt ? `<span class="pend-tag" style="color:var(--green);background:var(--green-dim)">resuelto ${tsShort(item.doneAt)}</span>` : ''}
+        </div>
+      </div>
+      ${item.source === 'bot_watch' ? '' : `<span class="pend-del" title="eliminar" onclick="deleteTask('${item.id}')">×</span>`}`;
     list.appendChild(li);
   });
 }
 
-function render() {
-  document.getElementById('notes').value = state.notes || '';
-  updateTimestamp();
-  renderPending();
+function renderPendingSummary(openCount, highCount, doneCount) {
+  const el = document.getElementById('pending-summary');
+  if (!el) return;
+  el.innerHTML = `
+    <div class="pending-summary-box"><div class="pending-summary-k">Falta</div><div class="pending-summary-v">${openCount}</div><div class="pending-summary-sub">acciones abiertas ahora</div></div>
+    <div class="pending-summary-box"><div class="pending-summary-k">Riesgo</div><div class="pending-summary-v">${highCount}</div><div class="pending-summary-sub">alta prioridad</div></div>
+    <div class="pending-summary-box"><div class="pending-summary-k">Hecho</div><div class="pending-summary-v">${doneCount}</div><div class="pending-summary-sub">recordado por la página</div></div>`;
 }
 
-load();
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function loadPendientes() {
+  try {
+    const res = await fetch(`${API}/`, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    pendingItems = applyPendingOverrides(data.items || []);
+    mergeBotResolvedFromServer(data.botResolved);
+    renderBotSuggestions();
+    document.getElementById('pend-error').style.display = 'none';
+    setSourceStatus(`API ok · ${tsShort(data.updatedAt)}`, 'ok');
+  } catch(err) {
+    document.getElementById('pend-error').style.display = 'block';
+    document.getElementById('pend-error').textContent = `Error cargando pendientes: ${err.message}`;
+    setSourceStatus('API sin respuesta', 'warn');
+  }
+}
+
+async function toggleDone(id) {
+  const botItem = botWatchItems.find(i => i.id === id);
+  if (botItem) {
+    botItem.done = !botItem.done;
+    botItem.doneAt = botItem.done ? new Date().toISOString() : null;
+    if (botItem.done) botResolved[id] = { doneAt: botItem.doneAt };
+    else delete botResolved[id];
+    saveBotResolved();
+    renderBotSuggestions();
+    setSaveStatus('guardando watcher...', 'warn', true);
+    const ok = await persistBotResolved(id, botItem.done, botItem.doneAt);
+    setSaveStatus(ok ? 'watcher guardado' : 'watcher guardado local · API no respondió', ok ? 'ok' : 'warn');
+    if (ok) loadPendientes();
+    return;
+  }
+
+  const item = pendingItems.find(i => i.id === id);
+  if (!item) return;
+  item.done = !item.done;
+  item.doneAt = item.done ? new Date().toISOString() : null;
+  renderPending();
+  setSaveStatus('guardando tarea...', 'warn', true);
+  try {
+    const res = await fetch(`${API}/?id=${encodeURIComponent(id)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ done: item.done }) });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const saved = await res.json();
+    Object.assign(item, saved);
+    clearPendingOverride(id);
+    setSaveStatus('tarea guardada', 'ok');
+    renderPending();
+  } catch(e) {
+    rememberPendingOverride(item);
+    setSaveStatus('guardado local · API no respondió', 'warn');
+  }
+}
+
+async function deleteTask(id) {
+  const item = pendingItems.find(i => i.id === id);
+  pendingItems = pendingItems.filter(i => i.id !== id);
+  renderPending();
+  setSaveStatus('eliminando...', 'warn', true);
+  try {
+    const res = await fetch(`${API}/?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    clearPendingOverride(id);
+    setSaveStatus('tarea eliminada', 'ok');
+  } catch(e) {
+    if (item) rememberPendingOverride(item, { deleted: true });
+    setSaveStatus('eliminado local · API no respondió', 'warn');
+  }
+}
+
+async function addTask() {
+  const text = document.getElementById('new-task-text').value.trim();
+  if (!text) return;
+  const cat = document.getElementById('new-task-cat').value;
+  const priority = document.getElementById('new-task-priority').value;
+  const item = { id: String(Date.now()), text, priority, category: cat, source: 'manual', done: false, createdAt: new Date().toISOString(), doneAt: null };
+  pendingItems.push(item);
+  document.getElementById('new-task-text').value = '';
+  renderPending();
+  setSaveStatus('añadiendo...', 'warn', true);
+  try {
+    const res = await fetch(`${API}/`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text, priority, category: cat }) });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const created = await res.json();
+    // replace temp item with server-assigned id
+    const idx = pendingItems.findIndex(i => i.id === item.id);
+    if (idx > -1) pendingItems[idx] = created;
+    clearPendingOverride(item.id);
+    setSaveStatus('tarea añadida', 'ok');
+    renderPending();
+  } catch(e) {
+    rememberPendingOverride(item, { localOnly: true });
+    setSaveStatus('añadido local · API no respondió', 'warn');
+  }
+}
+
+/* ── Refresh loop ── */
+function updateTimestamp() {
+  const str = nowStr();
+  fmt('last-updated', str);
+  fmt('footer-ts', str);
+}
+
+async function refreshAll() {
+  await Promise.all([loadMachines(), loadSecurity(), loadPendientes()]);
+  updateTimestamp();
+}
+
+function startCountdown() {
+  countdown = REFRESH_INTERVAL;
+  const el = document.getElementById('countdown');
+  const tick = setInterval(() => {
+    countdown--;
+    if (el) el.textContent = `· ${countdown}s`;
+    if (countdown <= 0) {
+      clearInterval(tick);
+      refreshAll().then(startCountdown);
+    }
+  }, 1000);
+}
+
+// Allow Enter key to add task
+document.getElementById('new-task-text').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addTask();
+});
+
+loadBotResolved();
+loadPendingOverrides();
+refreshAll().then(startCountdown);
 </script>
 </body>
 </html>

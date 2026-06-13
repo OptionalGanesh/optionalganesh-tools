@@ -9,26 +9,26 @@
       --bg: #050505;
       --bg-soft: #0c0c0c;
       --line: rgba(255,255,255,0.08);
+      --line-hover: rgba(255,255,255,0.18);
       --text: rgba(255,255,255,0.92);
-      --muted: rgba(255,255,255,0.45);
-      --hover: rgba(255,255,255,0.08);
-      --glow: rgba(255,255,255,0.12);
+      --muted: rgba(255,255,255,0.48);
+      --dim: rgba(255,255,255,0.32);
+      --glow: rgba(255,255,255,0.1);
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     html, body {
       margin: 0;
       min-height: 100%;
       background:
-        radial-gradient(circle at 20% 20%, rgba(255,255,255,0.035), transparent 30%),
-        radial-gradient(circle at 80% 30%, rgba(255,255,255,0.025), transparent 28%),
+        radial-gradient(circle at 18% 18%, rgba(255,255,255,0.03), transparent 32%),
+        radial-gradient(circle at 82% 28%, rgba(255,255,255,0.02), transparent 30%),
         linear-gradient(180deg, #070707 0%, #020202 100%);
       color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
       letter-spacing: 0.01em;
+      -webkit-font-smoothing: antialiased;
     }
 
     body {
@@ -36,58 +36,59 @@
       align-items: center;
       justify-content: center;
       padding: 32px;
+      min-height: 100vh;
+    }
+
+    /* subtle dot-grid background */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.016) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.016) 1px, transparent 1px);
+      background-size: 28px 28px;
+      pointer-events: none;
+      opacity: 0.4;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,0.5), rgba(0,0,0,0.06));
     }
 
     .frame {
+      position: relative;
       width: 100%;
       max-width: 1180px;
-      min-height: 78vh;
       border: 1px solid var(--line);
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      box-shadow: 0 0 0 1px rgba(255,255,255,0.015) inset, 0 24px 80px rgba(0,0,0,0.45);
+      background: linear-gradient(180deg, rgba(255,255,255,0.018), rgba(255,255,255,0.008));
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.012) inset,
+        0 32px 96px rgba(0,0,0,0.5);
       display: grid;
-      grid-template-columns: 1.1fr 1.4fr;
+      grid-template-columns: 1fr 1.5fr;
       overflow: hidden;
-      position: relative;
-    }
-
-    .frame::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
-      background-size: 28px 28px;
-      pointer-events: none;
-      opacity: 0.35;
-      mask-image: linear-gradient(to bottom, rgba(0,0,0,0.55), rgba(0,0,0,0.08));
-    }
-
-    .left, .right {
-      position: relative;
       z-index: 1;
     }
 
+    /* ── Left panel ── */
     .left {
-      padding: 56px 44px 40px;
+      padding: 56px 44px 44px;
       border-right: 1px solid var(--line);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      gap: 40px;
     }
 
     .label {
-      color: var(--muted);
+      color: var(--dim);
       font-size: 11px;
       letter-spacing: 0.28em;
       text-transform: uppercase;
-      margin-bottom: 18px;
+      margin-bottom: 20px;
     }
 
     h1 {
       margin: 0;
-      font-size: clamp(2.2rem, 4vw, 4.6rem);
+      font-size: clamp(2.4rem, 4vw, 4.8rem);
       font-weight: 300;
       line-height: 0.95;
       letter-spacing: 0.18em;
@@ -95,32 +96,33 @@
     }
 
     .subtitle {
-      margin-top: 18px;
-      max-width: 480px;
+      margin-top: 20px;
       color: var(--muted);
       font-size: 14px;
-      line-height: 1.7;
+      line-height: 1.75;
+      max-width: 340px;
     }
 
     .quote {
-      margin-top: 42px;
-      padding-left: 16px;
+      margin-top: 36px;
+      padding-left: 14px;
       border-left: 1px solid var(--line);
-      color: rgba(255,255,255,0.62);
+      color: rgba(255,255,255,0.55);
       font-size: 13px;
-      line-height: 1.8;
-      max-width: 420px;
+      line-height: 1.85;
+      font-style: italic;
     }
 
     .footer-note {
-      color: rgba(255,255,255,0.33);
+      color: var(--dim);
       font-size: 11px;
       letter-spacing: 0.18em;
       text-transform: uppercase;
     }
 
+    /* ── Right panel ── */
     .right {
-      padding: 34px 28px 28px;
+      padding: 32px 28px 28px;
       display: flex;
       flex-direction: column;
     }
@@ -129,30 +131,46 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 16px;
-      padding-bottom: 18px;
+      padding-bottom: 16px;
       border-bottom: 1px solid var(--line);
-      margin-bottom: 18px;
+      margin-bottom: 20px;
     }
 
     .topbar-title {
-      font-size: 12px;
+      font-size: 11px;
       text-transform: uppercase;
-      letter-spacing: 0.22em;
-      color: var(--muted);
+      letter-spacing: 0.24em;
+      color: var(--dim);
     }
 
     .status {
+      display: flex;
+      align-items: center;
+      gap: 7px;
       font-size: 11px;
-      color: rgba(255,255,255,0.55);
+      color: var(--dim);
       letter-spacing: 0.14em;
       text-transform: uppercase;
     }
 
+    .status-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: rgba(74, 222, 128, 0.8);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* ── Card grid ── */
     .grid {
       display: grid;
-      grid-template-columns: repeat(2, minmax(220px, 1fr));
-      gap: 14px;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
       flex: 1;
       align-content: start;
     }
@@ -161,105 +179,107 @@
       text-decoration: none;
       color: var(--text);
       border: 1px solid var(--line);
-      background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.02));
-      min-height: 148px;
-      padding: 18px 18px 16px;
+      background: rgba(255,255,255,0.012);
+      padding: 20px 20px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
       position: relative;
       overflow: hidden;
-      transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
+      transition:
+        border-color 180ms ease,
+        background 180ms ease,
+        box-shadow 180ms ease;
     }
 
-    .card::before {
+    /* shimmer on hover */
+    .card::after {
       content: "";
       position: absolute;
       inset: 0;
-      background: linear-gradient(135deg, rgba(255,255,255,0.05), transparent 45%);
+      background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%);
       opacity: 0;
       transition: opacity 180ms ease;
       pointer-events: none;
     }
 
     .card:hover {
-      transform: translateY(-2px);
-      border-color: rgba(255,255,255,0.18);
-      background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.025));
-      box-shadow: 0 10px 40px rgba(0,0,0,0.3), 0 0 24px var(--glow);
+      border-color: var(--line-hover);
+      background: rgba(255,255,255,0.028);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.28), 0 0 0 1px rgba(255,255,255,0.04) inset;
     }
 
-    .card:hover::before {
-      opacity: 1;
+    .card:hover::after { opacity: 1; }
+
+    .card:focus-visible {
+      outline: 1px solid rgba(255,255,255,0.45);
+      outline-offset: 2px;
+      border-color: rgba(255,255,255,0.28);
+    }
+
+    /* ── Card internals ── */
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
     }
 
     .card-tag {
-      display: inline-block;
       font-size: 10px;
-      letter-spacing: 0.18em;
+      letter-spacing: 0.16em;
       text-transform: uppercase;
-      color: rgba(255,255,255,0.42);
-      margin-bottom: 16px;
-    }
-
-    .card-title {
-      font-size: 20px;
-      font-weight: 300;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      margin-bottom: 10px;
-    }
-
-    .card-desc {
-      color: rgba(255,255,255,0.58);
-      font-size: 13px;
-      line-height: 1.65;
-      max-width: 90%;
+      color: var(--dim);
+      line-height: 1.4;
     }
 
     .card-arrow {
-      position: absolute;
-      right: 16px;
-      bottom: 14px;
-      color: rgba(255,255,255,0.34);
-      font-size: 18px;
-      transition: transform 180ms ease, color 180ms ease;
+      color: var(--dim);
+      font-size: 14px;
+      flex-shrink: 0;
+      margin-top: 1px;
+      transition: transform 200ms ease, color 200ms ease;
     }
 
     .card:hover .card-arrow {
-      transform: translateX(4px);
+      transform: translate(3px, -2px);
       color: rgba(255,255,255,0.7);
     }
 
-    @media (max-width: 920px) {
-      .frame {
-        grid-template-columns: 1fr;
-      }
+    .card-title {
+      font-size: 18px;
+      font-weight: 400;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      line-height: 1.1;
+      margin: 0;
+    }
 
+    .card-desc {
+      color: rgba(255,255,255,0.55);
+      font-size: 12.5px;
+      line-height: 1.65;
+      margin-top: 2px;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 960px) {
+      .frame { grid-template-columns: 1fr; }
       .left {
         border-right: none;
         border-bottom: 1px solid var(--line);
-        gap: 28px;
+        padding: 40px 32px 32px;
+        gap: 24px;
       }
+      .subtitle { max-width: none; }
     }
 
     @media (max-width: 640px) {
-      body {
-        padding: 14px;
-      }
-
-      .left {
-        padding: 34px 22px 28px;
-      }
-
-      .right {
-        padding: 22px 16px 16px;
-      }
-
-      .grid {
-        grid-template-columns: 1fr;
-      }
-
-      h1 {
-        letter-spacing: 0.12em;
-      }
+      body { padding: 12px; }
+      .left { padding: 28px 20px 24px; }
+      .right { padding: 20px 14px 16px; }
+      .grid { grid-template-columns: 1fr; gap: 8px; }
+      h1 { letter-spacing: 0.12em; }
     }
   </style>
 </head>
@@ -286,43 +306,83 @@
     <section class="right">
       <div class="topbar">
         <div class="topbar-title">Access Points</div>
-        <div class="status">Online</div>
+        <div class="status">
+          <span class="status-dot"></span>
+          Online
+        </div>
       </div>
 
       <div class="grid">
-        <a class="card" href="/Suno/">
-          <div class="card-tag">Prompt Tool · Audio</div>
-          <div class="card-title">Audio AI Prompter</div>
-          <div class="card-desc">Genera prompts de música con identidad artística. Emoción → prompt Suno/ACE.</div>
-          <div class="card-arrow">→</div>
+        <a class="card" href="/studio/">
+          <div class="card-top">
+            <div class="card-tag">Listening · Mix · Mastering</div>
+            <div class="card-arrow">↗</div>
+          </div>
+          <div class="card-title">OG Studio</div>
+          <div class="card-desc">Understand the song, diagnose the mix, build the master, and keep your listening notes and processing chains in one workspace.</div>
         </a>
 
-        <a class="card" href="/Video/">
-          <div class="card-tag">Prompt Tool · Video</div>
-          <div class="card-title">Video AI Prompter</div>
-          <div class="card-desc">Genera prompts de video loopable 9:16. Vibe → prompt para Runway / Kling / Sora / Wan.</div>
-          <div class="card-arrow">→</div>
+        <a class="card" href="/ChainBuilder/">
+          <div class="card-top">
+            <div class="card-tag">Chains · Plugins · Recall</div>
+            <div class="card-arrow">↗</div>
+          </div>
+          <div class="card-title">Chain Builder</div>
+          <div class="card-desc">Describe the sound or drop the stems — get an ordered plugin chain built only from what you own, with starting settings like a recall sheet.</div>
+        </a>
+
+        <a class="card" href="/shadow/">
+          <div class="card-top">
+            <div class="card-tag">Practice Tool · Shadow</div>
+            <div class="card-arrow">↗</div>
+          </div>
+          <div class="card-title">Shadow</div>
+          <div class="card-desc">Entrena a Shadow. Planificador semanal de sesiones, timer, ejercicios y registro de progreso.</div>
         </a>
 
         <a class="card" href="/MG-30/">
-          <div class="card-tag">Patch Utility</div>
+          <div class="card-top">
+            <div class="card-tag">Patch Utility</div>
+            <div class="card-arrow">↗</div>
+          </div>
           <div class="card-title">MG-30</div>
           <div class="card-desc">Build and export patch structures from a cleaner control surface.</div>
-          <div class="card-arrow">→</div>
         </a>
 
         <a class="card" href="/OGSystemState/">
-          <div class="card-tag">System</div>
+          <div class="card-top">
+            <div class="card-tag">System</div>
+            <div class="card-arrow">↗</div>
+          </div>
           <div class="card-title">OG State</div>
-          <div class="card-desc">All devices, accounts, repos, bots, agents, domain — full operational picture.</div>
-          <div class="card-arrow">→</div>
+          <div class="card-desc">All devices, repos, bots, agents, heartbeats and services — full operational picture.</div>
         </a>
 
-        <a class="card" href="/ClaudeRouter/">
-          <div class="card-tag">Utility</div>
-          <div class="card-title">Claude Router</div>
-          <div class="card-desc">Keyword classifier — route any task to Normal, Cowork, or Code. No API. Works offline.</div>
-          <div class="card-arrow">→</div>
+        <a class="card" href="/drum-practice-os/">
+          <div class="card-top">
+            <div class="card-tag">Practice Tool · Drums</div>
+            <div class="card-arrow">↗</div>
+          </div>
+          <div class="card-title">Drum Practice OS</div>
+          <div class="card-desc">Módulos, ejercicios, generador rítmico, click visual/sonoro y registro de práctica.</div>
+        </a>
+
+        <a class="card" href="/circle-engine/">
+          <div class="card-top">
+            <div class="card-tag">Music Theory</div>
+            <div class="card-arrow">↗</div>
+          </div>
+          <div class="card-title">Circle Engine</div>
+          <div class="card-desc">Circle of fifths, harmonic relationships, chord progressions and theory navigation.</div>
+        </a>
+
+        <a class="card" href="/cash14/">
+          <div class="card-top">
+            <div class="card-tag">Outreach · El Recurso</div>
+            <div class="card-arrow">↗</div>
+          </div>
+          <div class="card-title">Cash14 Radar</div>
+          <div class="card-desc">Lead pipeline para El Recurso. Nuevos leads, seguimientos y estado de contacto.</div>
         </a>
       </div>
     </section>

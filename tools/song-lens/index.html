@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Private listening, mix analysis and mastering workspace for Optional Ganesh."
+    />
+    <title>OG Studio / Optional Ganesh Tools</title>
+    <link rel="stylesheet" href="./styles.css?v=20260612-3" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="Optional Ganesh tools home">
+        <span class="brand-mark">OG</span>
+        <span class="brand-text">OPTIONAL GANESH <b>/ TOOLS</b></span>
+      </a>
+      <div class="header-meta">
+        <span class="privacy-dot"></span>
+        <span>PRIVATE WORKSPACE</span>
+        <span class="header-rule"></span>
+        <span>OG STUDIO <b>01</b></span>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero shell">
+        <div class="hero-copy">
+          <p class="eyebrow">LISTEN / MIX / MASTER</p>
+          <h1>Hear the song.<br /><em>Finish the work.</em></h1>
+          <p class="hero-intro">
+            One private workspace for understanding a song, diagnosing the mix,
+            building the master, and keeping the useful decisions.
+          </p>
+        </div>
+        <div class="hero-aside">
+          <p class="aside-number">01—03</p>
+          <p>
+            Lens files stay in this browser. Mix and Master files use the private
+            OG Studio analysis engine.
+          </p>
+        </div>
+      </section>
+
+      <section class="workspace shell">
+        <nav class="tabs" aria-label="OG Studio sections">
+          <button class="tab-button is-active" data-view="analyze" type="button">
+            <span>01</span> Lens
+          </button>
+          <button class="tab-button" data-view="mix" type="button">
+            <span>02</span> Mix
+          </button>
+          <button class="tab-button" data-view="master" type="button">
+            <span>03</span> Master
+          </button>
+          <button class="tab-button" data-view="calibrate" type="button">
+            <span>04</span> Calibrate
+          </button>
+          <button class="tab-button" data-view="message" type="button">
+            <span>05</span> Notes
+          </button>
+          <button class="tab-button" data-view="library" type="button">
+            <span>06</span> Library
+          </button>
+        </nav>
+
+        <section class="view is-active" data-view-panel="analyze">
+          <div class="source-grid">
+            <article class="panel source-panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="kicker">NEW LISTEN</p>
+                  <h2>Analyze a song</h2>
+                </div>
+                <span class="local-chip">LOCAL PROCESSING</span>
+              </div>
+
+              <div class="source-fields">
+                <label class="field-label" for="song-title">Track label</label>
+                <input
+                  id="song-title"
+                  class="text-input"
+                  type="text"
+                  placeholder="Artist — Track"
+                  autocomplete="off"
+                />
+              </div>
+
+              <label class="drop-zone" for="audio-file">
+                <input
+                  id="audio-file"
+                  type="file"
+                  accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.flac,.aiff"
+                />
+                <span class="drop-icon">↓</span>
+                <span>
+                  <b>Drop WAV · MP3 · M4A · AIFF · OGG</b>
+                  <small>Private analysis in this browser — your file stays local</small>
+                </span>
+              </label>
+
+              <div class="divider"><span>OR</span></div>
+
+              <div class="source-fields">
+                <label class="field-label" for="audio-url">Song link <span class="field-context">(reference only)</span></label>
+                <div class="url-row">
+                  <input
+                    id="audio-url"
+                    class="text-input"
+                    type="url"
+                    placeholder="Spotify · Apple · Tidal · SoundCloud · YouTube"
+                    autocomplete="off"
+                  />
+                  <button id="analyze-url" class="button button-dark" type="button">
+                    Attach link
+                  </button>
+                </div>
+                <p class="field-help">
+                  The link identifies the song and attaches artwork and platform links.
+                  It does not provide audio analysis. Upload the file above for real measurements.
+                </p>
+              </div>
+
+              <section id="streaming-context" class="streaming-context" hidden>
+                <div class="streaming-context-head">
+                  <img id="streaming-thumbnail" class="streaming-thumbnail" alt="" hidden />
+                  <div class="streaming-context-copy">
+                    <p class="kicker"><span id="streaming-provider">SPOTIFY</span> · LINK CONTEXT ONLY</p>
+                    <h3 id="streaming-title">Song reference</h3>
+                    <p id="streaming-note">
+                      The link tells me what song this is. Upload a WAV or MP3 above for the real read.
+                    </p>
+                  </div>
+                  <button
+                    id="remove-streaming-context"
+                    class="icon-button"
+                    type="button"
+                    aria-label="Remove streaming reference"
+                  >
+                    ×
+                  </button>
+                </div>
+                <iframe
+                  id="streaming-embed"
+                  class="streaming-embed"
+                  title="Song reference player"
+                  loading="lazy"
+                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                  hidden
+                ></iframe>
+                <div id="streaming-alternatives" class="streaming-alternatives"></div>
+                <p id="quick-read-context-status" class="quick-read-passive-status"></p>
+                <a
+                  id="streaming-link"
+                  class="text-button streaming-link"
+                  href="#"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Open reference ↗</a
+                >
+              </section>
+
+              <div class="source-bottom">
+                <button id="load-example" class="text-button" type="button">
+                  Load the example session ↗
+                </button>
+                <span id="process-status" class="status-line" aria-live="polite"
+                  >Ready for a first listen.</span
+                >
+              </div>
+            </article>
+
+          </div>
+
+          <section id="analysis-results" class="results-area">
+            <div class="results-head">
+              <div>
+                <p class="kicker">CURRENT SESSION</p>
+                <h2 id="result-title">Example / Midnight Static</h2>
+                <p id="result-meta" class="muted-line">
+                  Example data · Alt-pop intention · exploratory read
+                </p>
+              </div>
+              <div class="results-actions">
+                <span id="session-chip" class="session-chip">EXAMPLE SESSION</span>
+                <button id="jump-message" class="button button-accent" type="button">
+                  Draft lead note →
+                </button>
+              </div>
+            </div>
+
+            <article id="quick-read-results" class="panel quick-read-results" hidden>
+              <div class="panel-heading compact">
+                <div>
+                  <p class="kicker">SONG CONTEXT</p>
+                  <h3>Genre · mood · BPM</h3>
+                </div>
+                <span id="quick-read-chip" class="local-chip">LINK ONLY</span>
+              </div>
+              <p id="quick-read-status" class="panel-description">
+                Waiting for a public song link.
+              </p>
+              <div id="quick-read-metrics" class="quick-read-metrics" hidden>
+                <div>
+                  <small>BPM</small>
+                  <strong id="quick-bpm">—</strong>
+                </div>
+                <div>
+                  <small>KEY</small>
+                  <strong id="quick-key">—</strong>
+                </div>
+                <div>
+                  <small>ENERGY</small>
+                  <strong id="quick-energy">—</strong>
+                </div>
+                <div>
+                  <small>VOICE</small>
+                  <strong id="quick-voice">—</strong>
+                </div>
+              </div>
+              <p id="quick-caption" class="quick-caption" hidden></p>
+              <div id="quick-tags" class="quick-tags"></div>
+            </article>
+
+            <div id="analysis-notice" class="analysis-notice" hidden>
+              <b id="analysis-notice-title">LINK CONTEXT ONLY</b>
+              <span id="analysis-notice-copy">
+                The file tells me what the audio is doing. Upload WAV or MP3 above for real measurements.
+              </span>
+            </div>
+
+            <div class="metric-grid">
+              <article class="metric-card">
+                <span class="metric-name">AVG RMS</span>
+                <strong id="metric-rms">−12.8</strong>
+                <small>dBFS · density proxy</small>
+              </article>
+              <article class="metric-card">
+                <span class="metric-name">DYNAMIC SPREAD</span>
+                <strong id="metric-dynamics">8.7</strong>
+                <small>dB · section movement</small>
+              </article>
+              <article class="metric-card">
+                <span class="metric-name">STEREO WIDTH</span>
+                <strong id="metric-width">48</strong>
+                <small>% · side / mid energy</small>
+              </article>
+              <article class="metric-card">
+                <span class="metric-name">TEMPO EST.</span>
+                <strong id="metric-tempo">104</strong>
+                <small>BPM · approximate</small>
+              </article>
+            </div>
+
+            <div class="analysis-grid">
+              <article class="panel chart-panel">
+                <div class="panel-heading compact">
+                  <div>
+                    <p class="kicker">ENERGY MAP</p>
+                    <h3>Arrangement movement</h3>
+                  </div>
+                  <span id="contrast-value" class="chart-value">+8.7 dB</span>
+                </div>
+                <div id="energy-chart" class="energy-chart" aria-label="Energy by song section"></div>
+                <div class="chart-axis">
+                  <span>INTRO</span><span>MIDDLE</span><span>END</span>
+                </div>
+              </article>
+
+              <article class="panel chart-panel">
+                <div class="panel-heading compact">
+                  <div>
+                    <p class="kicker">SPECTRAL MAP</p>
+                    <h3>Tonal weight</h3>
+                  </div>
+                  <span class="chart-value">RELATIVE</span>
+                </div>
+                <div id="tone-chart" class="tone-chart"></div>
+              </article>
+            </div>
+
+            <div class="reading-grid">
+              <article class="panel reading-panel">
+                <div class="panel-heading compact">
+                  <div>
+                    <p class="kicker">INDUSTRY READ</p>
+                    <h3 id="industry-profile-title">Intimate alt-pop</h3>
+                  </div>
+                  <span class="read-tag">REFERENCE RANGE</span>
+                </div>
+                <ul id="industry-observations" class="observation-list"></ul>
+              </article>
+
+              <article class="panel reading-panel taste-reading">
+                <div class="panel-heading compact">
+                  <div>
+                    <p class="kicker">MY READ</p>
+                    <h3>Optional Ganesh lens</h3>
+                  </div>
+                  <span class="read-tag">YOUR TASTE</span>
+                </div>
+                <ul id="taste-observations" class="observation-list"></ul>
+              </article>
+            </div>
+          </section>
+        </section>
+
+        <section class="view engine-view" data-view-panel="mix">
+          <div class="section-intro engine-intro">
+            <div><p class="kicker">SECOND EAR</p><h2>Diagnose the mix.</h2></div>
+            <p>Measure the file, find the pressure points, and turn them into concrete mix decisions.</p>
+          </div>
+          <iframe class="studio-engine" src="/chains/?tab=a&amp;embed=1" title="OG Studio Mix"></iframe>
+        </section>
+
+        <section class="view engine-view" data-view-panel="master">
+          <div class="section-intro engine-intro">
+            <div><p class="kicker">FINAL PASS</p><h2>Build the master.</h2></div>
+            <p>Render, compare, and keep a calibrated mastering chain from your real arsenal.</p>
+          </div>
+          <iframe class="studio-engine" src="/chains/?tab=m&amp;embed=1" title="OG Studio Master"></iframe>
+        </section>
+
+        <section class="view" data-view-panel="calibrate">
+          <div class="section-intro">
+            <div>
+              <p class="kicker">PRIVATE CALIBRATION</p>
+              <h2>Teach the tool how you listen.</h2>
+            </div>
+            <p>
+              No model training needed. Save your principles and measurements from
+              music you own or can legally analyze. The read becomes more yours
+              over time.
+            </p>
+          </div>
+
+          <div class="calibration-grid">
+            <article class="panel calibration-panel">
+              <div class="panel-heading compact">
+                <div>
+                  <p class="kicker">BASELINE</p>
+                  <h3>Industry intention</h3>
+                </div>
+              </div>
+              <label class="field-label" for="industry-profile"
+                >Compare the current song with</label
+              >
+              <select id="industry-profile" class="select-input"></select>
+              <p id="profile-description" class="field-help"></p>
+              <div id="profile-ranges" class="profile-ranges"></div>
+            </article>
+
+            <article class="panel calibration-panel">
+              <div class="panel-heading compact">
+                <div>
+                  <p class="kicker">PERSONAL LENS</p>
+                  <h3>Your listening priorities</h3>
+                </div>
+                <button id="reset-taste" class="text-button subtle" type="button">
+                  Reset
+                </button>
+              </div>
+              <div id="taste-sliders" class="taste-sliders"></div>
+              <label class="field-label" for="taste-notes">Principles in your words</label>
+              <textarea
+                id="taste-notes"
+                class="textarea-input"
+                rows="5"
+                placeholder="What do you repeatedly reach for? What do you avoid?"
+              ></textarea>
+              <button id="save-taste" class="button button-accent" type="button">
+                Save my lens
+              </button>
+            </article>
+          </div>
+
+          <article class="panel references-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="kicker">PRIVATE REFERENCES</p>
+                <h3>Build your own listening memory</h3>
+              </div>
+              <span class="local-chip">METRICS ONLY</span>
+            </div>
+            <p class="panel-description">
+              Add the measurements from the current session to your private
+              references. Audio is never stored. Use finished work, before/after
+              versions, or legally provided reference files. Saved measurements
+              begin influencing “My read” immediately.
+            </p>
+            <div class="reference-form">
+              <input
+                id="reference-name"
+                class="text-input"
+                type="text"
+                placeholder="Reference label"
+                autocomplete="off"
+              />
+              <button id="save-reference" class="button button-dark" type="button">
+                Save current metrics
+              </button>
+            </div>
+            <div id="references-list" class="references-list"></div>
+          </article>
+        </section>
+
+        <section class="view" data-view-panel="message">
+          <div class="section-intro">
+            <div>
+              <p class="kicker">CONVERSION WITHOUT THE PITCH</p>
+              <h2>Send something useful.</h2>
+            </div>
+            <p>
+              Start with the music. Keep the language human. Make your service
+              relevant only where the track gives you a reason.
+            </p>
+          </div>
+
+          <div class="message-grid">
+            <article class="panel message-controls">
+              <label class="field-label" for="lead-name">Lead name</label>
+              <input
+                id="lead-name"
+                class="text-input"
+                type="text"
+                placeholder="Name"
+                autocomplete="off"
+              />
+
+              <label class="field-label" for="message-format">Format</label>
+              <select id="message-format" class="select-input">
+                <option value="short">Short DM / WhatsApp</option>
+                <option value="email">Email</option>
+                <option value="voice">Voice note outline</option>
+              </select>
+
+              <label class="field-label" for="service-focus">Relevant service</label>
+              <select id="service-focus" class="select-input">
+                <option value="production">Production perspective</option>
+                <option value="mix">Mix engineering</option>
+                <option value="vocal">Vocal production</option>
+                <option value="instruments">Instruments and arrangement</option>
+                <option value="atmos">Immersive / Atmos mix</option>
+                <option value="conversation">A listening call</option>
+              </select>
+
+              <label class="field-label" for="personal-line">What you noticed <span class="field-context">(your actual observations)</span></label>
+              <textarea
+                id="personal-line"
+                class="textarea-input"
+                rows="5"
+                placeholder="The vocal sits too far back. The drop loses energy instead of gaining it. That synth texture in the bridge is the most interesting thing on the track. Write anything specific you heard."
+              ></textarea>
+
+              <div class="draft-button-row">
+                <button id="regenerate-message" class="button button-accent" type="button">
+                  Draft with AI →
+                </button>
+                <button id="regenerate-template" class="text-button subtle" type="button">
+                  Use template
+                </button>
+              </div>
+            </article>
+
+            <article class="panel draft-panel">
+              <div class="panel-heading compact">
+                <div>
+                  <p class="kicker">EDIT BEFORE SENDING</p>
+                  <h3>Lead note</h3>
+                </div>
+                <span id="draft-source" class="read-tag">EXAMPLE SESSION</span>
+              </div>
+              <textarea id="message-draft" class="draft-textarea" rows="16"></textarea>
+              <div class="draft-actions">
+                <button id="copy-message" class="button button-dark" type="button">
+                  Copy note
+                </button>
+                <button id="save-message" class="text-button" type="button">
+                  Save to history ↗
+                </button>
+              </div>
+              <p class="field-help">
+                Review every message yourself. The tool is here to sharpen your
+                listening, not impersonate it.
+              </p>
+            </article>
+          </div>
+
+          <article class="panel history-panel">
+            <div class="panel-heading compact">
+              <div>
+                <p class="kicker">RECENT NOTES</p>
+                <h3>Lead history</h3>
+              </div>
+              <button id="clear-history" class="text-button subtle" type="button">
+                Clear
+              </button>
+            </div>
+            <div id="message-history" class="history-list"></div>
+          </article>
+        </section>
+
+        <section class="view engine-view" data-view-panel="library">
+          <div class="section-intro engine-intro">
+            <div><p class="kicker">WORKING MEMORY</p><h2>Keep the useful decisions.</h2></div>
+            <p>Saved diagnostic notes and processing chains, ready to reuse or adapt.</p>
+          </div>
+          <iframe class="studio-engine library-engine" src="/chains/?tab=l&amp;embed=1" title="OG Studio Library"></iframe>
+        </section>
+      </section>
+    </main>
+
+    <footer class="site-footer shell">
+      <span>OPTIONAL GANESH / OG STUDIO</span>
+      <span>PRIVATE LISTENING · MIX · MASTER</span>
+    </footer>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <button id="run-quick-read" hidden type="button" aria-hidden="true"></button>
+    <script src="./app.js?v=20260612-2" defer></script>
+  </body>
+</html>

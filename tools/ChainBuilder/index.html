@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chain Builder — Optional Ganesh</title>
+<style>
+  :root {
+    --bg: #23282b;
+    --panel: #2e3438;
+    --panel-deep: #282d31;
+    --ink: #e8e4da;
+    --ink-dim: rgba(232, 228, 218, 0.55);
+    --ink-faint: rgba(232, 228, 218, 0.28);
+    --vu: #e3a23a;
+    --vu-dim: rgba(227, 162, 58, 0.35);
+    --trace: #7fa28c;
+    --alert: #c4624a;
+    --line: rgba(232, 228, 218, 0.12);
+    --line-strong: rgba(232, 228, 218, 0.22);
+    --screw: rgba(232, 228, 218, 0.18);
+    --display: "Archivo Narrow", "Oswald", "Avenir Next Condensed", "Arial Narrow", "Helvetica Neue", sans-serif;
+    --body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --mono: "JetBrains Mono", "IBM Plex Mono", "SF Mono", Menlo, Consolas, monospace;
+    --r: 4px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { font-size: 16px; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 15px;
+    line-height: 1.55;
+    min-height: 100vh;
+    min-width: 360px;
+  }
+
+  .page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3.5rem 1.25rem 5rem;
+  }
+  .page.wide { max-width: 1100px; }
+
+  /* faceplate lettering */
+  .plate {
+    font-family: var(--display);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-weight: 600;
+  }
+
+  header { margin-bottom: 2.5rem; display: flex; align-items: baseline; gap: 1rem; flex-wrap: wrap; }
+  h1 { font-family: var(--display); font-size: clamp(1.1rem, 4.5vw, 1.5rem); letter-spacing: 0.2em; font-weight: 700; }
+  .subtitle { color: var(--ink-dim); font-size: 0.85rem; flex: 1; }
+  #settings-toggle {
+    margin-left: auto; background: none; border: 1px solid var(--line);
+    color: var(--ink-dim); border-radius: var(--r); min-width: 44px; min-height: 44px;
+    font-size: 1.05rem; cursor: pointer; transition: border-color 150ms ease-out, color 150ms ease-out;
+  }
+  #settings-toggle:hover { border-color: var(--line-strong); color: var(--ink); }
+
+  /* ── settings ── */
+  #settings { display: none; background: var(--panel); border: 1px solid var(--line);
+    border-radius: var(--r); padding: 1.5rem; margin-bottom: 2rem; }
+  #settings.open { display: block; }
+  #settings h2 { font-size: 0.8rem; margin-bottom: 1rem; color: var(--ink-dim); }
+  .field { margin-bottom: 1.1rem; }
+  .field label { display: block; font-family: var(--display); text-transform: uppercase;
+    letter-spacing: 0.12em; font-size: 0.72rem; color: var(--ink-dim); margin-bottom: 0.35rem; }
+  .field .hint { font-size: 0.78rem; color: var(--ink-faint); margin-top: 0.3rem; }
+  input[type="text"], input[type="password"], textarea, select {
+    width: 100%; background: var(--panel-deep); border: 1px solid var(--line);
+    border-radius: var(--r); color: var(--ink); padding: 0.65rem 0.75rem;
+    font-family: var(--body); font-size: 0.92rem; min-height: 44px;
+    transition: border-color 150ms ease-out;
+  }
+  textarea { resize: vertical; line-height: 1.5; }
+  input:focus, textarea:focus, select:focus, button:focus-visible {
+    outline: 2px solid var(--vu); outline-offset: 1px; border-color: transparent;
+  }
+
+  /* ── input zone ── */
+  .input-zone { display: grid; grid-template-columns: 1fr; gap: 1rem; margin-bottom: 1.25rem; }
+  @media (min-width: 760px) { .input-zone { grid-template-columns: 1fr 1fr; } }
+
+  .input-card { background: var(--panel); border: 1px solid var(--line);
+    border-radius: var(--r); padding: 1.25rem; min-width: 0; }
+
+  .origin-row { display: flex; gap: 0.6rem; }
+  .origin-row select { width: auto; flex: 0 0 auto; }
+  .origin-row input { flex: 1; min-width: 0; }
+
+  /* stem bay — empty rack bay, not a dashed rectangle */
+  #drop-bay {
+    background: var(--panel-deep);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    min-height: 132px;
+    padding: 1rem;
+    position: relative;
+    cursor: pointer;
+    transition: border-color 150ms ease-out, box-shadow 150ms ease-out;
+    background-image: repeating-linear-gradient(
+      0deg, transparent 0 30px, rgba(232,228,218,0.04) 30px 31px);
+  }
+  #drop-bay::before, #drop-bay::after {
+    content: ''; position: absolute; top: 10px; width: 7px; height: 7px;
+    border-radius: 50%; background: var(--screw);
+    box-shadow: 0 102px 0 var(--screw);
+  }
+  #drop-bay::before { left: 10px; }
+  #drop-bay::after { right: 10px; }
+  #drop-bay.armed {
+    border-color: var(--vu);
+    box-shadow: 0 0 0 1px var(--vu), 0 0 24px rgba(227,162,58,0.25) inset;
+  }
+  #drop-bay .bay-hint { color: var(--ink-faint); font-size: 0.82rem; text-align: center;
+    padding: 1.6rem 1.5rem; }
+  #drop-bay.armed .bay-hint { color: var(--vu); }
+  .stem-file { display: flex; align-items: center; gap: 0.5rem; font-family: var(--mono);
+    font-size: 0.78rem; padding: 0.3rem 0.2rem; color: var(--ink); }
+  .stem-file .led { width: 7px; height: 7px; border-radius: 50%; background: var(--vu-dim); flex: 0 0 auto; }
+  .stem-file.analyzed .led { background: var(--vu); }
+  .stem-file .rm { margin-left: auto; background: none; border: none; color: var(--ink-faint);
+    cursor: pointer; font-size: 0.95rem; min-width: 32px; min-height: 32px; }
+  .stem-file .rm:hover { color: var(--alert); }
+  #file-input { display: none; }
+
+  /* ── buttons ── */
+  .actions { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; margin-bottom: 1rem; }
+  .btn {
+    font-family: var(--display); text-transform: uppercase; letter-spacing: 0.12em;
+    font-size: 0.8rem; font-weight: 600;
+    background: var(--panel); color: var(--ink);
+    border: 1px solid var(--line-strong); border-radius: var(--r);
+    padding: 0 1.4rem; min-height: 46px; cursor: pointer;
+    transition: border-color 150ms ease-out, background 150ms ease-out;
+  }
+  .btn:hover:not(:disabled) { border-color: var(--vu); }
+  .btn:disabled { opacity: 0.4; cursor: default; }
+  .btn.primary { background: var(--vu); color: #1d1a14; border-color: var(--vu); }
+  .btn.primary:hover:not(:disabled) { background: #ecb45a; }
+  .btn.quiet { border-color: var(--line); color: var(--ink-dim); font-size: 0.72rem; min-height: 40px; }
+  .btn.quiet:hover:not(:disabled) { color: var(--ink); }
+
+  /* ── status ── */
+  #status { display: flex; align-items: center; gap: 0.5rem; min-height: 1.6rem;
+    font-family: var(--mono); font-size: 0.78rem; color: var(--ink-dim); margin-bottom: 1.5rem; }
+  #status .dot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
+  #status .dot.ok { background: var(--trace); }
+  #status .dot.busy { background: var(--vu); }
+  #status .dot.err { background: var(--alert); }
+
+  /* ── analysis meters ── */
+  #meters { display: flex; flex-direction: column; gap: 0.8rem; margin-bottom: 2rem; }
+  .meter-stem { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r);
+    padding: 0.8rem 1rem; }
+  .meter-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.55rem; }
+  .meter-name { font-family: var(--display); text-transform: uppercase; letter-spacing: 0.12em;
+    font-size: 0.78rem; }
+  .meter-stats { font-family: var(--mono); font-size: 0.72rem; color: var(--ink-dim); }
+  .bands { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .band { text-align: center; }
+  .band .bar { height: 34px; background: var(--panel-deep); border: 1px solid var(--line);
+    border-radius: 2px; position: relative; overflow: hidden; }
+  .band .fill { position: absolute; bottom: 0; left: 0; right: 0; background: var(--vu); }
+  .band.flagged .fill { background: var(--alert); }
+  .band .bl { font-family: var(--mono); font-size: 0.58rem; color: var(--ink-faint);
+    margin-top: 3px; display: block; text-transform: uppercase; }
+  .band .bv { font-family: var(--mono); font-size: 0.6rem; color: var(--ink-dim); display: block; }
+
+  /* ── rack output ── */
+  #intent { font-size: 0.95rem; color: var(--ink-dim); margin-bottom: 1.5rem; max-width: 720px; }
+  #rack-wrap { position: relative; }
+  #racks { display: flex; flex-direction: column; gap: 2.25rem; }
+  @media (min-width: 900px) {
+    #racks.multi { flex-direction: row; align-items: flex-start; gap: 2.5rem; }
+    #racks.multi .rack { flex: 1; min-width: 0; }
+  }
+
+  .rack { border: 1px solid var(--line-strong); border-radius: 6px; background: var(--panel-deep);
+    padding: 0.6rem; }
+  .rack-title { font-family: var(--display); text-transform: uppercase; letter-spacing: 0.16em;
+    font-size: 0.8rem; color: var(--ink-dim); padding: 0.45rem 0.5rem 0.7rem;
+    display: flex; justify-content: space-between; align-items: baseline; }
+  .rack-title .verdict { font-size: 0.66rem; color: var(--vu); }
+
+  .module { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r);
+    margin-bottom: 0.55rem; position: relative; }
+  .module:last-child { margin-bottom: 0; }
+  @media (prefers-reduced-motion: no-preference) {
+    .module.slot-in { animation: slotIn 220ms ease-out backwards; }
+    @keyframes slotIn { from { opacity: 0; transform: translateY(-10px); } }
+  }
+  .module-face {
+    width: 100%; background: none; border: none; color: inherit; text-align: left;
+    padding: 0.85rem 2.2rem 0.85rem 1rem; cursor: pointer; min-height: 56px;
+    display: block; font-family: inherit;
+  }
+  .module-face::before, .module-face::after {
+    content: ''; position: absolute; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--screw); top: 50%; margin-top: -3px;
+  }
+  .module-face::before { left: 7px; }
+  .module-face::after { right: 7px; }
+  .module-face .slot-no { font-family: var(--mono); font-size: 0.66rem; color: var(--ink-faint);
+    float: right; }
+  .module-name { font-family: var(--display); text-transform: uppercase; letter-spacing: 0.1em;
+    font-size: 0.95rem; font-weight: 600; padding-left: 0.5rem; }
+  .module-mfr { font-size: 0.72rem; color: var(--ink-faint); padding-left: 0.5rem; }
+  .module-role { display: inline-block; font-family: var(--display); text-transform: uppercase;
+    letter-spacing: 0.12em; font-size: 0.62rem; color: var(--ink-dim);
+    border: 1px solid var(--line); border-radius: 2px; padding: 0.15rem 0.45rem;
+    margin: 0.4rem 0 0 0.5rem; }
+  .module-body { display: none; padding: 0 1.2rem 1.1rem 1.5rem; }
+  .module.open .module-body { display: block; }
+  .module.open { border-color: var(--line-strong); }
+  .module-reasoning { font-size: 0.88rem; color: var(--ink-dim); margin-bottom: 0.75rem; }
+  .module-settings { font-family: var(--mono); font-size: 0.76rem; color: var(--ink);
+    background: var(--panel-deep); border: 1px solid var(--line); border-radius: var(--r);
+    padding: 0.7rem 0.8rem; white-space: pre-wrap; }
+  .module-settings::before { content: 'RECALL'; display: block; font-size: 0.58rem;
+    letter-spacing: 0.18em; color: var(--vu); margin-bottom: 0.35rem; }
+
+  .blank-panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r);
+    min-height: 56px; display: flex; align-items: center; justify-content: center;
+    color: var(--ink-faint); font-family: var(--display); text-transform: uppercase;
+    letter-spacing: 0.16em; font-size: 0.7rem; position: relative;
+    background-image: repeating-linear-gradient(135deg, transparent 0 10px, rgba(232,228,218,0.025) 10px 20px);
+  }
+  .blank-reason { font-size: 0.8rem; color: var(--ink-dim); padding: 0.7rem 0.5rem 0.2rem; }
+
+  .alts { font-size: 0.8rem; color: var(--ink-faint); padding: 0.7rem 0.5rem 0.2rem; }
+  .alts strong { color: var(--ink-dim); font-weight: 500; }
+
+  /* patch cables */
+  #cables { position: absolute; inset: 0; pointer-events: none; display: none; z-index: 2; }
+  #racks.multi ~ #cables, #cables.on { display: block; }
+  .cable-tag { position: absolute; transform: translate(-50%, -50%); pointer-events: auto;
+    background: var(--bg); border: 1px solid var(--trace); color: var(--trace);
+    font-family: var(--mono); font-size: 0.68rem; padding: 0.3rem 0.55rem; border-radius: 3px;
+    max-width: 300px; z-index: 3; }
+  #cross-list { margin-top: 2rem; display: none; flex-direction: column; gap: 0.5rem; }
+  #cross-list.on { display: flex; }
+  #cross-list h3 { font-family: var(--display); text-transform: uppercase; letter-spacing: 0.16em;
+    font-size: 0.72rem; color: var(--trace); }
+  .cross-item { border-left: 2px solid var(--trace); padding: 0.2rem 0 0.2rem 0.8rem;
+    font-size: 0.85rem; color: var(--ink-dim); }
+  .cross-item .pair { font-family: var(--mono); font-size: 0.7rem; color: var(--trace); display: block; }
+
+  #output-actions { margin-top: 2rem; }
+</style>
+</head>
+<body>
+<div class="page" id="page">
+  <header>
+    <h1>CHAIN BUILDER</h1>
+    <span class="subtitle" id="subtitle"></span>
+    <button id="settings-toggle" aria-label="Settings" aria-expanded="false">⚙</button>
+  </header>
+
+  <section id="settings" aria-label="Settings">
+    <h2 class="plate" id="settings-title"></h2>
+    <div class="field">
+      <label for="backend-select" id="backend-label"></label>
+      <select id="backend-select">
+        <option value="anthropic"></option>
+        <option value="ollama"></option>
+      </select>
+    </div>
+    <div class="field" id="anthropic-fields">
+      <label for="key-input" id="key-label"></label>
+      <input type="password" id="key-input" placeholder="sk-ant-…" autocomplete="off">
+      <div class="hint" id="key-hint"></div>
+    </div>
+    <div id="ollama-fields" style="display:none">
+      <div class="field">
+        <label for="ollama-model-input" id="ollama-model-label"></label>
+        <input type="text" id="ollama-model-input" placeholder="qwen2.5:14b">
+      </div>
+      <div class="field">
+        <label for="ollama-url-input" id="ollama-url-label"></label>
+        <input type="text" id="ollama-url-input" placeholder="http://localhost:11434">
+        <div class="hint" id="ollama-hint"></div>
+      </div>
+    </div>
+    <div class="field">
+      <label for="oracle-input" id="oracle-label"></label>
+      <input type="text" id="oracle-input" placeholder="http://localhost:7777">
+      <div class="hint" id="oracle-hint"></div>
+    </div>
+    <div class="field">
+      <label for="manual-input" id="manual-label"></label>
+      <textarea id="manual-input" rows="4"></textarea>
+      <div class="hint" id="manual-hint"></div>
+    </div>
+    <div class="actions">
+      <button class="btn" id="save-settings"></button>
+      <button class="btn quiet" id="refresh-inventory"></button>
+    </div>
+  </section>
+
+  <section class="input-zone">
+    <div class="input-card">
+      <div class="field">
+        <label for="prompt-input" id="prompt-label"></label>
+        <textarea id="prompt-input" rows="4"></textarea>
+      </div>
+      <div class="field">
+        <label for="source-input" id="source-label"></label>
+        <input type="text" id="source-input">
+      </div>
+      <div class="field">
+        <label for="origin-select" id="origin-label"></label>
+        <div class="origin-row">
+          <select id="origin-select">
+            <option value="recorded"></option>
+            <option value="virtual"></option>
+          </select>
+          <input type="text" id="origin-detail">
+        </div>
+      </div>
+    </div>
+
+    <div class="input-card">
+      <div class="field">
+        <label id="drop-label"></label>
+        <div id="drop-bay" role="button" tabindex="0" aria-label="Drop audio stems or click to choose files">
+          <div class="bay-hint" id="bay-hint"></div>
+          <div id="stem-list"></div>
+        </div>
+        <input type="file" id="file-input" multiple accept=".wav,.aif,.aiff,.mp3,.flac,audio/*">
+      </div>
+      <div class="field">
+        <label for="notes-input" id="notes-label"></label>
+        <textarea id="notes-input" rows="3"></textarea>
+      </div>
+    </div>
+  </section>
+
+  <div class="actions">
+    <button class="btn" id="analyze-btn" disabled></button>
+    <button class="btn primary" id="build-btn"></button>
+  </div>
+
+  <div id="status" aria-live="polite"></div>
+
+  <section id="meters"></section>
+
+  <section id="output" aria-label="Chain output">
+    <p id="intent"></p>
+    <div id="rack-wrap">
+      <div id="racks"></div>
+      <svg id="cables" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div id="cable-tags"></div>
+    </div>
+    <div id="cross-list"></div>
+    <div class="actions" id="output-actions" style="display:none">
+      <button class="btn quiet" id="copy-btn"></button>
+    </div>
+  </section>
+</div>
+
+<script src="copy.js"></script>
+<script>
+'use strict';
+
+// ── state ──────────────────────────────────────────────────────────────────
+const S = {
+  files: [],            // File objects queued in the bay
+  analysis: null,       // /analyze/audio response
+  inventory: null,      // /plugins/inventory response (or null)
+  result: null,         // parsed chain JSON
+};
+
+const $ = id => document.getElementById(id);
+const LS = {
+  key: 'og_api_key',
+  oracle: 'og_oracle_url',
+  manual: 'og_cb_manual_plugins',
+  inv: 'og_cb_inventory',
+  invTime: 'og_cb_inventory_time',
+  // shared with Decision Engine so both tools follow the same backend choice
+  backend: 'og_backend',
+  ollamaModel: 'og_ollama_model',
+  ollamaUrl: 'og_ollama_url',
+};
+const oracleUrl = () => (localStorage.getItem(LS.oracle) || 'http://localhost:7777').replace(/\/$/, '');
+const getBackend = () => localStorage.getItem(LS.backend) || 'anthropic';
+const getOllamaModel = () => localStorage.getItem(LS.ollamaModel) || 'qwen2.5:14b';
+const getOllamaUrl = () => (localStorage.getItem(LS.ollamaUrl) || 'http://localhost:11434').replace(/\/$/, '');
+
+// ── copy injection ─────────────────────────────────────────────────────────
+function injectCopy() {
+  $('subtitle').textContent = COPY.subtitle;
+  $('settings-title').textContent = COPY.settingsTitle;
+  $('backend-label').textContent = COPY.backendLabel;
+  const bsel = $('backend-select');
+  bsel.options[0].textContent = COPY.backendAnthropic;
+  bsel.options[1].textContent = COPY.backendOllama;
+  $('ollama-model-label').textContent = COPY.ollamaModelLabel;
+  $('ollama-url-label').textContent = COPY.ollamaUrlLabel;
+  $('ollama-hint').textContent = COPY.ollamaHint;
+  $('key-label').textContent = COPY.keyLabel;
+  $('key-hint').textContent = COPY.keyHint;
+  $('oracle-label').textContent = COPY.oracleLabel;
+  $('oracle-hint').textContent = COPY.oracleHint;
+  $('manual-label').textContent = COPY.manualLabel;
+  $('manual-hint').textContent = COPY.manualHint;
+  $('save-settings').textContent = COPY.saveBtn;
+  $('refresh-inventory').textContent = COPY.refreshInventory;
+  $('prompt-label').textContent = COPY.promptLabel;
+  $('prompt-input').placeholder = COPY.promptPlaceholder;
+  $('source-label').textContent = COPY.sourceLabel;
+  $('source-input').placeholder = COPY.sourcePlaceholder;
+  $('origin-label').textContent = COPY.originLabel;
+  const sel = $('origin-select');
+  sel.options[0].textContent = COPY.originRecorded;
+  sel.options[1].textContent = COPY.originVirtual;
+  $('drop-label').textContent = COPY.dropLabel;
+  $('bay-hint').textContent = COPY.dropHint;
+  $('notes-label').textContent = COPY.notesLabel;
+  $('notes-input').placeholder = COPY.notesPlaceholder;
+  $('analyze-btn').textContent = COPY.analyzeBtn;
+  $('build-btn').textContent = COPY.buildBtn;
+  $('copy-btn').textContent = COPY.copyBtn;
+  setOriginPlaceholder();
+}
+function setOriginPlaceholder() {
+  $('origin-detail').placeholder = $('origin-select').value === 'virtual'
+    ? COPY.originDetailVirtualPlaceholder : COPY.originDetailRecordedPlaceholder;
+}
+
+// ── status ─────────────────────────────────────────────────────────────────
+function status(kind, msg) {
+  $('status').innerHTML = msg
+    ? `<span class="dot ${kind}"></span><span>${escapeHtml(msg)}</span>` : '';
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ── settings ───────────────────────────────────────────────────────────────
+function applyBackendUI() {
+  const b = $('backend-select').value;
+  $('anthropic-fields').style.display = b === 'anthropic' ? 'block' : 'none';
+  $('ollama-fields').style.display = b === 'ollama' ? 'block' : 'none';
+}
+$('backend-select').addEventListener('change', applyBackendUI);
+$('settings-toggle').addEventListener('click', () => {
+  const open = $('settings').classList.toggle('open');
+  $('settings-toggle').setAttribute('aria-expanded', String(open));
+  if (open) {
+    $('backend-select').value = getBackend();
+    $('ollama-model-input').value = localStorage.getItem(LS.ollamaModel) || '';
+    $('ollama-url-input').value = localStorage.getItem(LS.ollamaUrl) || '';
+    $('oracle-input').value = localStorage.getItem(LS.oracle) || '';
+    $('manual-input').value = localStorage.getItem(LS.manual) || '';
+    applyBackendUI();
+  }
+});
+$('save-settings').addEventListener('click', () => {
+  localStorage.setItem(LS.backend, $('backend-select').value);
+  const k = $('key-input').value.trim();
+  if (k) { localStorage.setItem(LS.key, k); $('key-input').value = ''; }
+  const om = $('ollama-model-input').value.trim();
+  if (om) localStorage.setItem(LS.ollamaModel, om); else localStorage.removeItem(LS.ollamaModel);
+  const ou = $('ollama-url-input').value.trim();
+  if (ou) localStorage.setItem(LS.ollamaUrl, ou); else localStorage.removeItem(LS.ollamaUrl);
+  const o = $('oracle-input').value.trim();
+  if (o) localStorage.setItem(LS.oracle, o); else localStorage.removeItem(LS.oracle);
+  const m = $('manual-input').value.trim();
+  if (m) localStorage.setItem(LS.manual, m); else localStorage.removeItem(LS.manual);
+  $('settings').classList.remove('open');
+  status('ok', 'Settings saved — backend: ' + getBackend());
+});
+$('origin-select').addEventListener('change', setOriginPlaceholder);
+
+// ── inventory ──────────────────────────────────────────────────────────────
+async function loadInventory(force) {
+  if (!force) {
+    const cached = localStorage.getItem(LS.inv);
+    if (cached) {
+      try {
+        S.inventory = JSON.parse(cached);
+        status('ok', `${COPY.inventoryLoaded(S.inventory.count)} — ${COPY.inventoryStale}`);
+      } catch (e) { /* fall through to fetch */ }
+    }
+  }
+  try {
+    const res = await fetch(oracleUrl() + '/plugins/inventory', { signal: AbortSignal.timeout(6000) });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    S.inventory = await res.json();
+    localStorage.setItem(LS.inv, JSON.stringify(S.inventory));
+    localStorage.setItem(LS.invTime, String(Date.now()));
+    status('ok', COPY.inventoryLoaded(S.inventory.count));
+  } catch (e) {
+    if (!S.inventory && !localStorage.getItem(LS.manual)) status('err', COPY.oracleOffline);
+  }
+}
+$('refresh-inventory').addEventListener('click', () => loadInventory(true));
+
+// Compact inventory block for the system prompt: grouped per category.
+function inventoryBlock() {
+  if (S.inventory && S.inventory.plugins) {
+    const byCat = {};
+    for (const p of S.inventory.plugins) {
+      (byCat[p.category || 'Other'] = byCat[p.category || 'Other'] || [])
+        .push(`${p.name} (${p.manufacturer}${p.subtype ? ', ' + p.subtype : ''})`);
+    }
+    return Object.keys(byCat).sort()
+      .map(c => `${c}: ${byCat[c].join('; ')}`).join('\n');
+  }
+  const manual = localStorage.getItem(LS.manual);
+  return manual || null;
+}
+
+// ── stem bay ───────────────────────────────────────────────────────────────
+const bay = $('drop-bay');
+bay.addEventListener('click', () => $('file-input').click());
+bay.addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('file-input').click(); }
+});
+['dragenter', 'dragover'].forEach(ev => bay.addEventListener(ev, e => {
+  e.preventDefault(); bay.classList.add('armed');
+}));
+['dragleave', 'drop'].forEach(ev => bay.addEventListener(ev, e => {
+  e.preventDefault(); bay.classList.remove('armed');
+}));
+bay.addEventListener('drop', e => addFiles(e.dataTransfer.files));
+$('file-input').addEventListener('change', e => { addFiles(e.target.files); e.target.value = ''; });
+
+function addFiles(list) {
+  const ok = /\.(wav|aif|aiff|mp3|flac)$/i;
+  for (const f of list) {
+    if (!ok.test(f.name)) continue;
+    if (S.files.some(x => x.name === f.name)) continue;
+    S.files.push(f);
+  }
+  S.analysis = null;
+  renderBay();
+}
+function removeFile(name) {
+  S.files = S.files.filter(f => f.name !== name);
+  S.analysis = null;
+  renderBay();
+}
+function renderBay() {
+  const listEl = $('stem-list');
+  listEl.innerHTML = '';
+  $('bay-hint').textContent = S.files.length ? COPY.dropMore : COPY.dropHint;
+  for (const f of S.files) {
+    const row = document.createElement('div');
+    row.className = 'stem-file' + (S.analysis ? ' analyzed' : '');
+    row.innerHTML = `<span class="led"></span><span>${escapeHtml(f.name)}</span>
+      <button class="rm" aria-label="Remove ${escapeHtml(f.name)}">✕</button>`;
+    row.querySelector('.rm').addEventListener('click', e => { e.stopPropagation(); removeFile(f.name); });
+    listEl.appendChild(row);
+  }
+  $('analyze-btn').disabled = S.files.length === 0;
+}
+
+// ── analyze ────────────────────────────────────────────────────────────────
+$('analyze-btn').addEventListener('click', analyze);
+async function analyze() {
+  if (!S.files.length) return;
+  const btn = $('analyze-btn');
+  btn.disabled = true; btn.textContent = COPY.analyzing;
+  status('busy', COPY.analyzing);
+  try {
+    const fd = new FormData();
+    for (const f of S.files) fd.append('files', f, f.name);
+    const res = await fetch(oracleUrl() + '/analyze/audio', { method: 'POST', body: fd });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      throw new Error(d.detail || 'HTTP ' + res.status);
+    }
+    S.analysis = await res.json();
+    renderBay();
+    renderMeters();
+    status('ok', COPY.stemsAnalyzed(S.analysis.stems.length));
+  } catch (e) {
+    status('err', `${COPY.analyzeFailed} — ${e.message === 'Failed to fetch' ? COPY.oracleOffline : e.message}`);
+  } finally {
+    btn.textContent = COPY.analyzeBtn;
+    btn.disabled = S.files.length === 0;
+  }
+}
+
+const BAND_ORDER = ['sub', 'low', 'lowmid', 'mid', 'himid', 'high', 'air'];
+function renderMeters() {
+  const root = $('meters');
+  root.innerHTML = '';
+  if (!S.analysis) return;
+  const flagged = {};
+  for (const m of (S.analysis.cross_stem?.masking || [])) {
+    for (const st of m.stems) (flagged[st] = flagged[st] || new Set()).add(m.band);
+  }
+  for (const stem of S.analysis.stems) {
+    const card = document.createElement('div');
+    card.className = 'meter-stem';
+    const lufs = stem.lufs_integrated == null ? '—' : stem.lufs_integrated.toFixed(1);
+    const crest = stem.crest_factor == null ? '—' : stem.crest_factor.toFixed(1);
+    let bands = '';
+    for (const b of BAND_ORDER) {
+      const share = stem.band_energy[b] ?? 0;
+      const h = Math.round(Math.sqrt(share) * 100);
+      const db = stem.band_levels_db?.[b];
+      const isFlagged = flagged[stem.stem_name]?.has(b);
+      bands += `<div class="band${isFlagged ? ' flagged' : ''}">
+        <div class="bar"><div class="fill" style="height:${h}%"></div></div>
+        <span class="bl">${b}</span>
+        <span class="bv">${db == null ? '' : db}</span>
+      </div>`;
+    }
+    card.innerHTML = `<div class="meter-head">
+        <span class="meter-name">${escapeHtml(stem.stem_name)}</span>
+        <span class="meter-stats">${lufs} LUFS · crest ${crest} dB · ${stem.duration ?? '—'}s</span>
+      </div><div class="bands">${bands}</div>`;
+    root.appendChild(card);
+  }
+}
+
+// ── build chain ────────────────────────────────────────────────────────────
+$('build-btn').addEventListener('click', build);
+async function build() {
+  const backend = getBackend();
+  const apiKey = localStorage.getItem(LS.key);
+  if (backend === 'anthropic' && !apiKey) { status('err', COPY.needKey); return; }
+  const inv = inventoryBlock();
+  if (!inv) { status('err', COPY.needInventory); return; }
+
+  let userMsg;
+  if (S.analysis) {
+    const notes = $('notes-input').value.trim();
+    const goal = $('prompt-input').value.trim();
+    userMsg = 'Audio analysis of my stems:\n' + JSON.stringify(S.analysis) +
+      (notes ? '\n\nSession notes / intent: ' + notes : '') +
+      (goal ? '\n\nSonic goal: ' + goal : '') +
+      '\n\nBuild a chain (or leave-alone verdict) per stem, plus cross-stem actions.';
+  } else {
+    const goal = $('prompt-input').value.trim();
+    const source = $('source-input').value.trim();
+    if (!goal) { status('err', COPY.needPrompt); $('prompt-input').focus(); return; }
+    if (!source) { status('err', COPY.needSource); $('source-input').focus(); return; }
+    const origin = $('origin-select').value;
+    const detail = $('origin-detail').value.trim();
+    userMsg = `Sonic goal: ${goal}\nSource: ${source}\nOrigin: ${origin}${detail ? ' — ' + detail : ''}` +
+      '\n\nBuild one chain for this source.';
+  }
+
+  const btn = $('build-btn');
+  btn.disabled = true; btn.textContent = COPY.building;
+  status('busy', backend === 'ollama' ? COPY.buildingLocal : COPY.building);
+  clearOutput();
+  try {
+    const text = backend === 'ollama'
+      ? await callOllama(buildSystemPrompt(inv), userMsg)
+      : await callAnthropic(apiKey, buildSystemPrompt(inv), userMsg);
+    S.result = parseChainJson(text);
+    if (!S.result) { status('err', COPY.parseFailed); return; }
+    renderResult();
+    status('ok', '');
+  } catch (e) {
+    status('err', `${COPY.buildFailed} — ${e.message}`);
+  } finally {
+    btn.disabled = false; btn.textContent = COPY.buildBtn;
+  }
+}
+
+async function callAnthropic(apiKey, system, userMsg) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 4000,
+      system,
+      messages: [{ role: 'user', content: userMsg }],
+    }),
+  });
+  if (!res.ok) {
+    let hint = 'HTTP ' + res.status;
+    if (res.status === 401) hint = 'Invalid API key.';
+    else if (res.status === 429) hint = 'Rate limited — wait a moment.';
+    throw new Error(hint);
+  }
+  const data = await res.json();
+  return (data.content || []).map(c => c.text || '').join('');
+}
+
+async function callOllama(system, userMsg) {
+  const url = getOllamaUrl();
+  let res;
+  try {
+    res = await fetch(url + '/api/generate', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        model: getOllamaModel(),
+        system,
+        prompt: userMsg,
+        stream: false,
+        format: 'json',
+        // system prompt ≈ 5k tokens (inventory ~3.7k) — default 4k ctx would truncate it
+        options: { temperature: 0.4, num_ctx: 12288 },
+      }),
+    });
+  } catch (e) {
+    throw new Error(COPY.ollamaOffline(url));
+  }
+  if (!res.ok) throw new Error('Ollama HTTP ' + res.status);
+  const data = await res.json();
+  return data.response || '';
+}
+
+function parseChainJson(text) {
+  let t = text.trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '');
+  const start = t.indexOf('{');
+  const end = t.lastIndexOf('}');
+  if (start === -1 || end === -1) return null;
+  try {
+    const obj = JSON.parse(t.slice(start, end + 1));
+    if (!Array.isArray(obj.stems)) return null;
+    return obj;
+  } catch (e) { return null; }
+}
+
+// ── render output ──────────────────────────────────────────────────────────
+function clearOutput() {
+  $('intent').textContent = '';
+  $('racks').innerHTML = '';
+  $('racks').className = '';
+  $('cables').innerHTML = '';
+  $('cable-tags').innerHTML = '';
+  $('cross-list').innerHTML = '';
+  $('cross-list').className = '';
+  $('output-actions').style.display = 'none';
+  $('page').classList.remove('wide');
+}
+
+function renderResult() {
+  const r = S.result;
+  clearOutput();
+  $('intent').textContent = r.overall_intent || '';
+
+  const racks = $('racks');
+  const multi = r.stems.length > 1;
+  if (multi) { racks.classList.add('multi'); $('page').classList.add('wide'); }
+
+  let slotDelay = 0;
+  for (const stem of r.stems) {
+    const rack = document.createElement('div');
+    rack.className = 'rack';
+    rack.dataset.stem = stem.stem;
+    const verdictTag = stem.verdict === 'leave_alone' ? COPY.leaveAlone : '';
+    rack.innerHTML = `<div class="rack-title"><span>${escapeHtml(stem.stem)}</span>
+      <span class="verdict">${verdictTag}</span></div>`;
+
+    if (stem.verdict === 'leave_alone' || !Array.isArray(stem.chain) || !stem.chain.length) {
+      const blank = document.createElement('div');
+      blank.className = 'blank-panel module slot-in';
+      blank.style.animationDelay = (slotDelay += 60) + 'ms';
+      blank.textContent = COPY.blankPanel;
+      rack.appendChild(blank);
+      if (stem.verdict_reason) {
+        const p = document.createElement('p');
+        p.className = 'blank-reason';
+        p.textContent = stem.verdict_reason;
+        rack.appendChild(p);
+      }
+    } else {
+      for (const mod of stem.chain) {
+        const el = document.createElement('div');
+        el.className = 'module slot-in';
+        el.style.animationDelay = (slotDelay += 60) + 'ms';
+        el.innerHTML = `
+          <button class="module-face" aria-expanded="false">
+            <span class="slot-no">${String(mod.slot ?? '').padStart(2, '0')}</span>
+            <span class="module-name">${escapeHtml(mod.plugin || '')}</span><br>
+            <span class="module-mfr">${escapeHtml(mod.manufacturer || '')}</span><br>
+            <span class="module-role">${escapeHtml(mod.role || '')}</span>
+          </button>
+          <div class="module-body">
+            <p class="module-reasoning">${escapeHtml(mod.reasoning || '')}</p>
+            <div class="module-settings">${escapeHtml(mod.starting_settings || '')}</div>
+          </div>`;
+        el.querySelector('.module-face').addEventListener('click', () => {
+          const open = el.classList.toggle('open');
+          el.querySelector('.module-face').setAttribute('aria-expanded', String(open));
+        });
+        rack.appendChild(el);
+      }
+      if (Array.isArray(stem.alternatives) && stem.alternatives.length) {
+        const p = document.createElement('p');
+        p.className = 'alts';
+        p.innerHTML = `<strong>${COPY.alternativesLabel}:</strong> ` +
+          stem.alternatives.map(escapeHtml).join(' · ');
+        rack.appendChild(p);
+      }
+    }
+    racks.appendChild(rack);
+  }
+
+  renderCrossStem();
+  $('output-actions').style.display = 'flex';
+  requestAnimationFrame(drawCables);
+}
+
+function renderCrossStem() {
+  const actions = S.result?.cross_stem_actions || [];
+  const list = $('cross-list');
+  if (!actions.length) return;
+  list.classList.add('on');
+  list.innerHTML = `<h3>${COPY.crossStemTitle}</h3>` + actions.map(a => `
+    <div class="cross-item">
+      <span class="pair">${(a.stems || []).map(escapeHtml).join(' ⇄ ')}${a.band ? ' · ' + escapeHtml(a.band) : ''}</span>
+      ${escapeHtml(a.action || '')}
+    </div>`).join('');
+}
+
+// Patch cables: curved SVG between racks when side by side.
+function drawCables() {
+  const svg = $('cables');
+  const tags = $('cable-tags');
+  svg.innerHTML = ''; tags.innerHTML = '';
+  const actions = S.result?.cross_stem_actions || [];
+  const racksEl = $('racks');
+  const sideBySide = racksEl.classList.contains('multi') && window.matchMedia('(min-width: 900px)').matches;
+  svg.classList.toggle('on', sideBySide && actions.length > 0);
+  // cables carry the actions on wide screens; the inline list covers stacked layouts
+  $('cross-list').classList.toggle('on', actions.length > 0 && !sideBySide);
+  // reserve hang space below the racks for the cables and their tags
+  $('rack-wrap').style.paddingBottom =
+    (sideBySide && actions.length) ? (110 + actions.length * 30) + 'px' : '0px';
+  if (!sideBySide || !actions.length) return;
+
+  const wrap = $('rack-wrap').getBoundingClientRect();
+  svg.setAttribute('width', wrap.width);
+  svg.setAttribute('height', wrap.height);
+  svg.setAttribute('viewBox', `0 0 ${wrap.width} ${wrap.height}`);
+
+  actions.forEach((a, i) => {
+    if (!a.stems || a.stems.length < 2) return;
+    const elA = racksEl.querySelector(`[data-stem="${CSS.escape(a.stems[0])}"]`);
+    const elB = racksEl.querySelector(`[data-stem="${CSS.escape(a.stems[1])}"]`);
+    if (!elA || !elB) return;
+    // cables hang from the bottom of each rack, like a patch bay
+    const ra = elA.getBoundingClientRect(), rb = elB.getBoundingClientRect();
+    const x1 = ra.left - wrap.left + ra.width / 2 + (i % 2 ? 14 : -14);
+    const y1 = ra.bottom - wrap.top - 6;
+    const x2 = rb.left - wrap.left + rb.width / 2 + (i % 2 ? 14 : -14);
+    const y2 = rb.bottom - wrap.top - 6;
+    const sag = 56 + i * 30;
+    const my = Math.max(y1, y2) + sag;
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', `M ${x1} ${y1} C ${x1} ${my}, ${x2} ${my}, ${x2} ${y2}`);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', 'var(--trace)');
+    path.setAttribute('stroke-width', '2');
+    path.setAttribute('opacity', '0.85');
+    svg.appendChild(path);
+    ['1','2'].forEach((n, k) => {
+      const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      c.setAttribute('cx', k ? x2 : x1); c.setAttribute('cy', k ? y2 : y1);
+      c.setAttribute('r', '4'); c.setAttribute('fill', 'var(--trace)');
+      svg.appendChild(c);
+    });
+    const tag = document.createElement('div');
+    tag.className = 'cable-tag';
+    tag.textContent = (a.band ? a.band + ' · ' : '') + (a.action || '');
+    tag.style.left = ((x1 + x2) / 2) + 'px';
+    tag.style.top = (my - sag / 4) + 'px';
+    tags.appendChild(tag);
+  });
+}
+window.addEventListener('resize', () => { if (S.result) requestAnimationFrame(drawCables); });
+
+// ── recall sheet ───────────────────────────────────────────────────────────
+$('copy-btn').addEventListener('click', async () => {
+  if (!S.result) return;
+  const r = S.result;
+  const lines = ['CHAIN BUILDER — recall sheet', ''];
+  if (r.overall_intent) lines.push(r.overall_intent, '');
+  for (const stem of r.stems) {
+    lines.push(`[${stem.stem}]`);
+    if (stem.verdict === 'leave_alone' || !stem.chain?.length) {
+      lines.push('  leave alone' + (stem.verdict_reason ? ' — ' + stem.verdict_reason : ''));
+    } else {
+      for (const m of stem.chain) {
+        lines.push(`  ${m.slot}. ${m.plugin} (${m.manufacturer}) — ${m.role}`);
+        if (m.starting_settings) lines.push(`     ${m.starting_settings}`);
+      }
+      if (stem.alternatives?.length) lines.push('  alt: ' + stem.alternatives.join(' / '));
+    }
+    lines.push('');
+  }
+  const xs = r.cross_stem_actions || [];
+  if (xs.length) {
+    lines.push('[cross-stem]');
+    for (const a of xs) lines.push(`  ${(a.stems || []).join(' + ')}${a.band ? ' (' + a.band + ')' : ''}: ${a.action}`);
+  }
+  await navigator.clipboard.writeText(lines.join('\n'));
+  const btn = $('copy-btn');
+  const orig = btn.textContent;
+  btn.textContent = COPY.copied;
+  setTimeout(() => { btn.textContent = orig; }, 1400);
+});
+
+// ── Second Ear handoff (Stage 3) ───────────────────────────────────────────
+// Accepts ?prompt=… in the URL, or a JSON payload in localStorage under
+// og_secondear_handoff: { source: "second-ear", prompt: "...", source_label?,
+// origin?, origin_detail? }. Consumed once, then removed.
+function consumeHandoff() {
+  const params = new URLSearchParams(location.search);
+  const urlPrompt = params.get('prompt');
+  if (urlPrompt) { $('prompt-input').value = urlPrompt; return; }
+  const raw = localStorage.getItem('og_secondear_handoff');
+  if (!raw) return;
+  try {
+    const h = JSON.parse(raw);
+    if (h.prompt) $('prompt-input').value = h.prompt;
+    if (h.source_label) $('source-input').value = h.source_label;
+    if (h.origin === 'virtual' || h.origin === 'recorded') $('origin-select').value = h.origin;
+    if (h.origin_detail) $('origin-detail').value = h.origin_detail;
+  } catch (e) { /* ignore malformed payloads */ }
+  localStorage.removeItem('og_secondear_handoff');
+  setOriginPlaceholder();
+}
+
+// ── demo mode: #demo renders a mock chain without any API call ─────────────
+function demo() {
+  S.result = {
+    overall_intent: 'Dark, saturated lead vocal in front; synth bass leads the low end, P-bass yields.',
+    stems: [
+      { stem: 'lead_vocal', verdict: 'chain', chain: [
+        { slot: 1, plugin: 'oeksound soothe3', manufacturer: 'oeksound', role: 'resonance control',
+          reasoning: 'SM7B proximity buildup and harsh 3-5k pockets under saturation. Tame before compressing so the compressor reacts to tone, not resonance.',
+          starting_settings: 'depth 4, sharpness medium, focus 200-450 Hz and 2.5-5 kHz, oversampling 2x' },
+        { slot: 2, plugin: 'UADx 1176 Rev A', manufacturer: 'Universal Audio', role: 'FET compression',
+          reasoning: 'Fast FET grabs consonants and keeps the vocal in front of a dense mix without sounding flattened.',
+          starting_settings: 'ratio 4:1, attack 3, release 7, 3-5 dB GR on peaks' },
+      ], alternatives: ['IK Black 76 when CPU is tight'] },
+      { stem: 'synth_bass', verdict: 'leave_alone',
+        verdict_reason: 'Clean virtual source already dominating its lane. Shape it at the synth if anything.' },
+      { stem: 'p_bass', verdict: 'chain', chain: [
+        { slot: 1, plugin: 'UADx Pultec EQP-1A', manufacturer: 'Universal Audio', role: 'corrective EQ',
+          reasoning: 'Buried by synth bass at 60-150 Hz. Shift its center of gravity up: attenuate lows, let mids carry it.',
+          starting_settings: 'atten 60 Hz × 3, boost 100 Hz × 2, high boost off' },
+      ] },
+    ],
+    cross_stem_actions: [
+      { stems: ['synth_bass', 'p_bass'], band: 'low', action: 'Carve 80-150 Hz on synth_bass by 2-3 dB or sidechain it to the P-bass pocket' },
+    ],
+  };
+  renderResult();
+  // show one module open so the reveal interaction is visible
+  document.querySelector('.module-face')?.click();
+}
+
+// ── init ───────────────────────────────────────────────────────────────────
+injectCopy();
+consumeHandoff();
+loadInventory(false);
+if (location.hash === '#demo') demo();
+</script>
+</body>
+</html>

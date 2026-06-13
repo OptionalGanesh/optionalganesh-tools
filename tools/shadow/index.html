@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Shadow Trainer OS</title>
+  <meta name="theme-color" content="#000000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Shadow OS">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header id="header">
+    <div id="header-status"></div>
+    <nav id="nav"></nav>
+  </header>
+
+  <div id="notice" class="notice" style="display:none"></div>
+
+  <main id="app"></main>
+
+  <nav id="mobile-nav" class="mobile-nav" aria-label="Navegación principal"></nav>
+
+  <div id="log-modal" class="modal-overlay" style="display:none"
+       onclick="if(event.target===this)closeLog()"></div>
+
+  <div id="esc-modal" class="modal-overlay" style="display:none"
+       onclick="if(event.target===this)closeEscalation()"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

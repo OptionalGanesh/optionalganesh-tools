@@ -225,6 +225,23 @@
       font-family: monospace;
       letter-spacing: 0.08em;
     }
+
+    /* taste layer */
+    .pill, .platform-pill {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-generate { min-height: 48px; }
+    .btn-copy { min-height: 40px; display: inline-flex; align-items: center; }
+    :focus-visible { outline: 1px solid #1e90ff; outline-offset: 2px; }
+    textarea:focus, textarea:focus-visible { outline: none; border-color: #1e90ff; }
+    .back:focus-visible {
+      outline: 1px solid rgba(255,255,255,0.5);
+      outline-offset: 3px;
+      border-radius: 1px;
+    }
   </style>
 </head>
 <body>

@@ -571,8 +571,33 @@
     </div>
   </div>
 
+  <!-- SONG LIBRARY -->
+  <div class="pack" id="song-library" style="margin-top:14px">
+    <div class="pack-head" style="cursor:pointer" onclick="toggleSongLibrary()">
+      <span class="pack-title">Song Library</span>
+      <span class="pack-count" id="sl-toggle-label">ver tabla ↓</span>
+    </div>
+    <div id="song-library-body" style="display:none;overflow-x:auto">
+      <table id="sl-table" style="width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px;color:#d6e7de">
+        <thead>
+          <tr style="border-bottom:1px solid rgba(255,255,255,.12);color:#8fa096">
+            <th style="padding:8px 12px;text-align:left;letter-spacing:.1em">Preset</th>
+            <th style="padding:8px 12px;text-align:left;letter-spacing:.1em">Canción / uso</th>
+            <th style="padding:8px 12px;text-align:left;letter-spacing:.1em">Slot</th>
+            <th style="padding:8px 12px;text-align:left;letter-spacing:.1em">Escenas</th>
+            <th style="padding:8px 4px;text-align:left;letter-spacing:.1em"></th>
+          </tr>
+        </thead>
+        <tbody id="sl-tbody"></tbody>
+      </table>
+      <div id="sl-empty" style="font-family:var(--mono);font-size:11px;color:#8fa096;padding:1.4rem 1rem;display:none">
+        Añade presets al setlist para verlos aquí.
+      </div>
+    </div>
+  </div>
+
   <details class="advanced-panel">
-    <summary>Avanzado / laboratorio</summary>
+    <summary>Export &amp; Backup</summary>
     <div class="advanced-body">
       <p class="advanced-note">QuickTone sigue siendo la herramienta final para importar al pedal. Estas opciones son para backup, referencia y pruebas internas.</p>
       <div class="system-drawer">
@@ -773,7 +798,7 @@ function defaultScene() {
 let scenes       = [defaultScene(), defaultScene(), defaultScene()];
 let currentScene = 0;
 let selectedId   = 'amp';
-let pack         = [];
+let pack         = JSON.parse(localStorage.getItem('mg30pack') || '[]');
 
 // ═══════════════════════════════════════════════════════════
 // FIRMWARE LOAD
@@ -1185,13 +1210,15 @@ function recipeText(recipe) {
   return lines.join('\n');
 }
 
+function savePack() { localStorage.setItem('mg30pack', JSON.stringify(pack)); }
 function addToPack() {
   const meta = recipeMeta();
   pack.push({ meta, scenes: JSON.parse(JSON.stringify(scenes)) });
+  savePack();
   renderPack();
   flash(`"${meta.name}" añadido al setlist`);
 }
-function removeFromPack(i) { pack.splice(i,1); renderPack(); }
+function removeFromPack(i) { pack.splice(i,1); savePack(); renderPack(); }
 function loadFromPack(i) {
   scenes = JSON.parse(JSON.stringify(pack[i].scenes));
   applyRecipeMeta(pack[i].meta);
@@ -1204,6 +1231,43 @@ function dlSingle(i) {
   const item = pack[i];
   downloadBytes(buildPatchFile(item.scenes, item.meta.name), san(item.meta.name)+'.mg30patch');
 }
+function toggleSongLibrary() {
+  const body = document.getElementById('song-library-body');
+  const label = document.getElementById('sl-toggle-label');
+  const open = body.style.display === 'none';
+  body.style.display = open ? 'block' : 'none';
+  label.textContent = open ? 'ocultar ↑' : 'ver tabla ↓';
+  if (open) renderSongLibrary();
+}
+
+function renderSongLibrary() {
+  const tbody = document.getElementById('sl-tbody');
+  const empty = document.getElementById('sl-empty');
+  const table = document.getElementById('sl-table');
+  if (!pack.length) {
+    table.style.display = 'none';
+    empty.style.display = 'block';
+    return;
+  }
+  table.style.display = 'table';
+  empty.style.display = 'none';
+  tbody.innerHTML = pack.map((item, i) => {
+    const scenes_label = (item.meta.sceneNotes || [])
+      .map((n, j) => `<span style="color:#8fa096">${['A','B','C'][j]}:</span> ${esc(n || '—')}`)
+      .join('  ');
+    return `<tr style="border-bottom:1px solid rgba(255,255,255,.06);cursor:pointer" onclick="loadFromPack(${i})" title="Cargar preset">
+      <td style="padding:9px 12px;font-weight:700;color:#f0fdf4">${esc(item.meta.name || '—')}</td>
+      <td style="padding:9px 12px;color:#d6e7de">${esc(item.meta.song || '—')}</td>
+      <td style="padding:9px 12px;color:#8fa096">${esc(item.meta.targetSlot || '—')}</td>
+      <td style="padding:9px 12px;font-size:10px">${scenes_label || '—'}</td>
+      <td style="padding:9px 4px;white-space:nowrap">
+        <button onclick="event.stopPropagation();loadFromPack(${i})" style="background:none;border:1px solid rgba(255,255,255,.15);color:#d6e7de;font-family:var(--mono);font-size:9px;padding:3px 8px;cursor:pointer;margin-right:4px">↑ Cargar</button>
+        <button onclick="event.stopPropagation();removeFromPack(${i});renderSongLibrary()" style="background:none;border:1px solid rgba(255,100,100,.3);color:#f87171;font-family:var(--mono);font-size:9px;padding:3px 8px;cursor:pointer">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
 function renderPack() {
   const list = document.getElementById('pack-list');
   const cnt  = document.getElementById('pack-count');

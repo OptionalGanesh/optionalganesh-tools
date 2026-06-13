@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="pragma" content="no-cache">
+    <meta http-equiv="expires" content="0">
+    <title>Drum Practice OS</title>
+    <link rel="stylesheet" href="drum-practice-os.20260601-1950.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <aside class="sidebar" aria-label="Drum curriculum">
+        <div class="brand">
+          <a href="/" style="display:inline-block;font-size:10px;color:rgba(255,255,255,.35);text-decoration:none;letter-spacing:.18em;text-transform:uppercase;margin-bottom:8px;transition:color .15s">← tools</a>
+          <h1>Drum Practice OS</h1>
+          <p>Learn faster. Practice cleaner. Transfer everything to music.</p>
+        </div>
+
+        <section class="today-session-card" aria-label="Today's session">
+          <p class="kicker">Today</p>
+          <strong id="recommendedModule">Pulse + Subdivision</strong>
+          <span id="recommendationReason">Start with the internal clock.</span>
+          <small id="streakSummary">First session this week</small>
+          <div class="today-session-actions">
+            <button id="startToday" class="primary-button full">Start today's session</button>
+            <button id="continueLast" class="secondary-button full" hidden>Continue last session</button>
+          </div>
+        </section>
+
+        <button id="toggleModules" class="secondary-button sidebar-toggle" aria-controls="sidebarCurriculum" aria-expanded="false">Modules</button>
+
+        <div id="sidebarCurriculum" class="sidebar-curriculum">
+          <label class="search-box">
+            <span>Find a skill</span>
+            <input id="searchInput" type="search" placeholder="groove, fills, rudiments...">
+          </label>
+
+          <div class="mode-switch" aria-label="Practice mode">
+            <button class="mode-button active" data-mode="learn" aria-pressed="true">Learn</button>
+            <button class="mode-button" data-mode="drill" aria-pressed="false">Drill</button>
+            <button class="mode-button" data-mode="music" aria-pressed="false">Music</button>
+          </div>
+
+          <nav id="moduleNav" class="module-nav" aria-label="Modules"></nav>
+        </div>
+      </aside>
+
+      <section class="workspace">
+        <header class="hero">
+          <div>
+            <p id="moduleKicker" class="kicker">Foundation</p>
+            <h2 id="moduleTitle">Pulse</h2>
+            <p id="moduleBrief" class="hero-copy"></p>
+          </div>
+          <div class="today-card">
+            <span>Today's block</span>
+            <strong id="todayMinutes">20 min</strong>
+            <small id="todayFocus">One idea, clean sound, honest tempo.</small>
+          </div>
+        </header>
+
+        <section id="sessionRunner" class="panel session-runner" aria-label="Guided practice session">
+          <div class="session-runner-head">
+            <div>
+              <p class="kicker">Guided session</p>
+              <h3><span id="sessionStepCount">Step 1 of 4</span> · <span id="sessionStepTitle">Understand</span></h3>
+            </div>
+            <strong id="sessionStepTime" class="session-step-time">3 min</strong>
+          </div>
+          <p id="sessionStepText" class="session-step-text">Count the pattern and clap the accents before touching the kit.</p>
+          <div class="session-runner-actions">
+            <button id="sessionNext" class="primary-button">Next: Drill</button>
+            <button id="sessionRestart" class="secondary-button">Restart session</button>
+          </div>
+          <p id="sessionCompleteMessage" class="session-complete-message" role="status"></p>
+        </section>
+
+        <section class="quick-row" aria-label="Practice overview">
+          <article>
+            <span>1. Understand</span>
+            <strong id="learnCue">Count it out loud before touching the kit.</strong>
+          </article>
+          <article>
+            <span>2. Build</span>
+            <strong id="drillCue">Loop it slowly until the motion is boring.</strong>
+          </article>
+          <article>
+            <span>3. Transfer</span>
+            <strong id="musicCue">Play it in a groove, a fill, and a song form.</strong>
+          </article>
+        </section>
+
+        <section class="main-grid">
+          <article class="panel exercise-panel">
+            <div class="panel-head">
+              <div>
+                <p class="kicker">Current exercise</p>
+                <h3 id="exerciseTitle">Loading</h3>
+              </div>
+              <div class="stepper" aria-label="Exercise navigation">
+                <button id="prevExercise" class="icon-button" aria-label="Previous exercise">&lt;</button>
+                <button id="nextExercise" class="icon-button" aria-label="Next exercise">&gt;</button>
+              </div>
+            </div>
+
+            <p id="exerciseGoal" class="goal"></p>
+            <div id="exerciseMeta" class="meta-row"></div>
+            <div id="exerciseProgress" class="exercise-progress"></div>
+
+            <div class="pattern-toolbar">
+              <div>
+                <span>Kit map</span>
+                <strong id="patternName">16-step pattern</strong>
+              </div>
+              <button id="copyPattern" class="secondary-button">Copy pattern</button>
+            </div>
+
+            <div id="laneGrid" class="lane-grid" aria-label="Drum pattern lanes"></div>
+
+            <div class="coach-grid">
+              <section>
+                <h4>How to practice</h4>
+                <ol id="practiceSteps"></ol>
+              </section>
+              <section>
+                <h4>Listen for</h4>
+                <ul id="listenList"></ul>
+              </section>
+            </div>
+          </article>
+
+          <aside class="right-rail">
+            <article class="panel transport-panel">
+              <div class="panel-head">
+                <div>
+                  <p class="kicker">Metronome</p>
+                  <h3>Practice clock</h3>
+                </div>
+                <button id="soundToggle" class="icon-button" aria-label="Toggle click" aria-pressed="true">Sound on</button>
+              </div>
+
+              <div class="control-stack">
+                <label>
+                  <span>BPM</span>
+                  <input id="bpm" type="range" min="40" max="180" value="72">
+                  <strong id="bpmValue">72</strong>
+                </label>
+                <label class="select-control">
+                  <span>Click</span>
+                  <select id="clickMode">
+                    <option value="quarter" selected>Quarter notes</option>
+                    <option value="eighth">Eighth notes</option>
+                    <option value="sixteenth">Sixteenth notes</option>
+                    <option value="pattern">Pattern notes</option>
+                  </select>
+                </label>
+                <label class="select-control">
+                  <span>Block</span>
+                  <select id="blockLength">
+                    <option value="5">5 min</option>
+                    <option value="10">10 min</option>
+                    <option value="20" selected>20 min</option>
+                    <option value="30">30 min</option>
+                  </select>
+                </label>
+              </div>
+
+              <div class="timer-face">
+                <strong id="timerDisplay">20:00</strong>
+                <span id="clickSummary" class="click-summary">Quarter click · 72/min</span>
+                <div id="countStrip" class="count-strip" aria-label="Sixteenth-note count"></div>
+                <div id="beatDots" class="beat-dots" aria-label="Beat position"></div>
+              </div>
+
+              <div class="transport">
+                <button id="startStop" class="primary-button">Start</button>
+                <button id="resetTimer" class="secondary-button">Reset</button>
+              </div>
+            </article>
+
+            <article class="panel generator-panel">
+              <div class="panel-head">
+                <div>
+                  <p class="kicker">Practice generator</p>
+                  <h3>Give me a task</h3>
+                </div>
+                <button id="randomTask" class="icon-button" aria-label="Generate task">New</button>
+              </div>
+              <p id="taskPrompt" class="task-prompt"></p>
+              <div class="mini-controls">
+                <button data-task="easier">Easier</button>
+                <button data-task="harder">Harder</button>
+                <button data-task="musical">Musical</button>
+              </div>
+            </article>
+
+            <article class="panel journal-panel">
+              <div class="panel-head">
+                <div>
+                  <p class="kicker">Progress</p>
+                  <h3>Practice log</h3>
+                </div>
+                <button id="clearLog" class="icon-button" aria-label="Clear log">Clear</button>
+              </div>
+              <textarea id="journalInput" rows="4" placeholder="What improved? What still falls apart?"></textarea>
+              <button id="saveLog" class="primary-button full">Save note</button>
+              <div id="progressStats" class="progress-stats" aria-label="Practice progress"></div>
+              <div id="sessionList" class="session-list"></div>
+              <div id="logList" class="log-list"></div>
+            </article>
+          </aside>
+        </section>
+      </section>
+    </main>
+
+    <section class="mobile-focus-bar" aria-label="Quick practice controls">
+      <div class="mobile-focus-status">
+        <span id="mobileMode">Learn</span>
+        <strong id="mobileTimer">20:00</strong>
+        <small><span id="mobileBpmValue">72</span> BPM</small>
+      </div>
+      <div class="mobile-bpm-controls" aria-label="Quick BPM controls">
+        <button id="mobileBpmDown" class="icon-button" aria-label="Decrease BPM by 5">-5</button>
+        <button id="mobileBpmUp" class="icon-button" aria-label="Increase BPM by 5">+5</button>
+      </div>
+      <button id="mobileStartStop" class="primary-button">Start</button>
+      <button id="mobileReset" class="secondary-button">Reset</button>
+    </section>
+
+    <script src="drum-practice-os.20260601-1950.js"></script>
+  </body>
+</html>
