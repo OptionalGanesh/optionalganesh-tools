@@ -1,0 +1,1912 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Practice Engine</title>
+  <style>
+    :root {
+      --bg: #f2eee8;
+      --surface: #fffaf1;
+      --surface-2: #f7eadc;
+      --ink: #101010;
+      --muted: #6c625a;
+      --line: rgba(16, 16, 16, 0.18);
+      --accent: #ffb400;
+      --blue: #2447ff;
+      --green: #00a66a;
+      --red: #ff1a21;
+      --pink: #ff4fa3;
+      --shadow: 12px 14px 0 rgba(16, 16, 16, 0.16);
+      color-scheme: light;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        linear-gradient(90deg, rgba(16,16,16,0.035) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(16,16,16,0.03) 1px, transparent 1px),
+        radial-gradient(circle at 92% 8%, rgba(255, 26, 33, 0.18), transparent 28%),
+        var(--bg);
+      background-size: 42px 42px, 42px 42px, auto, auto;
+      line-height: 1.35;
+    }
+
+    button, textarea, input { font: inherit; }
+    button { border: 0; cursor: pointer; }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+    }
+
+    aside {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+      border-right: 2px solid var(--ink);
+      background: #101010;
+      color: #fffaf1;
+      padding: 24px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .brand { display: grid; gap: 10px; }
+    .mark {
+      width: 48px;
+      aspect-ratio: 1;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: var(--accent);
+      color: #111315;
+      font-weight: 900;
+      border: 2px solid #fffaf1;
+      box-shadow: 5px 5px 0 var(--red);
+    }
+
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: 28px; line-height: 1; letter-spacing: 0; }
+    h2 { font-size: 18px; }
+    h3 { font-size: 15px; }
+    p { line-height: 1.45; }
+
+    aside .muted { color: rgba(255, 250, 241, 0.68); }
+    .muted { color: var(--muted); }
+    .small { font-size: 13px; }
+
+    nav { display: grid; gap: 8px; }
+    nav button {
+      min-height: 42px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      color: var(--ink);
+      color: inherit;
+      background: transparent;
+      text-align: left;
+      border: 1px solid transparent;
+    }
+
+    nav button.active,
+    nav button:hover {
+      background: rgba(242, 239, 231, 0.07);
+      border-color: rgba(255, 250, 241, 0.24);
+    }
+
+    .side-note {
+      margin-top: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 13px;
+      background: rgba(255, 250, 241, 0.08);
+    }
+
+    .reference-stack {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+
+    .reference-stack img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      border: 1px solid rgba(255, 250, 241, 0.35);
+      filter: saturate(1.18) contrast(1.05);
+    }
+
+    main {
+      min-width: 0;
+      padding: 26px;
+      display: grid;
+      gap: 18px;
+      align-content: start;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .topbar h2 { font-size: 26px; line-height: 1.1; }
+
+    .status {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .pill {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 11px;
+      color: var(--muted);
+      background: rgba(255, 250, 241, 0.78);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .session-strip {
+      display: grid;
+      grid-template-columns: 1.1fr 0.95fr 0.95fr;
+      gap: 12px;
+    }
+
+    .strip-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      padding: 14px;
+      display: grid;
+      gap: 6px;
+      min-height: 86px;
+    }
+
+    .strip-card b {
+      color: var(--accent);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .strip-card strong {
+      font-size: 18px;
+      line-height: 1.12;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 0.95fr) minmax(360px, 1.05fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .hero-layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 0.78fr) minmax(0, 1.22fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .hero-layout > .layout {
+      grid-template-columns: 1fr;
+    }
+
+    .visual-panel {
+      min-height: 520px;
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      background: #fffaf1;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      isolation: isolate;
+    }
+
+    .visual-panel img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: saturate(1.26) contrast(1.06);
+      transform: scale(1.04);
+    }
+
+    .visual-panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, transparent 0 34%, rgba(36, 71, 255, 0.86) 35% 48%, transparent 49%),
+        linear-gradient(0deg, transparent 0 72%, rgba(255, 26, 33, 0.88) 73% 83%, transparent 84%);
+      mix-blend-mode: multiply;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .visual-panel::after {
+      content: "practice is not neutral";
+      position: absolute;
+      left: 16px;
+      bottom: 16px;
+      z-index: 2;
+      color: #fffaf1;
+      background: #101010;
+      border: 2px solid #fffaf1;
+      padding: 8px 10px;
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      max-width: 190px;
+    }
+
+    .scribble {
+      position: absolute;
+      z-index: 3;
+      border: 4px solid #fffaf1;
+      border-left-color: transparent;
+      width: 132px;
+      height: 42px;
+      border-radius: 50%;
+      right: 18px;
+      top: 26px;
+      transform: rotate(-8deg);
+      pointer-events: none;
+    }
+
+    .visual-caption {
+      position: absolute;
+      z-index: 3;
+      right: 14px;
+      bottom: 76px;
+      writing-mode: vertical-rl;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      color: #fffaf1;
+      text-shadow: 0 1px 0 #101010;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .panel.featured {
+      border-color: rgba(16, 16, 16, 0.72);
+      background: linear-gradient(180deg, #fffaf1, #ffe7d0);
+    }
+
+    .panel-body {
+      padding: 18px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .module-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .module {
+      min-height: 96px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #fffaf1;
+      color: var(--ink);
+      padding: 14px;
+      text-align: left;
+      display: grid;
+      gap: 8px;
+      align-content: start;
+    }
+
+    .module:hover,
+    .module.active {
+      border-color: #101010;
+      background: var(--color);
+      color: #101010;
+      box-shadow: inset 0 0 0 3px #101010, 7px 7px 0 #101010;
+    }
+
+    .module.active p {
+      color: #101010;
+      font-weight: 750;
+    }
+
+    .module span {
+      width: 10px;
+      aspect-ratio: 1;
+      border-radius: 999px;
+      background: var(--color);
+      box-shadow: 0 0 16px color-mix(in srgb, var(--color), transparent 45%);
+    }
+
+    .module p { font-size: 13px; color: var(--muted); }
+
+    .control-grid {
+      display: grid;
+      grid-template-columns: 0.8fr 1.2fr;
+      gap: 14px;
+    }
+
+    .controls {
+      display: grid;
+      gap: 12px;
+    }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .segmented button,
+    .focus-list button {
+      min-height: 40px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      color: var(--ink);
+      background: rgba(255, 250, 241, 0.88);
+      padding: 8px 10px;
+    }
+
+    .segmented button.active,
+    .focus-list button.active {
+      background: var(--accent);
+      color: #111315;
+      border-color: transparent;
+      font-weight: 800;
+    }
+
+    .focus-list {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .primary {
+      min-height: 46px;
+      border-radius: 8px;
+      color: #111315;
+      background: var(--accent);
+      font-weight: 900;
+      padding: 11px 14px;
+      box-shadow: 5px 5px 0 var(--ink);
+    }
+
+    .secondary {
+      min-height: 42px;
+      border-radius: 8px;
+      color: var(--ink);
+      background: #fffaf1;
+      border: 1px solid var(--line);
+      padding: 10px 12px;
+      font-weight: 750;
+    }
+
+    .plan {
+      display: grid;
+      gap: 10px;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 34px 54px minmax(0, 1fr);
+      gap: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 250, 241, 0.76);
+      padding: 12px;
+    }
+
+    .step.done {
+      border-color: rgba(98, 207, 143, 0.28);
+      background: rgba(0, 166, 106, 0.12);
+    }
+
+    .step-check {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      background: #fffaf1;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      align-self: start;
+    }
+
+    .step.done .step-check {
+      background: var(--green);
+      color: #111315;
+      border-color: transparent;
+    }
+
+    .time {
+      min-height: 42px;
+      border-radius: 8px;
+      background: rgba(240, 184, 79, 0.14);
+      color: var(--accent);
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      font-size: 13px;
+    }
+
+    .step strong { display: block; margin-bottom: 4px; }
+    .step p { color: var(--muted); font-size: 13px; }
+
+    .timer {
+      display: grid;
+      grid-template-columns: 1fr 120px;
+      gap: 12px;
+      align-items: center;
+      padding: 14px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #101010;
+      color: #fffaf1;
+    }
+
+    .clock {
+      font-size: clamp(36px, 6vw, 70px);
+      font-weight: 900;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .meter {
+      height: 10px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(255, 250, 241, 0.16);
+      margin-top: 10px;
+    }
+
+    .meter span {
+      display: block;
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--green), var(--blue));
+    }
+
+    .progress-note {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    .log-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .circle-board {
+      display: grid;
+      grid-template-columns: minmax(280px, 0.8fr) minmax(280px, 1.2fr);
+      gap: 16px;
+      align-items: center;
+    }
+
+    .fifths {
+      width: min(100%, 380px);
+      aspect-ratio: 1;
+      margin: 0 auto;
+      border-radius: 999px;
+      position: relative;
+      border: 1px solid var(--line);
+      background:
+        radial-gradient(circle, var(--surface) 0 27%, transparent 28%),
+        conic-gradient(from -15deg, rgba(240, 184, 79, 0.18), rgba(98, 207, 143, 0.13), rgba(102, 166, 255, 0.16), rgba(240, 184, 79, 0.18));
+    }
+
+    .key-button {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 54px;
+      height: 38px;
+      margin: -19px 0 0 -27px;
+      transform: rotate(var(--angle)) translateY(-148px) rotate(calc(-1 * var(--angle)));
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      color: var(--ink);
+      background: #fffaf1;
+      font-weight: 850;
+    }
+
+    .key-button:hover,
+    .key-button.active {
+      color: #111315;
+      background: var(--accent);
+      border-color: transparent;
+    }
+
+    .circle-center {
+      position: absolute;
+      inset: 34%;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      border: 1px solid var(--line);
+      background: #111315;
+      color: #fffaf1;
+      padding: 10px;
+      font-weight: 900;
+    }
+
+    .key-info {
+      display: grid;
+      gap: 12px;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .info-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 250, 241, 0.72);
+      padding: 12px;
+    }
+
+    .info-card b {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--accent);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .chords {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chord {
+      border-radius: 999px;
+      padding: 7px 10px;
+      background: rgba(255, 180, 0, 0.18);
+      border: 1px solid var(--line);
+      font-weight: 750;
+      font-size: 13px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 86px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--ink);
+      background: #fffaf1;
+      padding: 12px;
+      line-height: 1.4;
+    }
+
+    .logs {
+      display: grid;
+      gap: 8px;
+      max-height: 220px;
+      overflow: auto;
+    }
+
+    .log {
+      border-left: 3px solid var(--blue);
+      background: rgba(255, 250, 241, 0.72);
+      border-radius: 6px;
+      padding: 10px 11px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .log b { color: var(--ink); display: block; margin-bottom: 3px; }
+
+    /* Editorial atelier pass */
+    .app {
+      grid-template-columns: 224px minmax(0, 1fr);
+    }
+
+    aside {
+      padding: 20px 16px;
+      background:
+        linear-gradient(180deg, rgba(255, 26, 33, 0.18), transparent 24%),
+        #080808;
+    }
+
+    .brand {
+      gap: 14px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid rgba(255, 250, 241, 0.18);
+    }
+
+    .mark {
+      width: 44px;
+      border-radius: 0;
+      transform: rotate(-3deg);
+    }
+
+    h1 {
+      font-size: 34px;
+      line-height: 0.86;
+      text-transform: uppercase;
+      max-width: 160px;
+    }
+
+    nav {
+      gap: 2px;
+      counter-reset: nav;
+    }
+
+    nav button {
+      position: relative;
+      min-height: 52px;
+      border-radius: 0;
+      padding: 10px 8px 10px 42px;
+      text-transform: uppercase;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+      border-bottom: 1px solid rgba(255, 250, 241, 0.12);
+      counter-increment: nav;
+    }
+
+    nav button::before {
+      content: "0" counter(nav);
+      position: absolute;
+      left: 8px;
+      top: 13px;
+      color: var(--accent);
+      font-size: 12px;
+    }
+
+    nav button.active,
+    nav button:hover {
+      color: #101010;
+      background: #fffaf1;
+      border-color: #fffaf1;
+    }
+
+    nav button.active::before,
+    nav button:hover::before {
+      color: var(--red);
+    }
+
+    .side-note {
+      border-radius: 0;
+      border: 1px solid rgba(255, 250, 241, 0.26);
+      background: rgba(255, 250, 241, 0.06);
+    }
+
+    .reference-stack {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .reference-stack img {
+      border: 0;
+      aspect-ratio: 0.82;
+    }
+
+    main {
+      position: relative;
+      padding: 24px;
+      gap: 16px;
+      overflow: hidden;
+    }
+
+    main::before {
+      content: "PRACTICE";
+      position: absolute;
+      right: 18px;
+      top: -32px;
+      z-index: -1;
+      color: rgba(16, 16, 16, 0.045);
+      font-size: clamp(90px, 16vw, 230px);
+      font-weight: 950;
+      line-height: 0.82;
+      letter-spacing: 0;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: end;
+      padding: 18px 20px;
+      border: 2px solid var(--ink);
+      background: #fffaf1;
+      box-shadow: 8px 8px 0 var(--red);
+    }
+
+    .topbar h2 {
+      font-size: clamp(34px, 5vw, 72px);
+      line-height: 0.88;
+      max-width: 760px;
+      text-transform: uppercase;
+      font-weight: 950;
+    }
+
+    .topbar p {
+      margin-top: 10px;
+      max-width: 560px;
+      font-size: 15px;
+    }
+
+    .status {
+      max-width: 260px;
+      justify-content: flex-end;
+      align-content: end;
+    }
+
+    .pill {
+      border-radius: 0;
+      border: 1px solid #101010;
+      background: #101010;
+      color: #fffaf1;
+      font-weight: 850;
+    }
+
+    .session-strip {
+      grid-template-columns: 1.15fr 1fr 0.72fr;
+      gap: 0;
+      border: 2px solid #101010;
+      background: #101010;
+      box-shadow: 8px 8px 0 rgba(16, 16, 16, 0.16);
+    }
+
+    .strip-card {
+      min-height: 76px;
+      border: 0;
+      border-right: 1px solid rgba(255, 250, 241, 0.22);
+      border-radius: 0;
+      background: #101010;
+      color: #fffaf1;
+      box-shadow: none;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .strip-card:last-child {
+      border-right: 0;
+    }
+
+    .strip-card::after {
+      content: "";
+      position: absolute;
+      width: 76px;
+      height: 12px;
+      right: 12px;
+      top: 14px;
+      background: var(--red);
+      transform: rotate(-4deg);
+      opacity: 0.9;
+      pointer-events: none;
+    }
+
+    .strip-card:nth-child(2)::after { background: var(--blue); }
+    .strip-card:nth-child(3)::after { background: var(--accent); }
+
+    .strip-card b {
+      color: var(--accent);
+    }
+
+    .strip-card .muted {
+      color: rgba(255, 250, 241, 0.62);
+    }
+
+    .hero-layout {
+      position: relative;
+      grid-template-columns: minmax(300px, 0.86fr) minmax(420px, 1.14fr);
+      gap: 0;
+      align-items: stretch;
+      border: 2px solid #101010;
+      background: #101010;
+      box-shadow: 12px 14px 0 rgba(16, 16, 16, 0.16);
+    }
+
+    .visual-panel {
+      min-height: 760px;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+      clip-path: polygon(0 0, 100% 0, 88% 100%, 0 100%);
+    }
+
+    .visual-panel::before {
+      background:
+        linear-gradient(90deg, transparent 0 26%, rgba(36, 71, 255, 0.82) 27% 44%, transparent 45%),
+        linear-gradient(0deg, transparent 0 76%, rgba(255, 26, 33, 0.9) 77% 88%, transparent 89%),
+        radial-gradient(circle at 77% 52%, rgba(255, 180, 0, 0.78), transparent 16%);
+    }
+
+    .visual-panel::after {
+      left: 22px;
+      bottom: 22px;
+      border-radius: 0;
+      max-width: 230px;
+    }
+
+    .mode-stamp {
+      position: absolute;
+      z-index: 5;
+      left: 22px;
+      top: 108px;
+      max-width: 260px;
+      color: #fffaf1;
+      text-transform: uppercase;
+      font-weight: 950;
+      font-size: clamp(44px, 6vw, 82px);
+      line-height: 0.78;
+      letter-spacing: 0;
+      text-shadow: 5px 5px 0 #101010;
+      transform: rotate(-4deg);
+      pointer-events: none;
+    }
+
+    .mode-phrase {
+      position: absolute;
+      z-index: 5;
+      left: 26px;
+      top: 270px;
+      color: #101010;
+      background: var(--active-color, var(--accent));
+      border: 3px solid #101010;
+      padding: 8px 10px;
+      font-size: 12px;
+      font-weight: 950;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      max-width: 210px;
+      transform: rotate(3deg);
+      pointer-events: none;
+    }
+
+    body[data-mode="Guitar"] { --active-color: var(--accent); }
+    body[data-mode="Drums"] { --active-color: var(--red); }
+    body[data-mode="Composition"] { --active-color: var(--green); }
+    body[data-mode="Listening"] { --active-color: var(--blue); }
+
+    body[data-mode="Drums"] .topbar { box-shadow: 8px 8px 0 var(--red); }
+    body[data-mode="Composition"] .topbar { box-shadow: 8px 8px 0 var(--green); }
+    body[data-mode="Listening"] .topbar { box-shadow: 8px 8px 0 var(--blue); }
+
+    body[data-mode="Drums"] .panel.featured { border-top-color: var(--red); }
+    body[data-mode="Composition"] .panel.featured { border-top-color: var(--green); }
+    body[data-mode="Listening"] .panel.featured { border-top-color: var(--blue); }
+
+    body[data-mode="Drums"] .visual-panel::before {
+      background:
+        linear-gradient(90deg, transparent 0 18%, rgba(255, 26, 33, 0.9) 19% 42%, transparent 43%),
+        linear-gradient(0deg, transparent 0 70%, rgba(255, 180, 0, 0.88) 71% 82%, transparent 83%),
+        radial-gradient(circle at 68% 36%, rgba(36, 71, 255, 0.78), transparent 18%);
+    }
+
+    body[data-mode="Composition"] .visual-panel::before {
+      background:
+        linear-gradient(90deg, transparent 0 30%, rgba(0, 166, 106, 0.78) 31% 52%, transparent 53%),
+        linear-gradient(0deg, transparent 0 78%, rgba(255, 26, 33, 0.88) 79% 88%, transparent 89%),
+        radial-gradient(circle at 74% 44%, rgba(255, 180, 0, 0.78), transparent 17%);
+    }
+
+    body[data-mode="Listening"] .visual-panel::before {
+      background:
+        linear-gradient(90deg, transparent 0 22%, rgba(36, 71, 255, 0.86) 23% 56%, transparent 57%),
+        linear-gradient(0deg, transparent 0 74%, rgba(255, 79, 163, 0.82) 75% 84%, transparent 85%),
+        radial-gradient(circle at 78% 58%, rgba(255, 180, 0, 0.78), transparent 15%);
+    }
+
+    .scribble {
+      border-width: 5px;
+      width: 156px;
+      height: 48px;
+      right: 34px;
+      top: 34px;
+    }
+
+    .hero-layout > .layout {
+      padding: 14px;
+      background:
+        linear-gradient(90deg, rgba(255, 250, 241, 0.04) 1px, transparent 1px),
+        #101010;
+      background-size: 18px 18px;
+      align-content: stretch;
+    }
+
+    .panel {
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+      background: #fffaf1;
+    }
+
+    .panel.featured {
+      background: #fffaf1;
+      border-top: 10px solid var(--accent);
+    }
+
+    .panel-body {
+      padding: 18px;
+    }
+
+    .section-head {
+      padding-bottom: 10px;
+      border-bottom: 2px solid #101010;
+    }
+
+    .section-head h2 {
+      font-size: 22px;
+      text-transform: uppercase;
+      font-weight: 950;
+    }
+
+    .module-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0;
+      border: 2px solid #101010;
+    }
+
+    .module {
+      min-height: 118px;
+      border: 0;
+      border-right: 1px solid rgba(16,16,16,0.18);
+      border-radius: 0;
+      padding: 12px;
+      background: #fffaf1;
+    }
+
+    .module:last-child {
+      border-right: 0;
+    }
+
+    .module:hover,
+    .module.active {
+      box-shadow: inset 0 -8px 0 var(--color);
+      background: #fffaf1;
+      border-color: transparent;
+    }
+
+    .module h3 {
+      font-size: 16px;
+      text-transform: uppercase;
+      font-weight: 950;
+    }
+
+    .module p {
+      font-size: 12px;
+    }
+
+    .control-grid {
+      grid-template-columns: 0.65fr 1.35fr;
+    }
+
+    .segmented,
+    .focus-list {
+      gap: 0;
+      border: 2px solid #101010;
+    }
+
+    .segmented button,
+    .focus-list button {
+      border: 0;
+      border-right: 1px solid rgba(16,16,16,0.2);
+      border-radius: 0;
+      background: #fffaf1;
+      font-weight: 850;
+    }
+
+    .segmented button:last-child,
+    .focus-list button:last-child {
+      border-right: 0;
+    }
+
+    .segmented button.active,
+    .focus-list button.active {
+      background: var(--blue);
+      color: #fffaf1;
+    }
+
+    .primary {
+      border-radius: 0;
+      box-shadow: 5px 5px 0 #101010;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    .timer {
+      border: 0;
+      border-radius: 0;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px),
+        #101010;
+      background-size: 14px 14px;
+    }
+
+    .clock {
+      font-size: clamp(58px, 8vw, 110px);
+      letter-spacing: 0;
+    }
+
+    .step {
+      grid-template-columns: 36px 58px minmax(0, 1fr);
+      border: 0;
+      border-bottom: 1px solid rgba(16,16,16,0.14);
+      border-radius: 0;
+      background: transparent;
+      padding: 14px 4px;
+    }
+
+    .step:last-child {
+      border-bottom: 0;
+    }
+
+    .step.done {
+      background: linear-gradient(90deg, rgba(0, 166, 106, 0.16), transparent);
+    }
+
+    .step-check,
+    .time {
+      border-radius: 0;
+    }
+
+    #circle,
+    #journal {
+      border: 2px solid #101010;
+      box-shadow: 8px 8px 0 rgba(16, 16, 16, 0.12);
+    }
+
+    .mark-layer {
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .mark-layer span {
+      position: absolute;
+      color: rgba(16, 16, 16, 0.68);
+      font-weight: 950;
+      text-transform: uppercase;
+      letter-spacing: 0;
+      transform: rotate(var(--r));
+      font-size: var(--s);
+      line-height: 0.85;
+    }
+
+    .mark-layer span:nth-child(1) { left: 34%; top: 74px; --r: -7deg; --s: 34px; color: var(--red); }
+    .mark-layer span:nth-child(2) { right: 4%; top: 210px; --r: 8deg; --s: 19px; }
+    .mark-layer span:nth-child(3) { left: 26%; bottom: 260px; --r: -11deg; --s: 21px; color: var(--blue); }
+    .mark-layer span:nth-child(4) { right: 9%; bottom: 88px; --r: 4deg; --s: 48px; color: rgba(16,16,16,0.11); }
+
+    .crown {
+      position: absolute;
+      z-index: 4;
+      left: 24px;
+      top: 24px;
+      width: 96px;
+      height: 62px;
+      border-bottom: 7px solid var(--accent);
+      transform: rotate(-6deg);
+      pointer-events: none;
+    }
+
+    .crown::before,
+    .crown::after {
+      content: "";
+      position: absolute;
+      bottom: -7px;
+      width: 42px;
+      height: 42px;
+      border: 7px solid var(--accent);
+      border-bottom: 0;
+      transform: skewX(-12deg);
+    }
+
+    .crown::before { left: 0; }
+    .crown::after { right: 0; transform: skewX(12deg); }
+
+    .raw-notes {
+      position: absolute;
+      z-index: 4;
+      right: 28px;
+      top: 106px;
+      color: #fffaf1;
+      font-size: 11px;
+      line-height: 1.15;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      max-width: 120px;
+      text-shadow: 2px 2px 0 #101010;
+      transform: rotate(5deg);
+    }
+
+    .crossout {
+      position: relative;
+      display: inline-block;
+    }
+
+    .crossout::after {
+      content: "";
+      position: absolute;
+      left: -4px;
+      right: -4px;
+      top: 52%;
+      height: 5px;
+      background: var(--red);
+      transform: rotate(-3deg);
+      opacity: 0.9;
+    }
+
+    .module::after,
+    .step::after,
+    .info-card::after {
+      content: "";
+      position: absolute;
+      pointer-events: none;
+    }
+
+    .module {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .module::after {
+      right: 10px;
+      bottom: 8px;
+      width: 26px;
+      height: 8px;
+      border-top: 3px solid var(--color);
+      border-bottom: 3px solid var(--color);
+      transform: rotate(-9deg);
+      opacity: 0.8;
+    }
+
+    .step {
+      position: relative;
+    }
+
+    .step::after {
+      right: 8px;
+      top: 10px;
+      width: 24px;
+      height: 24px;
+      border: 2px solid rgba(16,16,16,0.18);
+      border-radius: 50%;
+    }
+
+    .info-card {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .info-card::after {
+      right: -18px;
+      top: 10px;
+      width: 68px;
+      height: 12px;
+      background: rgba(255, 26, 33, 0.76);
+      transform: rotate(-7deg);
+    }
+
+    .module.active {
+      background: var(--color);
+      color: #101010;
+      box-shadow: inset 0 0 0 3px #101010, 7px 7px 0 #101010;
+      z-index: 2;
+    }
+
+    .module.active p {
+      color: #101010;
+      font-weight: 850;
+    }
+
+    body[data-mode="Guitar"] .mode-phrase { background: var(--accent); }
+    body[data-mode="Drums"] .mode-phrase { background: var(--red); color: #fffaf1; }
+    body[data-mode="Composition"] .mode-phrase { background: var(--green); }
+    body[data-mode="Listening"] .mode-phrase { background: var(--blue); color: #fffaf1; }
+
+    @media (max-width: 980px) {
+      .app { grid-template-columns: 1fr; }
+      aside {
+        position: static;
+        height: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .layout, .hero-layout { grid-template-columns: 1fr; }
+      .status { justify-content: flex-start; }
+      .session-strip, .control-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      main { padding: 18px; }
+      .topbar { flex-direction: column; }
+      .module-grid, .segmented, .focus-list, .log-grid, .circle-board, .info-grid { grid-template-columns: 1fr; }
+      .timer { grid-template-columns: 1fr; }
+      .visual-panel { min-height: 430px; }
+      .key-button {
+        transform: rotate(var(--angle)) translateY(-126px) rotate(calc(-1 * var(--angle)));
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside>
+      <div class="brand">
+        <div class="mark">PE</div>
+        <h1>Practice Engine</h1>
+        <p class="muted small">Build focused sessions for guitar, drums, composition, and listening. Practice, log, return.</p>
+      </div>
+
+      <nav aria-label="Main">
+        <button class="active" data-jump="builder">Session Builder</button>
+        <button data-jump="plan">Practice Plan</button>
+        <button data-jump="circle">Circle of Fifths</button>
+        <button data-jump="journal">Journal</button>
+      </nav>
+
+      <div class="side-note">
+        <h3>Principle</h3>
+        <p class="muted small">No fixed curriculum. The tool gives you a clear next session, then remembers what happened.</p>
+      </div>
+
+      <div class="reference-stack" aria-label="Visual references">
+        <img src="assets/ref-01.jpeg" alt="">
+        <img src="assets/ref-03.jpeg" alt="">
+        <img src="assets/ref-05.jpeg" alt="">
+        <img src="assets/ref-07.jpeg" alt="">
+      </div>
+    </aside>
+
+    <main>
+      <div class="mark-layer" aria-hidden="true">
+        <span>NO MAP</span>
+        <span>sound / body / time</span>
+        <span>wrong note = door</span>
+        <span>////</span>
+      </div>
+
+      <header class="topbar">
+        <div>
+          <h2>What are you <span class="crossout">practicing</span> building now?</h2>
+          <p class="muted">Choose a module, focus, and time. Generate a practical session you can actually do.</p>
+        </div>
+        <div class="status">
+          <span class="pill" id="selectedModule">Guitar</span>
+          <span class="pill" id="selectedFocus">Technique</span>
+          <span class="pill" id="selectedLength">25 min</span>
+          <span class="pill" id="selectedKey">C major</span>
+        </div>
+      </header>
+
+      <section class="session-strip" aria-label="Current session overview">
+        <div class="strip-card">
+          <b>Current session</b>
+          <strong id="sessionSummary">25 min Guitar / Technique</strong>
+          <p class="muted small" id="sessionIntent">Warm hands, map the fretboard, make it musical.</p>
+        </div>
+        <div class="strip-card">
+          <b>Harmony lens</b>
+          <strong id="keySummary">C major / A minor</strong>
+          <p class="muted small" id="keyChords">C Dm Em F G Am Bdim</p>
+        </div>
+        <div class="strip-card">
+          <b>Progress</b>
+          <strong id="stepProgress">0 / 4 steps</strong>
+          <p class="muted small">Check steps as you finish them.</p>
+        </div>
+      </section>
+
+      <div class="hero-layout">
+        <section class="visual-panel" aria-label="Practice Engine visual reference">
+          <img id="museImage" src="assets/ref-04.jpeg" alt="">
+          <span class="crown"></span>
+          <span class="scribble"></span>
+          <span class="mode-stamp" id="modeStamp">Guitar</span>
+          <span class="mode-phrase" id="modePhrase">fretboard / hands / tone</span>
+          <span class="raw-notes">hands first<br>theory later<br>keep the stain</span>
+          <span class="visual-caption">guitar drums harmony composition</span>
+        </section>
+
+        <div class="layout">
+          <section class="panel" id="builder">
+            <div class="panel-body">
+              <div class="section-head">
+                <h2>Build Session</h2>
+                <span class="muted small">choose the frame</span>
+              </div>
+
+              <div class="module-grid">
+                <button class="module active" data-module="Guitar" style="--color: var(--accent)">
+                  <span></span>
+                  <h3>Guitar</h3>
+                  <p>Fretboard, chords, rhythm, riffs, tone, improvisation.</p>
+                </button>
+                <button class="module" data-module="Drums" style="--color: var(--red)">
+                  <span></span>
+                  <h3>Drums</h3>
+                  <p>Timing, rudiments, groove, fills, coordination, pocket.</p>
+                </button>
+                <button class="module" data-module="Composition" style="--color: var(--green)">
+                  <span></span>
+                  <h3>Composition</h3>
+                  <p>Motifs, harmony, melody, form, constraints, sketches.</p>
+                </button>
+                <button class="module" data-module="Listening" style="--color: var(--blue)">
+                  <span></span>
+                  <h3>Listening</h3>
+                  <p>References, transcription, sound analysis, arrangement notes.</p>
+                </button>
+              </div>
+
+              <div class="control-grid">
+                <div class="controls">
+                  <div class="section-head">
+                    <h2>Length</h2>
+                    <span class="muted small">window</span>
+                  </div>
+                  <div class="segmented" id="lengths">
+                    <button data-length="10">10</button>
+                    <button class="active" data-length="25">25</button>
+                    <button data-length="45">45</button>
+                    <button data-length="0">Open</button>
+                  </div>
+                </div>
+
+                <div class="controls">
+                  <div class="section-head">
+                    <h2>Focus</h2>
+                    <span class="muted small">angle</span>
+                  </div>
+                  <div class="focus-list" id="focuses">
+                    <button class="active" data-focus="Technique">Technique</button>
+                    <button data-focus="Groove">Groove</button>
+                    <button data-focus="Harmony">Harmony</button>
+                    <button data-focus="Writing">Writing</button>
+                    <button data-focus="Ear">Ear</button>
+                    <button data-focus="Free Play">Free Play</button>
+                  </div>
+                </div>
+              </div>
+
+              <button class="primary" id="generate">Refresh Plan</button>
+            </div>
+          </section>
+
+          <section class="panel featured" id="plan">
+            <div class="panel-body">
+              <div class="section-head">
+                <h2>Run Session</h2>
+                <span class="muted small" id="planTitle">25 min Guitar / Technique</span>
+              </div>
+
+              <div class="timer">
+                <div>
+                  <div class="clock" id="clock">25:00</div>
+                  <div class="meter"><span id="meterFill"></span></div>
+                  <p class="progress-note" id="timerNote">Ready when you are.</p>
+                </div>
+                <button class="primary" id="timerButton">Start</button>
+              </div>
+
+              <div class="plan" id="steps"></div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <section class="panel" id="circle">
+        <div class="panel-body">
+          <div class="section-head">
+            <h2>Circle of Fifths</h2>
+            <span class="muted small" id="circleKeyLabel">C major / A minor</span>
+          </div>
+
+          <div class="circle-board">
+            <div class="fifths" id="fifths" aria-label="Circle of fifths">
+              <div class="circle-center">
+                <span id="centerKey">C<br><span class="muted small">major</span></span>
+              </div>
+            </div>
+
+            <div class="key-info">
+              <div class="info-grid">
+                <div class="info-card">
+                  <b>Relative minor</b>
+                  <p id="relativeMinor">A minor</p>
+                </div>
+                <div class="info-card">
+                  <b>Neighbors</b>
+                  <p id="neighbors">F major / G major</p>
+                </div>
+              </div>
+
+              <div class="info-card">
+                <b>Diatonic chords</b>
+                <div class="chords" id="diatonicChords"></div>
+              </div>
+
+              <div class="info-card">
+                <b>Practice move</b>
+                <p id="circleMove">Write a 4-bar phrase using I, vi, IV, V. Then move it clockwise one key.</p>
+              </div>
+
+              <button class="secondary" id="sendCircleToPlan">Use For Composition Session</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="journal">
+        <div class="panel-body">
+          <div class="section-head">
+            <h2>Session Log</h2>
+            <span class="muted small" id="logCount">0 entries</span>
+          </div>
+
+          <div class="log-grid">
+            <textarea id="happened" placeholder="What happened?"></textarea>
+            <textarea id="keep" placeholder="What is worth keeping?"></textarea>
+            <textarea id="next" placeholder="What is the next move?"></textarea>
+          </div>
+
+          <button class="primary" id="saveLog">Save Session Log</button>
+          <div class="logs" id="logs"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const modules = {
+      Guitar: {
+        Technique: [
+          ["5", "Warm hands", "Chromatic movement with clean pressure, slow and even."],
+          ["10", "Fretboard pattern", "Triads on three string sets. Name every root."],
+          ["8", "Musical use", "Write one riff or chord movement from the shape."],
+          ["2", "Note", "Log what felt playable and what still felt vague."]
+        ],
+        Groove: [
+          ["5", "Right-hand pulse", "Mute strings and lock sixteenths with a metronome."],
+          ["10", "Chord groove", "Two chords, three rhythmic variations, no extra harmony."],
+          ["8", "Record pass", "Capture one take and listen for pocket."],
+          ["2", "Note", "Name the rhythm that worked."]
+        ],
+        Harmony: [
+          ["5", "Map", "Find I, IV, V, vi in one key across the neck."],
+          ["10", "Voicings", "Build three voicings with a common top note."],
+          ["8", "Progression", "Write a short loop using one borrowed color."],
+          ["2", "Note", "Save the voicing worth returning to."]
+        ],
+        Writing: [
+          ["5", "Constraint", "Choose two chords and one rhythmic cell."],
+          ["12", "Sketch", "Write a part without changing tools."],
+          ["6", "Variation", "Make a second version: softer, darker, or more empty."],
+          ["2", "Note", "Write the title or feeling."]
+        ],
+        Ear: [
+          ["5", "Sing then play", "Sing a small phrase before finding it on guitar."],
+          ["10", "Transcribe", "Learn two bars from a reference by ear."],
+          ["8", "Answer", "Write your own response to that phrase."],
+          ["2", "Note", "Log the interval or movement you heard."]
+        ],
+        "Free Play": [
+          ["5", "Set the sound", "Pick a tone that makes you want to continue."],
+          ["15", "Follow", "Play without stopping. Keep only what repeats naturally."],
+          ["3", "Mark", "Record the strongest 20 seconds."],
+          ["2", "Note", "Name the door that opened."]
+        ]
+      },
+      Drums: {
+        Technique: [
+          ["5", "Hands", "Single strokes, doubles, paradiddles. Low volume."],
+          ["10", "Control", "Move accents through sixteenths."],
+          ["8", "Apply", "Put the accent pattern inside a groove."],
+          ["2", "Note", "Log tempo and tension."]
+        ],
+        Groove: [
+          ["5", "Pulse", "Quarter notes with relaxed shoulders."],
+          ["10", "Pocket", "One groove, no fills, record two minutes."],
+          ["8", "Micro-shift", "Move ghost notes while keeping kick and hat steady."],
+          ["2", "Note", "Write where it rushed or sat back."]
+        ],
+        Harmony: [
+          ["5", "Part awareness", "Choose the harmonic rhythm you are serving."],
+          ["10", "Dynamic map", "Play the same groove under verse, lift, chorus."],
+          ["8", "Arrangement", "Design two transitions without overplaying."],
+          ["2", "Note", "Name what supported the song."]
+        ],
+        Writing: [
+          ["5", "Constraint", "Choose one kick pattern and keep it fixed."],
+          ["12", "Develop", "Build three grooves from the same skeleton."],
+          ["6", "Fill rule", "Write one fill that belongs to the groove."],
+          ["2", "Note", "Save the best variation."]
+        ],
+        Ear: [
+          ["5", "Reference", "Listen to a groove and tap only the backbeat."],
+          ["10", "Transcribe", "Find kick/snare placement by ear."],
+          ["8", "Rebuild", "Play a simplified version."],
+          ["2", "Note", "Log the feel: straight, swung, pushed, behind."]
+        ],
+        "Free Play": [
+          ["5", "Sound check", "Find a kit sound or surface that feels good."],
+          ["15", "Explore", "Play around one pulse. Let the hands wander."],
+          ["3", "Capture", "Record the most alive pattern."],
+          ["2", "Note", "Write what your body wanted to repeat."]
+        ]
+      },
+      Composition: {
+        Technique: [
+          ["5", "Material", "Choose one motif: rhythm, interval, or chord color."],
+          ["10", "Development", "Invert, repeat, remove, sequence."],
+          ["8", "Form", "Place the motif in A/B shape."],
+          ["2", "Note", "Name the strongest transformation."]
+        ],
+        Groove: [
+          ["5", "Cell", "Write one rhythmic cell."],
+          ["10", "Layer", "Build bass, chord, or melody from the same cell."],
+          ["8", "Contrast", "Write one section that breathes differently."],
+          ["2", "Note", "Log what made it move."]
+        ],
+        Harmony: [
+          ["5", "Palette", "Choose four chords or one mode."],
+          ["10", "Movement", "Create tension using bass or top-line motion."],
+          ["8", "Melody", "Write a melody that avoids the obvious note first."],
+          ["2", "Note", "Save the harmonic surprise."]
+        ],
+        Writing: [
+          ["5", "Prompt", "Write one sentence or image."],
+          ["12", "Sketch", "Turn it into a section without judging."],
+          ["6", "Edit", "Remove anything that explains too much."],
+          ["2", "Note", "Keep one line or sound."]
+        ],
+        Ear: [
+          ["5", "Reference", "Listen for form only."],
+          ["10", "Map", "Mark sections, entrances, density changes."],
+          ["8", "Borrow", "Use one structural move in your own sketch."],
+          ["2", "Note", "Name the borrowed device."]
+        ],
+        "Free Play": [
+          ["5", "Rule", "Pick a strange limitation."],
+          ["15", "Make", "Create a fragment with no finishing pressure."],
+          ["3", "Bounce", "Capture a rough audio note."],
+          ["2", "Note", "Write why it might matter."]
+        ]
+      },
+      Listening: {
+        Technique: [
+          ["5", "Focus", "Choose one layer: drums, guitar, vocal, bass, space."],
+          ["10", "Detail", "Write exact observations without interpretation."],
+          ["8", "Replicate", "Try to recreate one detail with your tools."],
+          ["2", "Note", "Log the technique you found."]
+        ],
+        Groove: [
+          ["5", "Pulse", "Find the subdivision and where the weight sits."],
+          ["10", "Map", "Write kick, snare, hat, bass relationship."],
+          ["8", "Feel", "Tap or play along, then describe the pocket."],
+          ["2", "Note", "Name the groove lesson."]
+        ],
+        Harmony: [
+          ["5", "Bass", "Follow root movement first."],
+          ["10", "Chords", "Find rough chord quality and emotional function."],
+          ["8", "Color", "Identify one extension, suspension, or borrowed sound."],
+          ["2", "Note", "Save the color."]
+        ],
+        Writing: [
+          ["5", "Form", "Mark when sections change."],
+          ["10", "Density", "Track what enters and leaves."],
+          ["8", "Lyric/sound", "Write one thing the song refuses to over-explain."],
+          ["2", "Note", "Log one usable writing move."]
+        ],
+        Ear: [
+          ["5", "Sing", "Sing the hook or bass before touching an instrument."],
+          ["10", "Find", "Locate it on guitar, voice, or keys."],
+          ["8", "Check", "Play against the track slowly."],
+          ["2", "Note", "Write what interval fooled you."]
+        ],
+        "Free Play": [
+          ["5", "Choose", "Pick a track because it pulls you."],
+          ["15", "Listen", "No analysis at first. Then write what stayed."],
+          ["3", "Respond", "Make a tiny sound answer."],
+          ["2", "Note", "Keep the response."]
+        ]
+      }
+    };
+
+    const circleKeys = [
+      { key: "C", minor: "A", chords: ["C", "Dm", "Em", "F", "G", "Am", "Bdim"] },
+      { key: "G", minor: "E", chords: ["G", "Am", "Bm", "C", "D", "Em", "F#dim"] },
+      { key: "D", minor: "B", chords: ["D", "Em", "F#m", "G", "A", "Bm", "C#dim"] },
+      { key: "A", minor: "F#", chords: ["A", "Bm", "C#m", "D", "E", "F#m", "G#dim"] },
+      { key: "E", minor: "C#", chords: ["E", "F#m", "G#m", "A", "B", "C#m", "D#dim"] },
+      { key: "B", minor: "G#", chords: ["B", "C#m", "D#m", "E", "F#", "G#m", "A#dim"] },
+      { key: "F#", minor: "D#", chords: ["F#", "G#m", "A#m", "B", "C#", "D#m", "E#dim"] },
+      { key: "Db", minor: "Bb", chords: ["Db", "Ebm", "Fm", "Gb", "Ab", "Bbm", "Cdim"] },
+      { key: "Ab", minor: "F", chords: ["Ab", "Bbm", "Cm", "Db", "Eb", "Fm", "Gdim"] },
+      { key: "Eb", minor: "C", chords: ["Eb", "Fm", "Gm", "Ab", "Bb", "Cm", "Ddim"] },
+      { key: "Bb", minor: "G", chords: ["Bb", "Cm", "Dm", "Eb", "F", "Gm", "Adim"] },
+      { key: "F", minor: "D", chords: ["F", "Gm", "Am", "Bb", "C", "Dm", "Edim"] }
+    ];
+
+    const circleMoves = [
+      "Write a 4-bar phrase using I, vi, IV, V. Then move it clockwise one key.",
+      "Play I, IV, V as guitar voicings in three neck positions. Keep the top note smooth.",
+      "Compose two bars in the major key, then answer with the relative minor.",
+      "Move counterclockwise one key and keep the same melody shape.",
+      "Use ii, V, I as a short cadence. Then make a less obvious second ending."
+    ];
+
+    const moduleImages = {
+      Guitar: "assets/ref-04.jpeg",
+      Drums: "assets/ref-06.jpeg",
+      Composition: "assets/ref-01.jpeg",
+      Listening: "assets/ref-07.jpeg"
+    };
+
+    const modulePhrases = {
+      Guitar: "fretboard / hands / tone",
+      Drums: "pulse / body / pressure",
+      Composition: "motif / form / damage",
+      Listening: "reference / ear / shadow"
+    };
+
+    let state = { module: "Guitar", focus: "Technique", length: 25 };
+    let selectedCircleIndex = 0;
+    let completedSteps = new Set();
+    let timer = null;
+    let remaining = state.length * 60;
+    let total = remaining;
+
+    const steps = document.querySelector("#steps");
+    const clock = document.querySelector("#clock");
+    const meterFill = document.querySelector("#meterFill");
+    const fifths = document.querySelector("#fifths");
+    const timerNote = document.querySelector("#timerNote");
+    const museImage = document.querySelector("#museImage");
+    const modeStamp = document.querySelector("#modeStamp");
+    const modePhrase = document.querySelector("#modePhrase");
+
+    function renderCircle() {
+      const selected = circleKeys[selectedCircleIndex];
+      const previous = circleKeys[(selectedCircleIndex + circleKeys.length - 1) % circleKeys.length];
+      const next = circleKeys[(selectedCircleIndex + 1) % circleKeys.length];
+      document.querySelector("#centerKey").innerHTML = `${selected.key}<br><span class="muted small">major</span>`;
+      document.querySelector("#circleKeyLabel").textContent = `${selected.key} major / ${selected.minor} minor`;
+      document.querySelector("#selectedKey").textContent = `${selected.key} major`;
+      document.querySelector("#keySummary").textContent = `${selected.key} major / ${selected.minor} minor`;
+      document.querySelector("#keyChords").textContent = selected.chords.join(" ");
+      document.querySelector("#relativeMinor").textContent = `${selected.minor} minor`;
+      document.querySelector("#neighbors").textContent = `${previous.key} major / ${next.key} major`;
+      document.querySelector("#diatonicChords").innerHTML = selected.chords.map((chord) => `<span class="chord">${chord}</span>`).join("");
+      document.querySelector("#circleMove").textContent = circleMoves[selectedCircleIndex % circleMoves.length];
+      document.querySelectorAll(".key-button").forEach((button) => {
+        button.classList.toggle("active", Number(button.dataset.index) === selectedCircleIndex);
+      });
+    }
+
+    function buildCircleButtons() {
+      circleKeys.forEach((item, index) => {
+        const button = document.createElement("button");
+        button.className = "key-button";
+        button.dataset.index = index;
+        button.style.setProperty("--angle", `${index * 30}deg`);
+        button.textContent = item.key;
+        button.setAttribute("aria-label", `${item.key} major`);
+        button.addEventListener("click", () => {
+          selectedCircleIndex = index;
+          renderCircle();
+        });
+        fifths.appendChild(button);
+      });
+    }
+
+    function renderState() {
+      document.querySelector("#selectedModule").textContent = state.module;
+      document.querySelector("#selectedFocus").textContent = state.focus;
+      document.querySelector("#selectedLength").textContent = state.length ? `${state.length} min` : "Open";
+      document.querySelector("#planTitle").textContent = `${state.length ? `${state.length} min` : "Open"} ${state.module} / ${state.focus}`;
+      document.querySelector("#sessionSummary").textContent = `${state.length ? `${state.length} min` : "Open"} ${state.module} / ${state.focus}`;
+      document.body.dataset.mode = state.module;
+      museImage.src = moduleImages[state.module];
+      modeStamp.textContent = state.module;
+      modePhrase.textContent = modulePhrases[state.module];
+      document.querySelectorAll(".module").forEach((button) => button.classList.toggle("active", button.dataset.module === state.module));
+      document.querySelectorAll("#focuses button").forEach((button) => button.classList.toggle("active", button.dataset.focus === state.focus));
+      document.querySelectorAll("#lengths button").forEach((button) => button.classList.toggle("active", Number(button.dataset.length) === state.length));
+    }
+
+    function scaledPlan() {
+      const base = modules[state.module][state.focus];
+      if (!state.length) return base.map((step, index) => [["warm", "deep", "make", "note"][index], step[1], step[2]]);
+      const baseTotal = base.reduce((sum, step) => sum + Number(step[0]), 0);
+      return base.map((step) => [String(Math.max(1, Math.round(Number(step[0]) * state.length / baseTotal))), step[1], step[2]]);
+    }
+
+    function renderPlan() {
+      completedSteps = new Set();
+      const plan = scaledPlan();
+      const labelSuffix = (value) => /^\d+$/.test(value) ? "m" : "";
+      steps.innerHTML = plan.map((step, index) => (
+        `<article class="step" data-index="${index}"><button class="step-check" aria-label="Mark ${step[1]} complete">✓</button><div class="time">${step[0]}${labelSuffix(step[0])}</div><div><strong>${step[1]}</strong><p>${step[2]}</p></div></article>`
+      )).join("");
+      document.querySelector("#sessionIntent").textContent = plan.slice(0, 3).map((step) => step[1]).join(", ") + ".";
+      resetTimer();
+      renderState();
+      updateStepProgress();
+    }
+
+    function updateStepProgress() {
+      const totalSteps = document.querySelectorAll(".step").length;
+      document.querySelector("#stepProgress").textContent = `${completedSteps.size} / ${totalSteps} steps`;
+    }
+
+    function format(seconds) {
+      if (!state.length) return "OPEN";
+      const mins = String(Math.floor(seconds / 60)).padStart(2, "0");
+      const secs = String(seconds % 60).padStart(2, "0");
+      return `${mins}:${secs}`;
+    }
+
+    function resetTimer() {
+      clearInterval(timer);
+      timer = null;
+      remaining = state.length ? state.length * 60 : 0;
+      total = remaining || 1;
+      clock.textContent = format(remaining);
+      meterFill.style.width = "0%";
+      timerNote.textContent = "Ready when you are.";
+      document.querySelector("#timerButton").textContent = "Start";
+    }
+
+    function tick() {
+      if (!state.length) {
+        clock.textContent = "OPEN";
+        meterFill.style.width = "100%";
+        return;
+      }
+      remaining = Math.max(0, remaining - 1);
+      clock.textContent = format(remaining);
+      meterFill.style.width = `${100 - (remaining / total * 100)}%`;
+      timerNote.textContent = remaining ? "Session running." : "Session complete.";
+      if (!remaining) resetTimer();
+    }
+
+    steps.addEventListener("click", (event) => {
+      const check = event.target.closest(".step-check");
+      if (!check) return;
+      const step = check.closest(".step");
+      const index = Number(step.dataset.index);
+      if (completedSteps.has(index)) {
+        completedSteps.delete(index);
+        step.classList.remove("done");
+      } else {
+        completedSteps.add(index);
+        step.classList.add("done");
+      }
+      updateStepProgress();
+    });
+
+    document.querySelectorAll(".module").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.module = button.dataset.module;
+        renderPlan();
+      });
+    });
+
+    document.querySelectorAll("#focuses button").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.focus = button.dataset.focus;
+        renderPlan();
+      });
+    });
+
+    document.querySelectorAll("#lengths button").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.length = Number(button.dataset.length);
+        renderPlan();
+      });
+    });
+
+    document.querySelector("#generate").addEventListener("click", renderPlan);
+
+    document.querySelector("#sendCircleToPlan").addEventListener("click", () => {
+      const selected = circleKeys[selectedCircleIndex];
+      state.module = "Composition";
+      state.focus = "Harmony";
+      state.length = 25;
+      renderPlan();
+      document.querySelector("#happened").value = `Circle of Fifths: ${selected.key} major / ${selected.minor} minor. Chords: ${selected.chords.join(", ")}.`;
+      document.querySelector("#plan").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    document.querySelector("#timerButton").addEventListener("click", () => {
+      if (timer) {
+        clearInterval(timer);
+        timer = null;
+        document.querySelector("#timerButton").textContent = "Start";
+        return;
+      }
+      document.querySelector("#timerButton").textContent = "Pause";
+      timerNote.textContent = state.length ? "Session running." : "Open session running.";
+      timer = setInterval(tick, 1000);
+    });
+
+    function renderLogs() {
+      const logs = JSON.parse(localStorage.getItem("practice-engine-logs") || "[]");
+      document.querySelector("#logCount").textContent = `${logs.length} ${logs.length === 1 ? "entry" : "entries"}`;
+      document.querySelector("#logs").innerHTML = logs.map((log) => (
+        `<article class="log"><b>${log.title}</b>${log.happened}<br><span>${log.keep}</span><br><span>${log.next}</span><br><span>${log.time}</span></article>`
+      )).join("");
+    }
+
+    document.querySelector("#saveLog").addEventListener("click", () => {
+      const happened = document.querySelector("#happened").value.trim();
+      const keep = document.querySelector("#keep").value.trim();
+      const next = document.querySelector("#next").value.trim();
+      if (!happened && !keep && !next) return;
+      const logs = JSON.parse(localStorage.getItem("practice-engine-logs") || "[]");
+      logs.unshift({
+        title: `${state.module} / ${state.focus}`,
+        happened: happened || "No happened note.",
+        keep: keep ? `Keep: ${keep}` : "Keep: not set.",
+        next: next ? `Next: ${next}` : "Next: not set.",
+        time: new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date())
+      });
+      localStorage.setItem("practice-engine-logs", JSON.stringify(logs.slice(0, 30)));
+      document.querySelector("#happened").value = "";
+      document.querySelector("#keep").value = "";
+      document.querySelector("#next").value = "";
+      renderLogs();
+    });
+
+    document.querySelectorAll("[data-jump]").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll("[data-jump]").forEach((nav) => nav.classList.remove("active"));
+        button.classList.add("active");
+        document.querySelector(`#${button.dataset.jump}`).scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
+
+    buildCircleButtons();
+    renderCircle();
+    renderPlan();
+    renderLogs();
+  </script>
+</body>
+</html>
