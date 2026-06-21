@@ -8,43 +8,26 @@
       content="Private listening, mix analysis and mastering workspace for Optional Ganesh."
     />
     <title>OG Studio / Optional Ganesh Tools</title>
-    <link rel="stylesheet" href="./styles.css?v=20260612-3" />
+    <link rel="stylesheet" href="./styles.css?v=20260621-1" />
   </head>
   <body>
-    <header class="site-header">
-      <a class="brand" href="/" aria-label="Optional Ganesh tools home">
-        <span class="brand-mark">OG</span>
-        <span class="brand-text">OPTIONAL GANESH <b>/ TOOLS</b></span>
-      </a>
-      <div class="header-meta">
-        <span class="privacy-dot"></span>
-        <span>PRIVATE WORKSPACE</span>
-        <span class="header-rule"></span>
-        <span>OG STUDIO <b>01</b></span>
-      </div>
-    </header>
+    <div class="studio-app">
+      <aside class="studio-sidebar">
+        <a class="brand" href="/" aria-label="Optional Ganesh tools home">
+          <span class="brand-mark">OG</span>
+          <span class="brand-text">OPTIONAL GANESH <b>/ STUDIO</b></span>
+        </a>
 
-    <main>
-      <section class="hero shell">
-        <div class="hero-copy">
+        <div class="sidebar-statement">
           <p class="eyebrow">LISTEN / MIX / MASTER</p>
           <h1>Hear the song.<br /><em>Finish the work.</em></h1>
-          <p class="hero-intro">
-            One private workspace for understanding a song, diagnosing the mix,
-            building the master, and keeping the useful decisions.
-          </p>
-        </div>
-        <div class="hero-aside">
-          <p class="aside-number">01—03</p>
           <p>
-            Lens files stay in this browser. Mix and Master files use the private
-            OG Studio analysis engine.
+            A private cockpit for reading the music, deciding the next move, and
+            keeping the useful decisions.
           </p>
         </div>
-      </section>
 
-      <section class="workspace shell">
-        <nav class="tabs" aria-label="OG Studio sections">
+        <nav class="tabs" aria-label="OG Studio workflow">
           <button class="tab-button is-active" data-view="analyze" type="button">
             <span>01</span> Lens
           </button>
@@ -64,6 +47,31 @@
             <span>06</span> Library
           </button>
         </nav>
+
+        <div class="sidebar-note">
+          <p class="aside-number">PRIVATE WORKSPACE</p>
+          <p>
+            Upload analysis stays in this browser. Link context, AI drafting, Mix,
+            Master, and Library use the private OG Studio services.
+          </p>
+        </div>
+      </aside>
+
+      <main class="studio-main">
+        <header class="studio-topbar">
+          <div>
+            <p class="kicker">OG STUDIO / WORKFLOW 01</p>
+            <h2>Source → read → decide → act.</h2>
+          </div>
+          <div class="header-meta">
+            <span class="privacy-dot"></span>
+            <span>PRIVATE WORKSPACE</span>
+            <span class="header-rule"></span>
+            <span>NO PUBLIC INDEX</span>
+          </div>
+        </header>
+
+      <section class="workspace">
 
         <section class="view is-active" data-view-panel="analyze">
           <div class="source-grid">
@@ -189,6 +197,43 @@
                 </button>
               </div>
             </div>
+
+            <article id="analysis-verdict" class="panel verdict-panel">
+              <div class="verdict-main">
+                <p class="kicker">FIRST DECISION</p>
+                <h3 id="verdict-title">Main opportunity: stronger section contrast.</h3>
+                <p id="verdict-copy">
+                  The track is balanced enough to judge. Start with the musical
+                  move before chasing more processing.
+                </p>
+              </div>
+              <div class="priority-board">
+                <p class="kicker">PRIORITY MOVES</p>
+                <ul id="priority-list" class="priority-list"></ul>
+              </div>
+              <div class="action-board" aria-label="Next actions">
+                <button class="action-card action-mix" data-view-action="mix" type="button">
+                  <span>02</span>
+                  <b>Diagnose mix</b>
+                  <small>Pressure points</small>
+                </button>
+                <button class="action-card action-master" data-view-action="master" type="button">
+                  <span>03</span>
+                  <b>Build master</b>
+                  <small>Final pass</small>
+                </button>
+                <button class="action-card action-calibrate" data-view-action="calibrate" type="button">
+                  <span>04</span>
+                  <b>Save reference</b>
+                  <small>Listening memory</small>
+                </button>
+                <button class="action-card action-message" data-view-action="message" type="button">
+                  <span>05</span>
+                  <b>Draft note</b>
+                  <small>Human feedback</small>
+                </button>
+              </div>
+            </article>
 
             <article id="quick-read-results" class="panel quick-read-results" hidden>
               <div class="panel-heading compact">
@@ -509,15 +554,16 @@
           <iframe class="studio-engine library-engine" src="/chains/?tab=l&amp;embed=1" title="OG Studio Library"></iframe>
         </section>
       </section>
-    </main>
 
-    <footer class="site-footer shell">
-      <span>OPTIONAL GANESH / OG STUDIO</span>
-      <span>PRIVATE LISTENING · MIX · MASTER</span>
-    </footer>
+        <footer class="site-footer">
+          <span>OPTIONAL GANESH / OG STUDIO</span>
+          <span>PRIVATE LISTENING · MIX · MASTER</span>
+        </footer>
+      </main>
+    </div>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
     <button id="run-quick-read" hidden type="button" aria-hidden="true"></button>
-    <script src="./app.js?v=20260612-2" defer></script>
+    <script src="./app.js?v=20260621-2" defer></script>
   </body>
 </html>

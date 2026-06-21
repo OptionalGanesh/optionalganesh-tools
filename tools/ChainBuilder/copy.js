@@ -53,7 +53,7 @@ const COPY = {
   keyLabel: 'Anthropic API key',
   keyHint: 'Stored in localStorage as og_api_key. Never leaves your browser except to api.anthropic.com.',
   oracleLabel: 'Oracle URL',
-  oracleHint: 'Local or tunneled. Default http://localhost:7777',
+  oracleHint: 'Leave blank on the hosted site — it uses the server Oracle automatically. Set http://localhost:7777 only when running locally on the Mac.',
   manualLabel: 'Manual plugin list',
   manualHint: 'Fallback when Oracle is unreachable. One plugin per line: name — manufacturer — category.',
   saveBtn: 'Save',

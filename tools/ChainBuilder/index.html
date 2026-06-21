@@ -389,7 +389,18 @@ const LS = {
   ollamaModel: 'og_ollama_model',
   ollamaUrl: 'og_ollama_url',
 };
-const oracleUrl = () => (localStorage.getItem(LS.oracle) || 'http://localhost:7777').replace(/\/$/, '');
+const oracleUrl = () => {
+  // A custom (tunneled) Oracle URL always wins.
+  const saved = (localStorage.getItem(LS.oracle) || '').replace(/\/$/, '');
+  if (saved && !/^https?:\/\/(localhost|127\.0\.0\.1)/i.test(saved)) return saved;
+  // Running the tool locally on the Mac: hit the Oracle directly.
+  if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+    return saved || 'http://localhost:7777';
+  }
+  // Hosted (tools.optionalganesh.com, e.g. from the phone): same-origin nginx
+  // proxy to the Oracle, so it works over HTTPS without reaching localhost.
+  return '/oracle';
+};
 const getBackend = () => localStorage.getItem(LS.backend) || 'anthropic';
 const getOllamaModel = () => localStorage.getItem(LS.ollamaModel) || 'qwen2.5:14b';
 const getOllamaUrl = () => (localStorage.getItem(LS.ollamaUrl) || 'http://localhost:11434').replace(/\/$/, '');
@@ -631,7 +642,8 @@ $('build-btn').addEventListener('click', build);
 async function build() {
   const backend = getBackend();
   const apiKey = localStorage.getItem(LS.key);
-  if (backend === 'anthropic' && !apiKey) { status('err', COPY.needKey); return; }
+  // No personal key needed on the hosted site — callAnthropic falls back to the
+  // same-origin server proxy, which injects the key server-side.
   const inv = inventoryBlock();
   if (!inv) { status('err', COPY.needInventory); return; }
 
@@ -674,14 +686,20 @@ async function build() {
 }
 
 async function callAnthropic(apiKey, system, userMsg) {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  // On the hosted site, ALWAYS use the same-origin /anthropic proxy (key injected
+  // server-side) and ignore any stale key in localStorage. Only call Anthropic
+  // directly with a personal key when running locally on the Mac.
+  const onHosted = location.protocol !== 'file:' &&
+                   location.hostname !== 'localhost' && location.hostname !== '127.0.0.1';
+  const url = onHosted ? '/anthropic/v1/messages' : 'https://api.anthropic.com/v1/messages';
+  const headers = { 'anthropic-version': '2023-06-01', 'content-type': 'application/json' };
+  if (!onHosted) {
+    headers['x-api-key'] = apiKey || '';
+    headers['anthropic-dangerous-direct-browser-access'] = 'true';
+  }
+  const res = await fetch(url, {
     method: 'POST',
-    headers: {
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
-      'content-type': 'application/json',
-    },
+    headers,
     body: JSON.stringify({
       model: 'claude-sonnet-4-6',
       max_tokens: 4000,

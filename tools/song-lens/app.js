@@ -5,6 +5,8 @@ const STORAGE_KEYS = {
   profile: "song-lens:profile",
 };
 
+const CYANITE_QUICK_READ_ENABLED = false;
+
 const industryProfiles = {
   balanced: {
     name: "Balanced release",
@@ -155,6 +157,9 @@ const els = {
   analysisNotice: document.querySelector("#analysis-notice"),
   analysisNoticeTitle: document.querySelector("#analysis-notice-title"),
   analysisNoticeCopy: document.querySelector("#analysis-notice-copy"),
+  verdictTitle: document.querySelector("#verdict-title"),
+  verdictCopy: document.querySelector("#verdict-copy"),
+  priorityList: document.querySelector("#priority-list"),
   quickReadResults: document.querySelector("#quick-read-results"),
   quickReadChip: document.querySelector("#quick-read-chip"),
   quickReadStatus: document.querySelector("#quick-read-status"),
@@ -473,6 +478,80 @@ function getTasteObservations(metrics = state.metrics) {
   return observations.slice(0, 3);
 }
 
+function getAnalysisVerdict(metrics = state.metrics) {
+  const profile = getProfile();
+  const dynamicState = compare(metrics.dynamicSpread, profile.ranges.dynamicSpread);
+  const presenceState = compare(metrics.tone.presence, profile.ranges.presence);
+  const lowState = compare(metrics.tone.low, profile.ranges.low);
+  const widthState = compare(metrics.width, profile.ranges.width);
+  const densityState = compare(metrics.rms, profile.ranges.rms);
+  const priorities = [];
+  let title = "Main opportunity: make one musical decision clearer.";
+  let copy =
+    "The technical read is useful, but the next move should still begin with the song's intention.";
+
+  if (state.streamingContext && state.sessionType !== "local" && state.sessionType !== "preview") {
+    return {
+      title: "Context attached. Upload audio for the real read.",
+      copy:
+        "The link can identify the song and enrich the reference, but the mix verdict needs the file.",
+      priorities: [
+        "Upload a WAV or MP3 if you want real measurements.",
+        "Use the attached link only as listening context.",
+        "Draft a note only after adding one human observation.",
+      ],
+    };
+  }
+
+  if (dynamicState === "low") {
+    title = "Main opportunity: stronger section contrast.";
+    copy =
+      "The track reads stable, but the emotional lift may need a clearer change of scale, texture, or foreground.";
+    priorities.push("Make the hook arrive with a visible change, not only more level.");
+  } else if (dynamicState === "high") {
+    title = "Main opportunity: protect the quiet sections.";
+    copy =
+      "The arrangement moves a lot. The risk is losing attention before the loudest moments arrive.";
+    priorities.push("Check whether the low-energy sections still carry intention.");
+  } else {
+    title = "Main opportunity: sharpen the hierarchy.";
+    copy =
+      "The section movement is controlled. The strongest gain is likely deciding what owns the foreground.";
+    priorities.push("Keep the arc, then make one transition feel inevitable.");
+  }
+
+  if (presenceState === "low") {
+    priorities.push("Bring the vocal or hook closer without brightening the whole mix.");
+  } else if (presenceState === "high") {
+    priorities.push("Check if the presence region creates intimacy or flattens depth.");
+  } else {
+    priorities.push("Presence is usable. Spend attention on role changes, not extra top end.");
+  }
+
+  if (lowState === "high") {
+    priorities.push("Simplify kick and bass roles before adding more low-end weight.");
+  } else if (lowState === "low") {
+    priorities.push("Consider more physical support if it serves the song's center.");
+  } else if (widthState === "low") {
+    priorities.push("Try one deliberate widening moment for arrival.");
+  } else if (densityState === "high") {
+    priorities.push("Protect transient shape before chasing more loudness.");
+  } else {
+    priorities.push("Do not over-correct the balance; look for the signature production gesture.");
+  }
+
+  return { title, copy, priorities: priorities.slice(0, 3) };
+}
+
+function renderAnalysisVerdict() {
+  const verdict = getAnalysisVerdict();
+  els.verdictTitle.textContent = verdict.title;
+  els.verdictCopy.textContent = verdict.copy;
+  els.priorityList.innerHTML = verdict.priorities
+    .map((text, index) => `<li><span>${index + 1}</span>${escapeHTML(text)}</li>`)
+    .join("");
+}
+
 function getPrivateReferenceObservation(metrics) {
   if (!state.references.length) return "";
 
@@ -589,6 +668,7 @@ function renderMetrics() {
     .join("");
 
   renderProfile();
+  renderAnalysisVerdict();
   renderObservationList(els.industryObservations, getIndustryObservations(metrics));
   renderObservationList(els.tasteObservations, getTasteObservations(metrics));
   renderStreamingContext();
@@ -653,11 +733,18 @@ function renderStreamingContext() {
 
 function getReferenceNotice() {
   const status = state.quickRead?.status;
+  if (status === "standby") {
+    return {
+      title: "LINK CONTEXT ONLY · METADATA / PREVIEW FIRST",
+      copy:
+        "Catalog analysis is optional. I will use metadata and preview analysis when available; upload audio for real measurements.",
+    };
+  }
   if (status === "activation" || status === "error" || status === "authorization" || status === "quota") {
     return {
-      title: "LINK CONTEXT ONLY · CYANITE OPTIONAL / UNAVAILABLE",
+      title: "LINK CONTEXT ONLY · CATALOG ANALYSIS UNAVAILABLE",
       copy:
-        "The link identifies the song. Upload a WAV or MP3 above for real audio measurements.",
+        "The link still identifies the song. Upload a WAV or MP3 above for real audio measurements.",
     };
   }
   if (status === "finished") {
@@ -721,6 +808,7 @@ function renderQuickRead() {
 
   // Cyanite fallback display
   const statusLabels = {
+    standby: "METADATA / PREVIEW CONTEXT",
     starting: "LINK CONTEXT ONLY",
     queued: "LINK CONTEXT ONLY",
     resolving: "LINK CONTEXT ONLY",
@@ -729,7 +817,7 @@ function renderQuickRead() {
     finished: "LINK CONTEXT ONLY",
     activation: "CYANITE OPTIONAL / UNAVAILABLE",
     authorization: "CYANITE OPTIONAL / UNAVAILABLE",
-    quota: "CYANITE OPTIONAL / UNAVAILABLE",
+    quota: "CATALOG ANALYSIS UNAVAILABLE",
     error: "CYANITE OPTIONAL / UNAVAILABLE",
   };
   els.quickReadChip.textContent = statusLabels[quickRead?.status] || "LINK CONTEXT ONLY";
@@ -743,8 +831,10 @@ function renderQuickRead() {
   }
 
   const message =
-    ["quota", "authorization", "activation", "error"].includes(quickRead.status)
-      ? "Cyanite optional / unavailable. Upload audio above for real analysis."
+    quickRead.status === "standby"
+      ? quickRead.message || "Metadata and preview context loaded when available. Upload audio above for real analysis."
+      : ["quota", "authorization", "activation", "error"].includes(quickRead.status)
+      ? quickRead.message || "Catalog analysis unavailable. Upload audio above for real analysis."
       : quickRead.status === "finished"
         ? "Link context ready. Upload audio above for real measurements."
         : "Resolving link context…";
@@ -1154,12 +1244,30 @@ async function attachStreamingContext(url) {
   setBusy(false);
   setStatus(`${provider} reference attached. Upload audio above for real analysis.`);
   showToast(`${provider} reference attached. Upload a WAV or MP3 for real measurements.`);
-  runQuickRead();
+  state.quickRead = {
+    status: "standby",
+    message:
+      "Metadata and preview context will load when available. Upload audio for the real mix read.",
+  };
+  renderMetrics();
+  if (CYANITE_QUICK_READ_ENABLED) {
+    runQuickRead();
+  }
 }
 
 async function runQuickRead() {
   if (!state.streamingContext) {
     showToast("Attach a public song link first.");
+    return;
+  }
+  if (!CYANITE_QUICK_READ_ENABLED) {
+    state.quickRead = {
+      status: "standby",
+      message:
+        "Catalog analysis is paused to avoid Cyanite quota limits. Metadata, preview, and uploaded audio still work.",
+    };
+    renderMetrics();
+    showToast("Catalog analysis paused. Upload audio for real measurements.");
     return;
   }
   state.quickRead = {
@@ -1236,7 +1344,7 @@ async function pollQuickRead(jobId) {
     if (payload.status === "quota") {
       state.quickRead.message =
         payload.error ||
-        "Cyanite plan limit reached. Upload WAV/MP3 for local Deep Read.";
+        "Catalog analysis quota reached. Upload WAV/MP3 for local Deep Read.";
       renderMetrics();
       return;
     }
@@ -1661,6 +1769,9 @@ async function copyMessage() {
 function bindEvents() {
   els.tabs.forEach((button) => {
     button.addEventListener("click", () => switchView(button.dataset.view));
+  });
+  document.querySelectorAll("[data-view-action]").forEach((button) => {
+    button.addEventListener("click", () => switchView(button.dataset.viewAction));
   });
   els.jumpMessage.addEventListener("click", () => switchView("message"));
   els.audioFile.addEventListener("change", (event) => analyzeFile(event.target.files[0]));
