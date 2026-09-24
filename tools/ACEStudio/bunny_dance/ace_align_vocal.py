@@ -38,6 +38,7 @@ TPB = 480
 MIN_GAP = TPB // 2          # pausa minima (corchea) para cortar frase
 PARK = "400bar"             # aparcamiento temporal durante apply
 MIN_SEC, MAX_SEC = 2.0, 240.0   # limites de vocal-to-midi por clip
+MIN_MATCHED = 3             # frases con menos palabras emparejadas heredan el desplazamiento vecino
 
 
 def ace(*args, check=True):
@@ -70,41 +71,43 @@ def find_notes(obj):
     return []
 
 
+TEMP = {"sing": None}       # una sola pista Sing temporal para todo el analisis
+
+
 def transcribe(track_uuid, label):
-    """vocal-to-midi de cada clip de audio -> una pista Sing temporal -> (notas globales, clips saltados)."""
-    sing, skipped = None, []
-    try:
-        for i, clip in enumerate(clips_of(track_uuid)):
-            length = clip["clipEndSec"] - clip["clipBeginSec"]
-            tag = f"  {label}: clip {i + 1} ({clip['clipBeginSec']:.1f}s-{clip['clipEndSec']:.1f}s)"
-            if not MIN_SEC <= length <= MAX_SEC:
-                print(f"{tag} salto: {length:.1f}s (vocal-to-midi acepta {MIN_SEC:g}-{MAX_SEC:g}s)")
-                skipped.append(clip["clipUuid"])
-                continue
-            before = sing_tracks()
-            args = ["generative", "vocal-to-midi", "--clip-uuid", clip["clipUuid"], "--language", "english",
-                    "--apply-pitch", "false", "--wait"]
-            if sing:
-                args += ["--track-uuid", sing]
-            print(f"{tag}...", flush=True)
-            res = subprocess.run([ACE, *args], capture_output=True, text=True)
-            if not sing:
-                new = sing_tracks() - before
-                sing = new.pop() if len(new) == 1 else None
-            if res.returncode != 0:
-                print(f"{tag} fallo, lo salto: {(res.stderr or res.stdout).strip().splitlines()[0]}")
-                skipped.append(clip["clipUuid"])
-        notes = []
+    """vocal-to-midi de cada clip de audio -> pista Sing temporal -> (notas globales, clips saltados)."""
+    skipped = []
+    sing = TEMP["sing"]
+    for i, clip in enumerate(clips_of(track_uuid)):
+        length = clip["clipEndSec"] - clip["clipBeginSec"]
+        tag = f"  {label}: clip {i + 1} ({clip['clipBeginSec']:.1f}s-{clip['clipEndSec']:.1f}s)"
+        if not MIN_SEC <= length <= MAX_SEC:
+            print(f"{tag} salto: {length:.1f}s (vocal-to-midi acepta {MIN_SEC:g}-{MAX_SEC:g}s)")
+            skipped.append(clip["clipUuid"])
+            continue
+        before = sing_tracks()
+        args = ["generative", "vocal-to-midi", "--clip-uuid", clip["clipUuid"], "--language", "english",
+                "--apply-pitch", "false", "--wait"]
         if sing:
-            index = jace("track", "get", "--track-uuid", sing)["trackIndex"]
-            for k, sc in enumerate(clips_of(sing)):
-                raw = jace("clip", "note-content", "--track-index", str(index), "--clip-index", str(k))
-                off = sc.get("clipBegin", 0)
-                for n in find_notes(raw):
-                    notes.append({"pos": off + n["pos"], "end": off + n["pos"] + n["dur"], "lyric": n.get("lyric", "")})
-    finally:
-        if sing and subprocess.run([ACE, "track", "delete", "--track-uuid", sing], capture_output=True).returncode != 0:
-            print(f"  AVISO: no pude borrar la pista Sing temporal {sing}; borrala a mano.")
+            args += ["--track-uuid", sing]
+        print(f"{tag}...", flush=True)
+        res = subprocess.run([ACE, *args], capture_output=True, text=True)
+        if not sing:
+            new = sing_tracks() - before
+            sing = TEMP["sing"] = new.pop() if len(new) == 1 else None
+        if res.returncode != 0:
+            print(f"{tag} fallo, lo salto: {(res.stderr or res.stdout).strip().splitlines()[0]}")
+            skipped.append(clip["clipUuid"])
+    notes = []
+    if sing:
+        index = jace("track", "get", "--track-uuid", sing)["trackIndex"]
+        for k, sc in enumerate(clips_of(sing)):
+            raw = jace("clip", "note-content", "--track-index", str(index), "--clip-index", str(k))
+            off = sc.get("clipBegin", 0)
+            for n in find_notes(raw):
+                notes.append({"pos": off + n["pos"], "end": off + n["pos"] + n["dur"], "lyric": n.get("lyric", "")})
+        for sc in clips_of(sing):              # vaciar la pista temporal para la siguiente
+            subprocess.run([ACE, "clip", "delete", "--clip-uuid", sc["clipUuid"]], capture_output=True)
     notes.sort(key=lambda n: n["pos"])
     return notes, skipped
 
@@ -183,7 +186,7 @@ def build_plan(ref_notes, target):
             label = " ".join(w for w, t in tgt_w if s <= t < e)
             silent = not any(s <= n["pos"] < e for n in inside)
             phrases.append({"clip": clip["clipUuid"], "start": s, "end": e, "matched": len(offs), "silent": silent,
-                            "offset": 0 if silent else int(statistics.median(offs)) if offs else None,
+                            "offset": 0 if silent else int(statistics.median(offs)) if len(offs) >= MIN_MATCHED else None,
                             "words": label or "(silencio)"})
 
     last = 0
@@ -239,6 +242,13 @@ def cmd_analyze(args):
         json.dump(state, fh)
     print(f"OK: referencia {len(state['ref']['notes'])} notas; "
           + ", ".join(f"[{t['index']}] {len(t['notes'])}" for t in state["targets"]) + f" -> {STATE}")
+    if TEMP["sing"]:
+        idx = jace("track", "get", "--track-uuid", TEMP["sing"])["trackIndex"]
+        state["temp_sing"] = TEMP["sing"]
+        with open(STATE, "w") as fh:
+            json.dump(state, fh)
+        print(f"Pista Sing temporal (vacia) {TEMP['sing']}: es la n.o {idx + 1} en la pantalla de ACE. "
+              "Seleccionala y borrala a mano (ACE no deja borrarla por comando).")
     print("Siguiente: python3 ace_align_vocal.py plan")
 
 
