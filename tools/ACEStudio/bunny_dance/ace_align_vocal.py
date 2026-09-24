@@ -396,8 +396,9 @@ def cmd_status(args):
             verdict = "SIN TOCAR (como al analizar)"
         elif at_new >= 0.8 * len(moved):
             verdict = "YA ALINEADA con este plan"
-        elif at_old >= 0.8 * len(moved):
-            verdict = "CORTADA pero SIN MOVER (un apply se quedo a medias)"
+        elif all(near(b, [c["clipBegin"] for c in t["clips"]] + [p["start"] for p in phrases], TOL) is not None
+                 for b in begins):
+            verdict = "CORTADA pero SIN MOVER (un apply se quedo a medias; 'apply' la termina)"
         else:
             verdict = "MODIFICADA de otra forma"
         print(f"[{t['index']}] {t['name']}: {verdict} — clips ahora {len(begins)}, "
