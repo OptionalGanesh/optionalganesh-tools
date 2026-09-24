@@ -328,8 +328,14 @@ def apply_target(ref_notes, t):
     strays = [c["clipBegin"] for c in current if near(c["clipBegin"], expected, TOL) is None]
     lost = [c["clipBegin"] for c in t["clips"] if near(c["clipBegin"], [x["clipBegin"] for x in current], TOL) is None]
     if strays or lost:
+        secs = lambda ticks: ", ".join(f"{x / TPB * 0.5:.2f}s" for x in sorted(ticks)[:6])
         print(f"  [{t['index']}] ha cambiado desde 'analyze' (no solo cortes de este script): la salto; "
               "vuelve a ejecutar analyze.")
+        print(f"      clips al analizar: {len(t['clips'])}, ahora: {len(current)}")
+        if strays:
+            print(f"      clips que empiezan donde no se esperaba ({len(strays)}): {secs(strays)}")
+        if lost:
+            print(f"      clips del analisis que ya no estan ({len(lost)}): {secs(lost)}")
         return
     for p in phrases:
         if near(p["start"], [c["clipBegin"] for c in clips_of(t["uuid"])], TOL) is not None:
