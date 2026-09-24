@@ -224,9 +224,17 @@ def build_plan(ref_notes, target):
         p["new"] = max(p["start"] + p["offset"], prev_new + 1, 0)   # nunca invertir el orden de las frases
         prev_new = p["new"]
     moving = [p for p in phrases if not p["silent"]]
-    for a, b in zip(moving, moving[1:]):   # la frase siguiente recorta la cola de esta: avisar si pisa una palabra
+    for i in range(len(moving) - 2, -1, -1):  # de atras adelante: si una frase pisaria la siguiente, se adelanta lo justo
+        a, b = moving[i], moving[i + 1]
+        tail = a.get("last_end", a["start"]) - a["start"]
+        if a["new"] + tail > b["new"]:
+            floor = moving[i - 1]["new"] + 1 if i else 0
+            fitted = max(b["new"] - tail, floor)
+            if fitted < a["new"]:
+                a["new"], a["fitted"] = fitted, True
+    for a, b in zip(moving, moving[1:]):   # lo que aun no quepa se avisa
         cut = a.get("last_end", a["start"]) + (a["new"] - a["start"]) - b["new"]
-        a["clipped"] = cut if cut > 0 else 0
+        a["clipped"] = cut if cut > TPB // 40 else 0      # < 25 ms no se considera recorte
     return pairs, ref_w, tgt_w, phrases
 
 
@@ -291,12 +299,12 @@ def cmd_plan(_):
               f"frases {len(phrases)} ({len(moved)} se mueven)")
         for p in phrases:
             d = (p["new"] - p["start"]) / TPB * 0.5          # 120 BPM: 1 negra = 0.5 s
-            flag = " *" if p.get("inherited") else ""
+            flag = (" *" if p.get("inherited") else "") + (" ~" if p.get("fitted") else "")
             warn = f"  !! recorta {p['clipped'] / TPB * 0.5:.2f}s de su ultima palabra" if p.get("clipped") else ""
             print(f"  {p['start'] / TPB * 0.5:7.2f}s -> {p['new'] / TPB * 0.5:7.2f}s  ({d:+.3f}s{flag}, "
                   f"{p['matched']} pal.)  {p['words'][:55]}{warn}")
         clipped = [p for p in phrases if p.get("clipped")]
-        print(f"  (* = desplazamiento tomado de la frase fiable anterior; "
+        print(f"  (* = desplazamiento tomado de la frase fiable anterior; ~ = ajustada para no pisar la siguiente; "
               f"{len(clipped)} frases recortarian una palabra)")
     print("\nVista previa: no se ha escrito nada. Para aplicar: python3 ace_align_vocal.py apply")
 
