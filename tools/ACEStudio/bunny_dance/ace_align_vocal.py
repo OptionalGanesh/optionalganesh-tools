@@ -158,7 +158,7 @@ def align(ref, tgt):
 def build_plan(ref_notes, target):
     ref_w, tgt_w = words(ref_notes), words(target["notes"])
     if not ref_w or not tgt_w:
-        sys.exit("La transcripcion no tiene palabras en alguna de las pistas.")
+        raise ValueError("la transcripcion no tiene palabras")
     pairs = align(ref_w, tgt_w)
     offset_of = {tgt_w[j][1]: ref_w[i][1] - tgt_w[j][1] for i, j in pairs}
 
@@ -245,7 +245,11 @@ def cmd_analyze(args):
 def cmd_plan(_):
     state = json.load(open(STATE))
     for t in state["targets"]:
-        pairs, ref_w, tgt_w, phrases = build_plan(state["ref"]["notes"], t)
+        try:
+            pairs, ref_w, tgt_w, phrases = build_plan(state["ref"]["notes"], t)
+        except ValueError as err:
+            print(f"\n=== [{t['index']}] {t['name']} ===\nLa salto: {err}")
+            continue
         moved = [p for p in phrases if p["new"] != p["start"]]
         print(f"\n=== [{t['index']}] {t['name']} ===")
         print(f"Palabras: referencia {len(ref_w)}, esta pista {len(tgt_w)}, emparejadas {len(pairs)}; "
@@ -262,7 +266,11 @@ def apply_target(ref_notes, t):
     if set(now) != {c["clipUuid"] for c in t["clips"]}:
         print(f"  [{t['index']}] ha cambiado desde 'analyze': la salto (vuelve a ejecutar analyze).")
         return
-    _, _, _, phrases = build_plan(ref_notes, t)
+    try:
+        _, _, _, phrases = build_plan(ref_notes, t)
+    except ValueError as err:
+        print(f"  [{t['index']}] la salto: {err}")
+        return
     for p in phrases:
         if p["start"] == now[p["clip"]]["clipBegin"]:
             continue
