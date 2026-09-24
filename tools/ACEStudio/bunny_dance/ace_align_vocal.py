@@ -39,6 +39,7 @@ MIN_GAP = TPB // 2          # pausa minima (corchea) para cortar frase
 PARK = "400bar"             # aparcamiento temporal durante apply
 MIN_SEC, MAX_SEC = 2.0, 240.0   # limites de vocal-to-midi por clip
 MIN_MATCHED = 3             # frases con menos palabras emparejadas heredan el desplazamiento de la anterior
+TOL = TPB // 4              # tolerancia al localizar cortes (ACE puede redondear un par de ticks)
 MAX_PHRASE = 8 * TPB        # frases de mas de 4 s (a 120 BPM) se parten por su pausa interna mayor
 
 
@@ -309,33 +310,48 @@ def cmd_plan(_):
     print("\nVista previa: no se ha escrito nada. Para aplicar: python3 ace_align_vocal.py apply")
 
 
+def near(tick, ticks, tol):
+    best = min(ticks, key=lambda x: abs(x - tick), default=None)
+    return best if best is not None and abs(best - tick) <= tol else None
+
+
 def apply_target(ref_notes, t):
-    now = {c["clipUuid"]: c for c in clips_of(t["uuid"])}
-    if set(now) != {c["clipUuid"] for c in t["clips"]}:
-        print(f"  [{t['index']}] ha cambiado desde 'analyze': la salto (vuelve a ejecutar analyze).")
-        return
     try:
         _, _, _, phrases = build_plan(ref_notes, t)
     except ValueError as err:
         print(f"  [{t['index']}] la salto: {err}")
         return
+    expected = [c["clipBegin"] for c in t["clips"]] + [p["start"] for p in phrases]
+    current = clips_of(t["uuid"])
+    # Se acepta la pista tal como la dejo 'analyze' o ya cortada (parcial o totalmente) por un 'apply' anterior;
+    # ACE puede colocar un corte a un par de ticks del pedido, por eso se compara con tolerancia.
+    strays = [c["clipBegin"] for c in current if near(c["clipBegin"], expected, TOL) is None]
+    lost = [c["clipBegin"] for c in t["clips"] if near(c["clipBegin"], [x["clipBegin"] for x in current], TOL) is None]
+    if strays or lost:
+        print(f"  [{t['index']}] ha cambiado desde 'analyze' (no solo cortes de este script): la salto; "
+              "vuelve a ejecutar analyze.")
+        return
     for p in phrases:
-        if p["start"] == now[p["clip"]]["clipBegin"]:
-            continue
-        # tras cada corte cambian los clips: buscar el que contiene este punto ahora mismo
+        if near(p["start"], [c["clipBegin"] for c in clips_of(t["uuid"])], TOL) is not None:
+            continue                                  # ya hay un corte aqui (de este o de un apply anterior)
         holder = [c for c in clips_of(t["uuid"]) if c["clipBegin"] < p["start"] < c["clipEnd"]]
         if len(holder) != 1:
-            sys.exit(f"[{t['index']}] no encuentro el clip que contiene el tick {p['start']}; revisa en ACE (history undo).")
+            sys.exit(f"[{t['index']}] no encuentro el clip que contiene el tick {p['start']}; no muevo nada.")
         ace("clip", "split", "--clip-uuid", holder[0]["clipUuid"], "--pos", f"{p['start']}t")
-    by_start = {c["clipBegin"]: c["clipUuid"] for c in clips_of(t["uuid"])}
-    missing = [p for p in phrases if p["start"] not in by_start]
-    if missing:
-        sys.exit(f"[{t['index']}] tras cortar no encuentro {len(missing)} frases; revisa en ACE (history undo).")
+    clips, used, found = clips_of(t["uuid"]), set(), {}
+    for p in phrases:
+        begin = near(p["start"], [c["clipBegin"] for c in clips if c["clipUuid"] not in used], TOL)
+        if begin is None:
+            sys.exit(f"[{t['index']}] tras cortar no encuentro la frase de {p['start'] / TPB * 0.5:.2f}s; no muevo nada.")
+        clip = next(c for c in clips if c["clipBegin"] == begin and c["clipUuid"] not in used)
+        used.add(clip["clipUuid"])
+        found[id(p)] = clip
     todo = [p for p in phrases if p["new"] != p["start"]]
     for p in todo:                                   # apartar, para no chocar al recolocar
-        ace("clip", "move", "--clip-uuid", by_start[p["start"]], "--move-later", PARK)
+        ace("clip", "move", "--clip-uuid", found[id(p)]["clipUuid"], "--move-later", PARK)
     for p in todo:                                   # en orden: cada frase solo puede recortar la cola de la anterior
-        ace("clip", "move", "--clip-uuid", by_start[p["start"]], "--pos", f"{p['new']}t", "--on-occupied", "cover")
+        dest = found[id(p)]["clipBegin"] + (p["new"] - p["start"])   # mismo desplazamiento aunque el corte redondeara
+        ace("clip", "move", "--clip-uuid", found[id(p)]["clipUuid"], "--pos", f"{max(dest, 0)}t", "--on-occupied", "cover")
     print(f"  [{t['index']}] {t['name'][:40]}: {len(todo)} de {len(phrases)} frases movidas")
 
 
