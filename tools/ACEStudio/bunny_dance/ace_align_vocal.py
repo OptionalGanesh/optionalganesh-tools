@@ -255,7 +255,7 @@ def cmd_analyze(args):
         sys.exit(f"No existe la pista de referencia {args.ref}.")
     print(f"Referencia: [{args.ref}] {ref_name}")
     targets = []
-    for idx in [int(x) for x in args.targets.split(",") if x.strip()]:
+    for idx in [int(x) for x in (args.targets or "21,23,24,25").split(",") if x.strip()]:
         uuid, name, kind = resolve(idx)
         if not uuid or kind != "Audio" or uuid == ref_uuid:
             why = "no existe o esta vacia" if not uuid else "es la referencia" if uuid == ref_uuid else f"no es de audio ({kind})"
@@ -286,9 +286,9 @@ def cmd_analyze(args):
     print("Siguiente: python3 ace_align_vocal.py plan")
 
 
-def cmd_plan(_):
+def cmd_plan(args):
     state = json.load(open(STATE))
-    for t in state["targets"]:
+    for t in selected(state, args):
         try:
             pairs, ref_w, tgt_w, phrases = build_plan(state["ref"]["notes"], t)
         except ValueError as err:
@@ -355,10 +355,17 @@ def apply_target(ref_notes, t):
     print(f"  [{t['index']}] {t['name'][:40]}: {len(todo)} de {len(phrases)} frases movidas")
 
 
-def cmd_apply(_):
+def selected(state, args):
+    if not args.targets:
+        return state["targets"]
+    wanted = {int(x) for x in args.targets.split(",") if x.strip()}
+    return [t for t in state["targets"] if t["index"] in wanted]
+
+
+def cmd_apply(args):
     state = json.load(open(STATE))
     print("Alineando con la referencia (la referencia no se toca)...")
-    for t in state["targets"]:
+    for t in selected(state, args):
         apply_target(state["ref"]["notes"], t)
     print("Hecho. Escucha cada pista; si algo no te gusta, history undo o revierte el proyecto guardado.")
 
@@ -367,7 +374,8 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("phase", choices=["analyze", "plan", "apply"])
     ap.add_argument("--ref", type=int, default=22, help="indice CLI de la pista de referencia (analyze)")
-    ap.add_argument("--targets", default="21,23,24,25", help="indices CLI de las pistas a alinear (analyze)")
+    ap.add_argument("--targets", default=None,
+                    help="analyze: indices CLI a alinear (por defecto 21,23,24,25); apply/plan: solo estos del analisis")
     args = ap.parse_args()
     {"analyze": cmd_analyze, "plan": cmd_plan, "apply": cmd_apply}[args.phase](args)
 
