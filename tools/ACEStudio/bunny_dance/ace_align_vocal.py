@@ -202,10 +202,14 @@ def cmd_analyze(args):
     targets = []
     for idx in [int(x) for x in args.targets.split(",") if x.strip()]:
         uuid, name, kind = resolve(idx)
-        if kind != "Audio" or uuid == ref_uuid:
-            print(f"  Salto [{idx}] {name}: {'es la referencia' if uuid == ref_uuid else 'no es de audio (' + kind + ')'}")
+        if not uuid or kind != "Audio" or uuid == ref_uuid:
+            why = "no existe" if not uuid else "es la referencia" if uuid == ref_uuid else f"no es de audio ({kind})"
+            print(f"  Salto [{idx}] {name}: {why}")
             continue
         targets.append({"index": idx, "uuid": uuid, "name": name})
+    if not targets:
+        sys.exit("No hay ninguna pista de audio que alinear.")
+    print("Pistas a alinear: " + ", ".join(f"[{t['index']}] {t['name']}" for t in targets))
     print("Transcribiendo (vocal-to-midi es gratis; crea y borra pistas Sing temporales)...")
     state = {"ref": {"uuid": ref_uuid, "name": ref_name, "notes": transcribe(ref_uuid, f"referencia [{args.ref}]")},
              "targets": []}
@@ -242,8 +246,13 @@ def apply_target(ref_notes, t):
         return
     _, _, _, phrases = build_plan(ref_notes, t)
     for p in phrases:
-        if p["start"] != now[p["clip"]]["clipBegin"]:
-            ace("clip", "split", "--clip-uuid", p["clip"], "--at", f"{p['start']}t")
+        if p["start"] == now[p["clip"]]["clipBegin"]:
+            continue
+        # tras cada corte cambian los clips: buscar el que contiene este punto ahora mismo
+        holder = [c for c in clips_of(t["uuid"]) if c["clipBegin"] < p["start"] < c["clipEnd"]]
+        if len(holder) != 1:
+            sys.exit(f"[{t['index']}] no encuentro el clip que contiene el tick {p['start']}; revisa en ACE (history undo).")
+        ace("clip", "split", "--clip-uuid", holder[0]["clipUuid"], "--at", f"{p['start']}t")
     by_start = {c["clipBegin"]: c["clipUuid"] for c in clips_of(t["uuid"])}
     missing = [p for p in phrases if p["start"] not in by_start]
     if missing:
