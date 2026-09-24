@@ -16,6 +16,9 @@ Fases (cada una se ejecuta por separado, en el Mac con ACE Studio abierto):
       palabras de mas o de menos), corta la pista a alinear en frases por sus
       pausas y calcula cuanto mover cada frase. Solo imprime; no escribe nada.
 
+  python3 ace_align_vocal.py status
+      Solo lectura: dice si cada pista esta sin tocar, cortada a medias o ya alineada.
+
   python3 ace_align_vocal.py apply
       Corta los clips de la pista a alinear en esas frases y mueve cada frase a su
       sitio. La pista de referencia no se toca. Guarda el proyecto antes.
@@ -376,14 +379,39 @@ def cmd_apply(args):
     print("Hecho. Escucha cada pista; si algo no te gusta, history undo o revierte el proyecto guardado.")
 
 
+def cmd_status(args):
+    """Solo lectura: para cada pista del analisis, ¿esta sin tocar, solo cortada o ya alineada?"""
+    state = json.load(open(STATE))
+    for t in selected(state, args):
+        try:
+            _, _, _, phrases = build_plan(state["ref"]["notes"], t)
+        except ValueError as err:
+            print(f"[{t['index']}] {t['name']}: sin plan ({err})")
+            continue
+        begins = [c["clipBegin"] for c in clips_of(t["uuid"])]
+        moved = [p for p in phrases if p["new"] != p["start"]]
+        at_new = sum(1 for p in moved if near(p["new"], begins, TOL) is not None)
+        at_old = sum(1 for p in moved if near(p["start"], begins, TOL) is not None)
+        if len(begins) == len(t["clips"]):
+            verdict = "SIN TOCAR (como al analizar)"
+        elif at_new >= 0.8 * len(moved):
+            verdict = "YA ALINEADA con este plan"
+        elif at_old >= 0.8 * len(moved):
+            verdict = "CORTADA pero SIN MOVER (un apply se quedo a medias)"
+        else:
+            verdict = "MODIFICADA de otra forma"
+        print(f"[{t['index']}] {t['name']}: {verdict} — clips ahora {len(begins)}, "
+              f"frases en su sitio nuevo {at_new}/{len(moved)}, en su sitio original {at_old}/{len(moved)}")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("phase", choices=["analyze", "plan", "apply"])
+    ap.add_argument("phase", choices=["analyze", "plan", "apply", "status"])
     ap.add_argument("--ref", type=int, default=22, help="indice CLI de la pista de referencia (analyze)")
     ap.add_argument("--targets", default=None,
                     help="analyze: indices CLI a alinear (por defecto 21,23,24,25); apply/plan: solo estos del analisis")
     args = ap.parse_args()
-    {"analyze": cmd_analyze, "plan": cmd_plan, "apply": cmd_apply}[args.phase](args)
+    {"analyze": cmd_analyze, "plan": cmd_plan, "apply": cmd_apply, "status": cmd_status}[args.phase](args)
 
 
 if __name__ == "__main__":
