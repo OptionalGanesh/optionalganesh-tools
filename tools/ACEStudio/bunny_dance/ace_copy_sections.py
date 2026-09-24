@@ -27,7 +27,6 @@ import time
 
 ACE = os.environ.get("ACE", "/Applications/ACE Studio.app/Contents/Helpers/acestudio-cli")
 TRACK_UUID = "{7570c6c8-dc13-4e86-b6cb-ef71e22e1287}"   # pista Sing "Ella - Kid"
-TRACK_INDEX = 13
 TPB = 480                                               # ticks por negra (4/4)
 LANGUAGE = "ENG"   # sin esto ACE aplica el idioma por defecto de la pista y la letra no se entiende
 
@@ -57,6 +56,14 @@ def ace(*args):
     if res.returncode != 0:
         sys.exit(f"acestudio-cli {' '.join(args)} fallo:\n{res.stderr or res.stdout}")
     return res.stdout
+
+
+def track_index():
+    """Posicion actual de la pista Sing, resuelta por UUID (cambia al crear pistas)."""
+    track = json.loads(ace("track", "get", "--track-uuid", TRACK_UUID, "--json"))
+    if track.get("trackType", "Sing") != "Sing":
+        sys.exit(f"La pista {TRACK_UUID} no es Sing ({track.get('trackType')}). No escribo nada.")
+    return track["trackIndex"]
 
 
 def find_notes(obj):
@@ -175,14 +182,12 @@ def main():
     ap.add_argument("--apply", action="store_true", help="escribir en ACE Studio (sin esto solo vista previa)")
     args = ap.parse_args()
 
-    track = json.loads(ace("track", "get", "--track-index", str(TRACK_INDEX), "--json"))
-    if track.get("trackUuid") != TRACK_UUID:
-        sys.exit(f"La pista {TRACK_INDEX} ya no es 'Ella - Kid' ({track.get('trackName')}). No escribo nada.")
+    index = track_index()
     clips = json.loads(ace("clip", "list", "--track-uuid", TRACK_UUID, "--json"))["clips"]
     if len(clips) != 1 or clips[0].get("clipBegin", 0) != 0:
         sys.exit("Esperaba 1 clip que empiece en el tick 0 en la pista Sing. No escribo nada.")
     clip = clips[0]
-    raw = json.loads(ace("clip", "note-content", "--track-index", str(TRACK_INDEX), "--clip-index", "0", "--json"))
+    raw = json.loads(ace("clip", "note-content", "--track-index", str(index), "--clip-index", "0", "--json"))
     notes = find_notes(raw)
     fingerprint = raw.get("fingerprint") if isinstance(raw, dict) else None
 

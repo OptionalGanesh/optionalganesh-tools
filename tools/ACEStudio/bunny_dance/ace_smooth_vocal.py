@@ -23,7 +23,7 @@ import sys
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from ace_copy_sections import LANGUAGE, TPB, TRACK_INDEX, TRACK_UUID, ace, find_notes  # noqa: E402
+from ace_copy_sections import LANGUAGE, TPB, TRACK_UUID, ace, find_notes, track_index  # noqa: E402
 
 
 def smooth(notes, max_gap):
@@ -49,11 +49,9 @@ def main():
     ap.add_argument("--max-gap", type=int, default=TPB // 4, help="hueco maximo a rellenar, en ticks (120 = semicorchea)")
     args = ap.parse_args()
 
-    track = json.loads(ace("track", "get", "--track-index", str(TRACK_INDEX), "--json"))
-    if track.get("trackUuid") != TRACK_UUID:
-        sys.exit(f"La pista {TRACK_INDEX} ya no es 'Ella - Kid' ({track.get('trackName')}). No escribo nada.")
+    index = track_index()
     clip = json.loads(ace("clip", "list", "--track-uuid", TRACK_UUID, "--json"))["clips"][0]
-    raw = json.loads(ace("clip", "note-content", "--track-index", str(TRACK_INDEX), "--clip-index", "0", "--json"))
+    raw = json.loads(ace("clip", "note-content", "--track-index", str(index), "--clip-index", "0", "--json"))
     notes = find_notes(raw)
     new, changed = smooth(notes, args.max_gap)
 
