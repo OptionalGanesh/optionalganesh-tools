@@ -29,6 +29,7 @@ ACE = os.environ.get("ACE", "/Applications/ACE Studio.app/Contents/Helpers/acest
 TRACK_UUID = "{7570c6c8-dc13-4e86-b6cb-ef71e22e1287}"   # pista Sing "Ella - Kid"
 TRACK_INDEX = 13
 TPB = 480                                               # ticks por negra (4/4)
+LANGUAGE = "ENG"   # sin esto ACE aplica el idioma por defecto de la pista y la letra no se entiende
 
 
 def T(bar, beat=1.0):
@@ -109,7 +110,7 @@ def relyric(verse, word):
 
 def shifted(notes, offset, semitones):
     return [{"pos": n["pos"] + offset, "dur": n["dur"], "pitch": n["pitch"] + semitones,
-             "lyric": n["lyric"]} for n in notes]
+             "lyric": n["lyric"], "language": LANGUAGE} for n in notes]
 
 
 def build(notes):
@@ -123,7 +124,7 @@ def build(notes):
     print(f"Referencia verso 1: {len(ref_v)} notas, STOP en tick {v_stop['pos']}")
     print(f"Referencia coro 1:  {len(ref_c)} notas, 'One' en tick {c_one['pos']}")
 
-    new = [{"pos": n["pos"], "dur": n["dur"], "pitch": n["pitch"], "lyric": n["lyric"]}
+    new = [{"pos": n["pos"], "dur": n["dur"], "pitch": n["pitch"], "lyric": n["lyric"], "language": LANGUAGE}
            for n in notes if n["pos"] < KEEP_BEFORE]
     for cyc in CYCLES:
         lo, hi = cyc["win"]
