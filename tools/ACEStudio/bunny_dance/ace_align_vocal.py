@@ -185,16 +185,18 @@ def build_plan(ref_notes, target):
             offs = [o for t, o in offset_of.items() if s <= t < e]
             label = " ".join(w for w, t in tgt_w if s <= t < e)
             silent = not any(s <= n["pos"] < e for n in inside)
+            last_end = max((n["end"] for n in inside if s <= n["pos"] < e), default=s)
             phrases.append({"clip": clip["clipUuid"], "start": s, "end": e, "matched": len(offs), "silent": silent,
+                            "last_end": last_end,
                             "offset": 0 if silent else int(statistics.median(offs)) if len(offs) >= MIN_MATCHED else None,
                             "words": label or "(silencio)"})
 
-    last = 0
-    for p in phrases:                      # frases sin palabras emparejadas heredan el desplazamiento anterior
+    reliable = [p for p in phrases if p["offset"] is not None and not p["silent"]]
+    for p in phrases:                      # frases poco fiables: desplazamiento de la frase fiable mas cercana
         if p["offset"] is None:
-            p["offset"] = last
-        if not p["silent"]:
-            last = p["offset"]
+            near = min(reliable, key=lambda r: abs(r["start"] - p["start"]), default=None)
+            p["offset"] = near["offset"] if near else 0
+            p["inherited"] = True
     prev_new = -1
     for p in phrases:
         if p["silent"]:                    # los trozos de silencio no se mueven
@@ -202,6 +204,10 @@ def build_plan(ref_notes, target):
             continue
         p["new"] = max(p["start"] + p["offset"], prev_new + 1, 0)   # nunca invertir el orden de las frases
         prev_new = p["new"]
+    moving = [p for p in phrases if not p["silent"]]
+    for a, b in zip(moving, moving[1:]):   # la frase siguiente recorta la cola de esta: avisar si pisa una palabra
+        cut = a["last_end"] + (a["new"] - a["start"]) - b["new"]
+        a["clipped"] = cut if cut > 0 else 0
     return pairs, ref_w, tgt_w, phrases
 
 
@@ -266,8 +272,13 @@ def cmd_plan(_):
               f"frases {len(phrases)} ({len(moved)} se mueven)")
         for p in phrases:
             d = (p["new"] - p["start"]) / TPB * 0.5          # 120 BPM: 1 negra = 0.5 s
-            print(f"  {p['start'] / TPB * 0.5:7.2f}s -> {p['new'] / TPB * 0.5:7.2f}s  ({d:+.3f}s, "
-                  f"{p['matched']} pal.)  {p['words'][:55]}")
+            flag = " *" if p.get("inherited") else ""
+            warn = f"  !! recorta {p['clipped'] / TPB * 0.5:.2f}s de su ultima palabra" if p.get("clipped") else ""
+            print(f"  {p['start'] / TPB * 0.5:7.2f}s -> {p['new'] / TPB * 0.5:7.2f}s  ({d:+.3f}s{flag}, "
+                  f"{p['matched']} pal.)  {p['words'][:55]}{warn}")
+        clipped = [p for p in phrases if p.get("clipped")]
+        print(f"  (* = desplazamiento tomado de la frase fiable mas cercana; "
+              f"{len(clipped)} frases recortarian una palabra)")
     print("\nVista previa: no se ha escrito nada. Para aplicar: python3 ace_align_vocal.py apply")
 
 
