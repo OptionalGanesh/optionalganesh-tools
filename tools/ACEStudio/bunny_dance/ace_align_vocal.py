@@ -37,6 +37,7 @@ STATE = os.path.expanduser("~/bunny_align.json")
 TPB = 480
 MIN_GAP = TPB // 2          # pausa minima (corchea) para cortar frase
 PARK = "400bar"             # aparcamiento temporal durante apply
+MIN_SEC, MAX_SEC = 2.0, 240.0   # limites de vocal-to-midi por clip
 
 
 def ace(*args, check=True):
@@ -70,32 +71,42 @@ def find_notes(obj):
 
 
 def transcribe(track_uuid, label):
-    """vocal-to-midi de cada clip de audio -> una pista Sing temporal -> notas globales."""
-    sing = None
-    for i, clip in enumerate(clips_of(track_uuid)):
-        before = sing_tracks()
-        args = ["generative", "vocal-to-midi", "--clip-uuid", clip["clipUuid"], "--language", "english",
-                "--apply-pitch", "false", "--wait"]
+    """vocal-to-midi de cada clip de audio -> una pista Sing temporal -> (notas globales, clips saltados)."""
+    sing, skipped = None, []
+    try:
+        for i, clip in enumerate(clips_of(track_uuid)):
+            length = clip["clipEndSec"] - clip["clipBeginSec"]
+            tag = f"  {label}: clip {i + 1} ({clip['clipBeginSec']:.1f}s-{clip['clipEndSec']:.1f}s)"
+            if not MIN_SEC <= length <= MAX_SEC:
+                print(f"{tag} salto: {length:.1f}s (vocal-to-midi acepta {MIN_SEC:g}-{MAX_SEC:g}s)")
+                skipped.append(clip["clipUuid"])
+                continue
+            before = sing_tracks()
+            args = ["generative", "vocal-to-midi", "--clip-uuid", clip["clipUuid"], "--language", "english",
+                    "--apply-pitch", "false", "--wait"]
+            if sing:
+                args += ["--track-uuid", sing]
+            print(f"{tag}...", flush=True)
+            res = subprocess.run([ACE, *args], capture_output=True, text=True)
+            if not sing:
+                new = sing_tracks() - before
+                sing = new.pop() if len(new) == 1 else None
+            if res.returncode != 0:
+                print(f"{tag} fallo, lo salto: {(res.stderr or res.stdout).strip().splitlines()[0]}")
+                skipped.append(clip["clipUuid"])
+        notes = []
         if sing:
-            args += ["--track-uuid", sing]
-        print(f"  {label}: clip {i + 1} ({clip['clipBeginSec']:.1f}s-{clip['clipEndSec']:.1f}s)...", flush=True)
-        ace(*args)
-        if not sing:
-            new = sing_tracks() - before
-            if len(new) != 1:
-                sys.exit("No encuentro la pista Sing temporal creada por vocal-to-midi.")
-            sing = new.pop()
-    index = jace("track", "get", "--track-uuid", sing)["trackIndex"]
-    notes = []
-    for k, sc in enumerate(clips_of(sing)):
-        raw = jace("clip", "note-content", "--track-index", str(index), "--clip-index", str(k))
-        off = sc.get("clipBegin", 0)
-        for n in find_notes(raw):
-            notes.append({"pos": off + n["pos"], "end": off + n["pos"] + n["dur"], "lyric": n.get("lyric", "")})
-    if subprocess.run([ACE, "track", "delete", "--track-uuid", sing], capture_output=True).returncode != 0:
-        print(f"  AVISO: no pude borrar la pista Sing temporal {sing}; borrala a mano.")
+            index = jace("track", "get", "--track-uuid", sing)["trackIndex"]
+            for k, sc in enumerate(clips_of(sing)):
+                raw = jace("clip", "note-content", "--track-index", str(index), "--clip-index", str(k))
+                off = sc.get("clipBegin", 0)
+                for n in find_notes(raw):
+                    notes.append({"pos": off + n["pos"], "end": off + n["pos"] + n["dur"], "lyric": n.get("lyric", "")})
+    finally:
+        if sing and subprocess.run([ACE, "track", "delete", "--track-uuid", sing], capture_output=True).returncode != 0:
+            print(f"  AVISO: no pude borrar la pista Sing temporal {sing}; borrala a mano.")
     notes.sort(key=lambda n: n["pos"])
-    return notes
+    return notes, skipped
 
 
 def words(notes):
@@ -152,8 +163,13 @@ def build_plan(ref_notes, target):
     offset_of = {tgt_w[j][1]: ref_w[i][1] - tgt_w[j][1] for i, j in pairs}
 
     phrases = []
+    skipped = set(target.get("skipped", []))
     for clip in target["clips"]:
         lo, hi = clip["clipBegin"], clip["clipEnd"]
+        if clip["clipUuid"] in skipped:          # sin transcripcion (clip corto): se mueve con la frase anterior
+            phrases.append({"clip": clip["clipUuid"], "start": lo, "end": hi, "matched": 0, "silent": False,
+                            "offset": None, "words": "(clip corto, sigue a la frase anterior)"})
+            continue
         inside = [n for n in target["notes"] if lo <= n["pos"] < hi]
         cuts = [lo]
         if inside and inside[0]["pos"] - lo > MIN_GAP:     # silencio inicial: se separa y se queda quieto
@@ -213,11 +229,11 @@ def cmd_analyze(args):
         sys.exit("No hay ninguna pista de audio que alinear.")
     print("Pistas a alinear: " + ", ".join(f"[{t['index']}] {t['name']}" for t in targets))
     print("Transcribiendo (vocal-to-midi es gratis; crea y borra pistas Sing temporales)...")
-    state = {"ref": {"uuid": ref_uuid, "name": ref_name, "notes": transcribe(ref_uuid, f"referencia [{args.ref}]")},
-             "targets": []}
+    ref_notes, _ = transcribe(ref_uuid, f"referencia [{args.ref}]")
+    state = {"ref": {"uuid": ref_uuid, "name": ref_name, "notes": ref_notes}, "targets": []}
     for t in targets:
         t["clips"] = clips_of(t["uuid"])
-        t["notes"] = transcribe(t["uuid"], f"[{t['index']}] {t['name'][:30]}")
+        t["notes"], t["skipped"] = transcribe(t["uuid"], f"[{t['index']}] {t['name'][:30]}")
         state["targets"].append(t)
     with open(STATE, "w") as fh:
         json.dump(state, fh)
