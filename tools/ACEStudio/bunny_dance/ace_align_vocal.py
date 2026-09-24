@@ -191,6 +191,8 @@ def resolve(index):
     if res.returncode != 0:
         return None, f"(no existe la pista {index})", ""
     track = json.loads(res.stdout)
+    if not track.get("trackUuid"):                     # hueco vacio del arreglo: sin UUID ni nombre
+        return None, f"(pista {index} vacia: {track.get('trackType', '?')})", track.get("trackType", "")
     return track["trackUuid"], track.get("trackName", ""), track.get("trackType", "")
 
 
@@ -203,7 +205,7 @@ def cmd_analyze(args):
     for idx in [int(x) for x in args.targets.split(",") if x.strip()]:
         uuid, name, kind = resolve(idx)
         if not uuid or kind != "Audio" or uuid == ref_uuid:
-            why = "no existe" if not uuid else "es la referencia" if uuid == ref_uuid else f"no es de audio ({kind})"
+            why = "no existe o esta vacia" if not uuid else "es la referencia" if uuid == ref_uuid else f"no es de audio ({kind})"
             print(f"  Salto [{idx}] {name}: {why}")
             continue
         targets.append({"index": idx, "uuid": uuid, "name": name})
@@ -252,7 +254,7 @@ def apply_target(ref_notes, t):
         holder = [c for c in clips_of(t["uuid"]) if c["clipBegin"] < p["start"] < c["clipEnd"]]
         if len(holder) != 1:
             sys.exit(f"[{t['index']}] no encuentro el clip que contiene el tick {p['start']}; revisa en ACE (history undo).")
-        ace("clip", "split", "--clip-uuid", holder[0]["clipUuid"], "--at", f"{p['start']}t")
+        ace("clip", "split", "--clip-uuid", holder[0]["clipUuid"], "--pos", f"{p['start']}t")
     by_start = {c["clipBegin"]: c["clipUuid"] for c in clips_of(t["uuid"])}
     missing = [p for p in phrases if p["start"] not in by_start]
     if missing:
