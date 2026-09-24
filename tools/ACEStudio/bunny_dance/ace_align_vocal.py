@@ -38,7 +38,8 @@ TPB = 480
 MIN_GAP = TPB // 2          # pausa minima (corchea) para cortar frase
 PARK = "400bar"             # aparcamiento temporal durante apply
 MIN_SEC, MAX_SEC = 2.0, 240.0   # limites de vocal-to-midi por clip
-MIN_MATCHED = 3             # frases con menos palabras emparejadas heredan el desplazamiento vecino
+MIN_MATCHED = 3             # frases con menos palabras emparejadas heredan el desplazamiento de la anterior
+MAX_PHRASE = 8 * TPB        # frases de mas de 4 s (a 120 BPM) se parten por su pausa interna mayor
 
 
 def ace(*args, check=True):
@@ -171,7 +172,7 @@ def build_plan(ref_notes, target):
         lo, hi = clip["clipBegin"], clip["clipEnd"]
         if clip["clipUuid"] in skipped:          # sin transcripcion (clip corto): se mueve con la frase anterior
             phrases.append({"clip": clip["clipUuid"], "start": lo, "end": hi, "matched": 0, "silent": False,
-                            "offset": None, "last_end": lo, "words": "(clip corto, sigue a la frase cercana)"})
+                            "offset": None, "last_end": lo, "words": "(clip corto, sigue a la frase anterior)"})
             continue
         inside = [n for n in target["notes"] if lo <= n["pos"] < hi]
         cuts = [lo]
@@ -181,6 +182,21 @@ def build_plan(ref_notes, target):
             if b["pos"] - a["end"] >= MIN_GAP:
                 cuts.append((a["end"] + b["pos"]) // 2)
         cuts.append(hi)
+        changed = True
+        while changed:                          # partir frases largas por su mayor hueco interno
+            changed = False
+            for s, e in zip(cuts, cuts[1:]):
+                seg = [n for n in inside if s <= n["pos"] < e]
+                if len(seg) < 2 or seg[-1]["end"] - seg[0]["pos"] <= MAX_PHRASE:
+                    continue
+                centre = (seg[0]["pos"] + seg[-1]["end"]) / 2
+                a, b = max(zip(seg, seg[1:]),       # mayor hueco; a igualdad, el mas centrado
+                           key=lambda ab: (ab[1]["pos"] - ab[0]["end"], -abs(ab[1]["pos"] - centre)))
+                cut = (a["end"] + b["pos"]) // 2 if b["pos"] > a["end"] else b["pos"]
+                if s < cut < e:
+                    cuts = sorted(set(cuts + [cut]))
+                    changed = True
+                    break
         for s, e in zip(cuts, cuts[1:]):
             offs = [o for t, o in offset_of.items() if s <= t < e]
             label = " ".join(w for w, t in tgt_w if s <= t < e)
@@ -192,11 +208,14 @@ def build_plan(ref_notes, target):
                             "words": label or "(silencio)"})
 
     reliable = [p for p in phrases if p["offset"] is not None and not p["silent"]]
-    for p in phrases:                      # frases poco fiables: desplazamiento de la frase fiable mas cercana
+    last = None
+    for p in phrases:                      # frases poco fiables: siguen a la frase fiable anterior (el conteo va con su STOP)
         if p["offset"] is None:
-            near = min(reliable, key=lambda r: abs(r["start"] - p["start"]), default=None)
-            p["offset"] = near["offset"] if near else 0
+            src = last or next((r for r in reliable if r["start"] > p["start"]), None)
+            p["offset"] = src["offset"] if src else 0
             p["inherited"] = True
+        elif not p["silent"]:
+            last = p
     prev_new = -1
     for p in phrases:
         if p["silent"]:                    # los trozos de silencio no se mueven
@@ -277,7 +296,7 @@ def cmd_plan(_):
             print(f"  {p['start'] / TPB * 0.5:7.2f}s -> {p['new'] / TPB * 0.5:7.2f}s  ({d:+.3f}s{flag}, "
                   f"{p['matched']} pal.)  {p['words'][:55]}{warn}")
         clipped = [p for p in phrases if p.get("clipped")]
-        print(f"  (* = desplazamiento tomado de la frase fiable mas cercana; "
+        print(f"  (* = desplazamiento tomado de la frase fiable anterior; "
               f"{len(clipped)} frases recortarian una palabra)")
     print("\nVista previa: no se ha escrito nada. Para aplicar: python3 ace_align_vocal.py apply")
 
