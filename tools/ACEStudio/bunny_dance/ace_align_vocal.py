@@ -171,7 +171,7 @@ def build_plan(ref_notes, target):
         lo, hi = clip["clipBegin"], clip["clipEnd"]
         if clip["clipUuid"] in skipped:          # sin transcripcion (clip corto): se mueve con la frase anterior
             phrases.append({"clip": clip["clipUuid"], "start": lo, "end": hi, "matched": 0, "silent": False,
-                            "offset": None, "words": "(clip corto, sigue a la frase anterior)"})
+                            "offset": None, "last_end": lo, "words": "(clip corto, sigue a la frase cercana)"})
             continue
         inside = [n for n in target["notes"] if lo <= n["pos"] < hi]
         cuts = [lo]
@@ -206,7 +206,7 @@ def build_plan(ref_notes, target):
         prev_new = p["new"]
     moving = [p for p in phrases if not p["silent"]]
     for a, b in zip(moving, moving[1:]):   # la frase siguiente recorta la cola de esta: avisar si pisa una palabra
-        cut = a["last_end"] + (a["new"] - a["start"]) - b["new"]
+        cut = a.get("last_end", a["start"]) + (a["new"] - a["start"]) - b["new"]
         a["clipped"] = cut if cut > 0 else 0
     return pairs, ref_w, tgt_w, phrases
 
