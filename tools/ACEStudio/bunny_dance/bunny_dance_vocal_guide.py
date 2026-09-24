@@ -16,11 +16,19 @@ Uso:
   python3 bunny_dance_vocal_guide.py
       -> genera la guia desde el patron cuadrado definido abajo.
   python3 bunny_dance_vocal_guide.py --source cancion.mid --track 13
-      -> toma el track de voz (13) del MIDI de la cancion, extrae el primer
-         ciclo (primer verso + primer coro = 8 compases desde --start-bar) y
-         lo replica nota a nota en todos los ciclos, con la transposicion de
-         CYCLES. Escribe la guia de voz y una copia del MIDI completo con el
-         track 13 sustituido (<cancion>_vocal_fixed.mid).
+      -> corrige el track de voz (13) del MIDI de la cancion por secciones:
+         cada VERSO se sustituye por una copia exacta del PRIMER verso y cada
+         CORO (el conteo "One hop / Two hops / Three hops") por una copia
+         exacta del PRIMER coro. Lo que queda fuera de esas secciones no se
+         toca. Escribe <cancion>_vocal_fixed.mid (cancion completa con el
+         track corregido) y bunny_dance_vocal_guide.mid (solo la voz).
+
+      Por defecto: versos de 4 compases en 1, 9, 17, 25 y coros de 4
+      compases en 5, 13, 21, 29; el ciclo 3 y 4 suben +1 semitono (igual que
+      CYCLES). Si tu cancion tiene otra forma, indicalo asi (compases desde 1,
+      la primera posicion de cada lista es la referencia; "@+1" = transponer):
+         --verses 1,9,17@+1,25@+1 --choruses 5,13,21@+1,29@+1
+         --verse-bars 4 --chorus-bars 4
 """
 
 import argparse
@@ -139,78 +147,107 @@ def validate(events):
     return min(pitches), max(pitches), len(ref)
 
 
-def extract_source_cycle(path, track_index, start_bar):
-    """Notas del primer ciclo del track de voz como PATTERN (en ticks nativos)."""
-    src = mido.MidiFile(path)
-    print(f"Fuente: {path} ({len(src.tracks)} tracks, {src.ticks_per_beat} tpb)")
-    for i, t in enumerate(src.tracks):
-        name = next((m.name for m in t if m.type == "track_name"), "")
-        n = sum(1 for m in t if m.type == "note_on" and m.velocity > 0)
-        print(f"  [{i:2d}] {name!r:40} {n} notas{'  <- voz' if i == track_index else ''}")
-    tpb = src.ticks_per_beat
-    bar = 4 * tpb
-    lo = start_bar * bar
-    hi = lo + CYCLE_BARS * bar
-    tick, open_notes, notes = 0, {}, []
-    for msg in src.tracks[track_index]:
+def parse_sections(spec):
+    """'1,9,17@+1' -> [(0, 0), (8, 0), (16, 1)]  (compas 0-based, semitonos)"""
+    out = []
+    for item in spec.split(","):
+        bar, _, shift = item.strip().partition("@")
+        out.append((int(bar) - 1, int(shift or 0)))
+    return out
+
+
+def read_notes(track):
+    """[(inicio, fin, nota, velocity)] en ticks absolutos + el resto de mensajes."""
+    tick, open_notes, notes, others = 0, {}, [], []
+    for msg in track:
         tick += msg.time
         if msg.type == "note_on" and msg.velocity > 0:
-            open_notes[msg.note] = tick
-        elif msg.type in ("note_on", "note_off") and msg.note in open_notes:
-            on = open_notes.pop(msg.note)
-            if lo <= on < hi:
-                notes.append((on - lo, min(tick, hi) - on, msg.note))
-    if not notes:
-        raise SystemExit("No hay notas en el primer ciclo: revisa --track y --start-bar")
-    notes.sort()
-    return src, tpb, notes
+            open_notes[msg.note] = (tick, msg.velocity, msg.channel)
+        elif msg.type in ("note_on", "note_off"):
+            if msg.note in open_notes:
+                on, vel, ch = open_notes.pop(msg.note)
+                notes.append((on, tick, msg.note, vel, ch))
+        elif msg.type != "end_of_track":
+            others.append((tick, msg))
+    return notes, others, tick
 
 
 def replicate_source(args):
-    src, tpb, notes = extract_source_cycle(args.source, args.track, args.start_bar - 1)
-    cycle_len = CYCLE_BARS * 4 * tpb
-    offset = (args.start_bar - 1) * 4 * tpb
-    abs_events = []
-    for c, cycle in enumerate(CYCLES):
-        base = offset + c * cycle_len
-        abs_events.append((base, 0, mido.MetaMessage("marker", text=cycle["name"])))
-        for rel, dur, note in notes:
-            pitch = note + cycle["transpose"]
-            abs_events.append((base + rel, 2, mido.Message("note_on", channel=CHANNEL,
-                                                           note=pitch, velocity=VELOCITY)))
-            abs_events.append((base + rel + dur, -1, mido.Message("note_off", channel=CHANNEL,
-                                                                  note=pitch, velocity=0)))
-    abs_events.sort(key=lambda e: (e[0], e[1]))
+    src = mido.MidiFile(args.source)
+    tpb = src.ticks_per_beat
+    ts = next((m for t in src.tracks for m in t if m.type == "time_signature"), None)
+    bar = tpb * 4 * ts.numerator // ts.denominator if ts else 4 * tpb
+    print(f"Fuente: {args.source} ({len(src.tracks)} tracks, {tpb} tpb, compas = {bar} ticks)")
+    for i, t in enumerate(src.tracks):
+        name = next((m.name for m in t if m.type == "track_name"), "")
+        n = sum(1 for m in t if m.type == "note_on" and m.velocity > 0)
+        print(f"  [{i:2d}] {name!r:40} {n} notas{'  <- voz' if i == args.track else ''}")
 
-    # Conserva los meta del track original (nombre, etc.) excepto notas/letras
-    old = src.tracks[args.track]
-    name = next((m.name for m in old if m.type == "track_name"), "Vocal Guide")
-    new_track = mido.MidiTrack([mido.MetaMessage("track_name", name=name, time=0)])
+    notes, others, end_tick = read_notes(src.tracks[args.track])
+    groups = [("VERSO", parse_sections(args.verses), args.verse_bars),
+              ("CORO", parse_sections(args.choruses), args.chorus_bars)]
+
+    replaced = []          # rangos [lo, hi) que se reescriben
+    pasted = []            # notas nuevas
+    for label, sections, nbars in groups:
+        ref_bar, ref_shift = sections[0]
+        lo, hi = ref_bar * bar, (ref_bar + nbars) * bar
+        ref = [(on - lo, min(off, hi) - on, n - ref_shift, v, ch)
+               for on, off, n, v, ch in notes if lo <= on < hi]
+        if not ref:
+            raise SystemExit(f"El primer {label} (compas {ref_bar + 1}) no tiene notas: "
+                             "revisa --track / --verses / --choruses")
+        print(f"  {label} referencia: compases {ref_bar + 1}-{ref_bar + nbars}, {len(ref)} notas")
+        for sbar, shift in sections[1:]:
+            base = sbar * bar
+            replaced.append((base, base + nbars * bar))
+            pasted += [(base + rel, base + rel + dur, n + shift, v, ch) for rel, dur, n, v, ch in ref]
+            print(f"    -> {label} en compas {sbar + 1}{f' ({shift:+d} st)' if shift else ''}: copiado")
+
+    def inside(t):
+        return any(lo <= t < hi for lo, hi in replaced)
+
+    kept = [x for x in notes if not inside(x[0])]
+    # Las letras viejas de las secciones reescritas ya no coinciden con las notas
+    # nuevas: se quitan (la letra se reescribe en ACE Studio).
+    others = [(t, m) for t, m in others if not (m.type == "lyrics" and inside(t))]
+
+    events = [(t, 0, m) for t, m in others]
+    for on, off, n, v, ch in kept + pasted:
+        events.append((on, 2, mido.Message("note_on", channel=ch, note=n, velocity=v)))
+        events.append((off, 1, mido.Message("note_off", channel=ch, note=n, velocity=0)))
+    events.sort(key=lambda e: (e[0], e[1]))
+
+    new_track = mido.MidiTrack()
     last = 0
-    for tick, _, msg in abs_events:
+    for tick, _, msg in events:
         new_track.append(msg.copy(time=tick - last))
         last = tick
-    new_track.append(mido.MetaMessage("end_of_track", time=0))
+    new_track.append(mido.MetaMessage("end_of_track", time=max(0, end_tick - last)))
 
     full = mido.MidiFile(type=src.type, ticks_per_beat=tpb)
     full.tracks = [new_track if i == args.track else t for i, t in enumerate(src.tracks)]
     fixed = os.path.splitext(os.path.basename(args.source))[0] + "_vocal_fixed.mid"
     full.save(fixed)
 
-    # Guia solo-voz: tempo/compas del track 0 de la fuente + la voz nueva
     guide = mido.MidiFile(type=1, ticks_per_beat=tpb)
     conductor = mido.MidiTrack(m for m in src.tracks[0] if m.is_meta and m.type in
                                ("set_tempo", "time_signature", "end_of_track"))
     guide.tracks = [conductor, new_track]
     guide.save(OUTPUT_FILE)
-    print(f"OK -> {OUTPUT_FILE} y {fixed}: {len(notes)} notas por ciclo x {len(CYCLES)} ciclos")
+    print(f"OK -> {fixed} y {OUTPUT_FILE}")
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--source", help="MIDI de la cancion con el track de voz")
     ap.add_argument("--track", type=int, default=13, help="indice del track de voz (por defecto 13)")
-    ap.add_argument("--start-bar", type=int, default=1, help="compas donde empieza el primer verso")
+    ap.add_argument("--verses", default="1,9,17@+1,25@+1",
+                    help="compases de inicio de cada verso; el primero es la referencia")
+    ap.add_argument("--choruses", default="5,13,21@+1,29@+1",
+                    help="compases de inicio de cada coro (conteo); el primero es la referencia")
+    ap.add_argument("--verse-bars", type=int, default=4)
+    ap.add_argument("--chorus-bars", type=int, default=4)
     args = ap.parse_args()
     if args.source:
         replicate_source(args)
